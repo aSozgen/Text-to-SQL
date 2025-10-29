@@ -1,5 +1,21 @@
 # Dialog-Aware Text-to-SQL Server
 
+## Model Performance
+
+Training results on CoSQL dataset:
+
+| Step     | Training Loss | Validation Loss | Accuracy | SQL Validity |
+| -------- | ------------- | --------------- | -------- | ------------ |
+| **300**  | 0.4780        | 0.4658          | 0.1172   | 0.9414       |
+| **600**  | 0.4115        | 0.4342          | 0.1440   | 0.9414       |
+| **900**  | 0.3868        | 0.4177          | 0.1440   | 0.9404       |
+| **1200** | 0.3454        | 0.4159          | 0.1470   | 0.9384       |
+| **1500** | 0.2896        | 0.3480          | 0.1728   | 0.9474       |
+| **1750** | 0.2821        | 0.3419          | 0.1847   | 0.9474       |
+| **2000** | 0.3009        | 0.3407          | 0.1787   | 0.9454       |
+| **2250** | 0.2824        | 0.3402          | 0.1837   | 0.9484       |
+
+
 ## Features
 - ✅ Single-turn Text-to-SQL
 - ✅ Multi-turn dialog support with conversation history

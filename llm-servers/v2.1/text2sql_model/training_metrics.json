@@ -1,0 +1,17 @@
+{
+  "phase": "Phase 2 - Dialog Fine-tuning (Resumed from checkpoint-1500)",
+  "checkpoint": "checkpoint-1500",
+  "dataset": "CoSQL",
+  "train_loss": 0.09896184343657982,
+  "eval_results": {
+    "eval_loss": 0.3419435918331146,
+    "eval_accuracy": 0.18470705064548162,
+    "eval_sql_validity": 0.9473684210526315,
+    "eval_runtime": 522.5122,
+    "eval_samples_per_second": 1.927,
+    "eval_steps_per_second": 0.482,
+    "epoch": 5.0
+  },
+  "training_examples": 7343,
+  "validation_examples": 1007
+}
