@@ -1,0 +1,14 @@
+{
+  "train_loss": 0.24085980724144684,
+  "eval_results": {
+    "eval_loss": 0.3965204060077667,
+    "eval_accuracy": 0.1769825918762089,
+    "eval_runtime": 177.7041,
+    "eval_samples_per_second": 5.819,
+    "eval_steps_per_second": 0.366,
+    "epoch": 10.0
+  },
+  "model_name": "t5-base",
+  "training_examples": 8659,
+  "validation_examples": 1034
+}
