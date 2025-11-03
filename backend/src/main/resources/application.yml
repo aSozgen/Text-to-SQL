@@ -1,0 +1,88 @@
+server:
+  port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+
+spring:
+  application:
+    name: backend
+
+  # Security
+  security:
+    user:
+      name: admin
+      password: admin123  # Change in production
+
+# LLM Server Configuration
+llm:
+  server:
+    base-url: http://localhost:8000
+    timeout: 30s
+    connect-timeout: 5s
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:dGV4dHRvc3FsLXNlY3JldC1rZXktY2hhbmdlLWluLXByb2R1Y3Rpb24tMjAyNA==}
+  expiration: 86400000  # 24 hours in milliseconds
+  issuer: backend
+
+# Resilience4j Circuit Breaker
+resilience4j:
+  circuitbreaker:
+    instances:
+      llmService:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state: 10s
+        failure-rate-threshold: 50
+        event-consumer-buffer-size: 10
+        record-exceptions:
+          - org.springframework.web.reactive.function.client.WebClientRequestException
+          - org.springframework.web.reactive.function.client.WebClientResponseException
+          - java.util.concurrent.TimeoutException
+
+  # Retry Configuration
+  retry:
+    instances:
+      llmService:
+        max-attempts: 3
+        wait-duration: 1s
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - org.springframework.web.reactive.function.client.WebClientRequestException
+          - java.util.concurrent.TimeoutException
+
+  # Time Limiter Configuration
+  timelimiter:
+    instances:
+      llmService:
+        timeout-duration: 30s
+        cancel-running-future: true
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,circuitbreakers,circuitbreakerevents
+  endpoint:
+    health:
+      show-details: always
+  health:
+    circuitbreakers:
+      enabled: true
+
+# Logging
+logging:
+  level:
+    com.texttosql.backend: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web.reactive.function.client: DEBUG
+    io.github.resilience4j: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
