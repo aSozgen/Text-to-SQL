@@ -11,12 +11,15 @@ import java.util.UUID;
 @Repository
 public interface UserRepository extends JpaRepository<UserEntity, UUID> {
     Optional<UserEntity> findByUserId(UUID userId);
+    Optional<UserEntity> findByUserIdAndActiveTrue(UUID userId);
+    Optional<UserEntity> findByUsernameAndActiveTrue(String username);
     Optional<UserEntity> findByUsername(String username);
     Optional<UserEntity> findByEmail(String email);
+    Optional<UserEntity> findByEmailAndActiveTrue(String email);
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);
     boolean isActive(UUID userId);
-    List<UserEntity> findByActiveTrueOrderByCreatedAtAsc();
+    List<UserEntity> findByActiveTrueOrderByCreatedAtDesc();
     long countAll();
     long countAllByActiveTrue();
 }

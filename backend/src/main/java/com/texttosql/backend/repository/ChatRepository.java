@@ -13,12 +13,10 @@ import java.util.UUID;
 public interface ChatRepository extends JpaRepository<ChatEntity, UUID> {
     Optional<ChatEntity> findByChatId(UUID chatId);
     Optional<ChatEntity> findByChatIdAndActiveTrue(UUID chatId);
-    Optional<ChatEntity> findByUserIdAndActiveTrueAndNameLikeIgnoreCase(UserEntity userId, String name);
-    List<ChatEntity> findByUserIdOrderByCreatedAtAsc(UserEntity userId);
-    List<ChatEntity> findByUserIdAndActiveTrueOrderByCreatedAtAsc(UserEntity userId);
-    List<ChatEntity> findByUserIdAndActiveTrueAndNameLike(UserEntity userId, String name);
-    boolean existsByNameAndUserIdAndActiveTrue(String name, UserEntity userId);
+    List<ChatEntity> findByUserIdOrderByCreatedAtDesc(UserEntity userId);
+    List<ChatEntity> findByUserIdAndActiveTrueOrderByCreatedAtDesc(UserEntity userId);
+    List<ChatEntity> findByUserIdAndActiveTrueAndNameContainingIgnoreCaseOrderByCreatedAtDesc(UserEntity userId, String name);
+    boolean existsByNameIgnoreCaseAndUserIdAndActiveTrue(String name, UserEntity userId);
     boolean isActive(UUID chatId);
-    long countAllByUserId(UserEntity userId);
     long countAllByUserIdAndActiveTrue(UserEntity userId);
 }

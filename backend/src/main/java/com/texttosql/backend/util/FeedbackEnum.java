@@ -1,4 +1,4 @@
-package com.texttosql.backend.utils;
+package com.texttosql.backend.util;
 
 public enum FeedbackEnum {
     GOOD,

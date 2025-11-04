@@ -12,8 +12,8 @@ import java.util.UUID;
 @Repository
 public interface ColumnRepository extends JpaRepository<ColumnEntity, UUID> {
     Optional<ColumnEntity> findByColumnId(UUID columnId);
-    List<ColumnEntity> findByTableIdOrderByCreatedAtAsc(TableEntity tableId);
-    List<ColumnEntity> findByTableIdAndNameLikeIgnoreCase(TableEntity tableId, String name);
-    boolean existsByNameAndTableId(String name, TableEntity tableId);
+    List<ColumnEntity> findByTableIdOrderByCreatedAtDesc(TableEntity tableId);
+    List<ColumnEntity> findByTableIdAndNameContainingIgnoreCaseOrderByCreatedAtDesc(TableEntity tableId, String name);
+    boolean existsByNameIgnoreCaseAndTableId(String name, TableEntity tableId);
     long countAllByTableId(TableEntity tableId);
 }

@@ -1,7 +1,7 @@
 package com.texttosql.backend.entity;
 
-import com.texttosql.backend.utils.FeedbackEnum;
-import com.texttosql.backend.utils.SenderTypeEnum;
+import com.texttosql.backend.util.FeedbackEnum;
+import com.texttosql.backend.util.SenderTypeEnum;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;

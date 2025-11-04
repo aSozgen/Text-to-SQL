@@ -3,86 +3,96 @@ server:
   error:
     include-message: always
     include-binding-errors: always
+    include-stacktrace: on_param
+    include-exception: false
 
 spring:
   application:
     name: backend
 
-  # Security
-  security:
-    user:
-      name: admin
-      password: admin123  # Change in production
+  datasource:
+    url: jdbc:postgresql://localhost:5432/texttosql-db
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
 
-# LLM Server Configuration
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+    open-in-view: false
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+      indent-output: true
+    time-zone: UTC
+    default-property-inclusion: non_null
+
+jwt:
+  secret: c5e163309292b0cc856f4a955d48e07b5e9f6fefd490c1dcd703efbb3eae065e
+  expiration: 86400000
+
 llm:
   server:
-    base-url: http://localhost:8000
-    timeout: 30s
-    connect-timeout: 5s
+    url: http://localhost:8000
+    timeout: 30000
 
-# JWT Configuration
-jwt:
-  secret: ${JWT_SECRET:dGV4dHRvc3FsLXNlY3JldC1rZXktY2hhbmdlLWluLXByb2R1Y3Rpb24tMjAyNA==}
-  expiration: 86400000  # 24 hours in milliseconds
-  issuer: backend
+logging:
+  level:
+    root: INFO
+    com.texttosql.backend: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/backend.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 30
 
-# Resilience4j Circuit Breaker
-resilience4j:
-  circuitbreaker:
-    instances:
-      llmService:
-        register-health-indicator: true
-        sliding-window-size: 10
-        minimum-number-of-calls: 5
-        permitted-number-of-calls-in-half-open-state: 3
-        automatic-transition-from-open-to-half-open-enabled: true
-        wait-duration-in-open-state: 10s
-        failure-rate-threshold: 50
-        event-consumer-buffer-size: 10
-        record-exceptions:
-          - org.springframework.web.reactive.function.client.WebClientRequestException
-          - org.springframework.web.reactive.function.client.WebClientResponseException
-          - java.util.concurrent.TimeoutException
-
-  # Retry Configuration
-  retry:
-    instances:
-      llmService:
-        max-attempts: 3
-        wait-duration: 1s
-        enable-exponential-backoff: true
-        exponential-backoff-multiplier: 2
-        retry-exceptions:
-          - org.springframework.web.reactive.function.client.WebClientRequestException
-          - java.util.concurrent.TimeoutException
-
-  # Time Limiter Configuration
-  timelimiter:
-    instances:
-      llmService:
-        timeout-duration: 30s
-        cancel-running-future: true
-
-# Actuator Configuration
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,circuitbreakers,circuitbreakerevents
+        include: health,info,metrics,env,loggers
+      base-path: /actuator
   endpoint:
     health:
       show-details: always
+      show-components: always
+    metrics:
+      access: read_only
   health:
-    circuitbreakers:
+    db:
       enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
 
-# Logging
-logging:
-  level:
-    com.texttosql.backend: DEBUG
-    org.springframework.security: DEBUG
-    org.springframework.web.reactive.function.client: DEBUG
-    io.github.resilience4j: DEBUG
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+info:
+  app:
+    name: Text-to-SQL Backend
+    description: Backend service for Text-to-SQL platform
+    version: 1.0.0
