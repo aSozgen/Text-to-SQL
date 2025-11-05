@@ -38,10 +38,11 @@ public class MessageEntity {
     private String content;
 
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private SenderTypeEnum senderType;
 
-    @Column(nullable = false)
     @Builder.Default
+    @Enumerated(EnumType.STRING)
     private FeedbackEnum feedback = FeedbackEnum.NONE;
 
     @Column(nullable = false)

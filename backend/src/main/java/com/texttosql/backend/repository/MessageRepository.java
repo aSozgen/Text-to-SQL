@@ -27,7 +27,6 @@ public interface MessageRepository extends JpaRepository<MessageEntity, UUID> {
     List<MessageEntity> findByFeedbackAndActiveTrueOrderByCreatedAtDesc(FeedbackEnum feedback);
     List<MessageEntity> findByChatIdAndActiveTrueAndContentContainingIgnoreCaseOrderByCreatedAtDesc(ChatEntity chatId, String content);
     List<MessageEntity> findByChatIdAndActiveTrueAndSenderTypeAndContentContainingIgnoreCaseOrderByCreatedAtDesc(ChatEntity chatId, SenderTypeEnum senderType, String content);
-    boolean isActive(UUID messageId);
     long countAllByChatId(ChatEntity chatId);
     long countAllByFeedback(FeedbackEnum feedback);
 }

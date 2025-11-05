@@ -87,13 +87,6 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Resilience4j for Circuit Breaker, Retry, Timeout -->
-        <dependency>
-            <groupId>io.github.resilience4j</groupId>
-            <artifactId>resilience4j-spring-boot3</artifactId>
-            <version>2.1.0</version>
-        </dependency>
-
         <!-- JWT Library (for token creation/validation) -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>

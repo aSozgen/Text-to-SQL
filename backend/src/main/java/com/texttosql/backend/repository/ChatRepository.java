@@ -17,6 +17,5 @@ public interface ChatRepository extends JpaRepository<ChatEntity, UUID> {
     List<ChatEntity> findByUserIdAndActiveTrueOrderByCreatedAtDesc(UserEntity userId);
     List<ChatEntity> findByUserIdAndActiveTrueAndNameContainingIgnoreCaseOrderByCreatedAtDesc(UserEntity userId, String name);
     boolean existsByNameIgnoreCaseAndUserIdAndActiveTrue(String name, UserEntity userId);
-    boolean isActive(UUID chatId);
     long countAllByUserIdAndActiveTrue(UserEntity userId);
 }

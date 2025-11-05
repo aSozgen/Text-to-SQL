@@ -1,5 +1,6 @@
 package com.texttosql.backend.entity;
 
+import com.texttosql.backend.util.RoleEnum;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -29,6 +30,10 @@ public class UserEntity {
 
     @Column(nullable = false)
     private String password;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private RoleEnum role;
 
     @Column(nullable = false)
     @Builder.Default
