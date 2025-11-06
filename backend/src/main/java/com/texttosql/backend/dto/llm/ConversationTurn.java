@@ -1,4 +1,4 @@
-package com.texttosql.backend.dto;
+package com.texttosql.backend.dto.llm;
 
 public record ConversationTurn(
         String question,

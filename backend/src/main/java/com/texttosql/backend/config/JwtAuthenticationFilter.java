@@ -1,6 +1,6 @@
 package com.texttosql.backend.config;
 
-import com.texttosql.backend.security.CustomUserDetailsService;
+import com.texttosql.backend.service.CustomUserDetailsService;
 import com.texttosql.backend.util.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

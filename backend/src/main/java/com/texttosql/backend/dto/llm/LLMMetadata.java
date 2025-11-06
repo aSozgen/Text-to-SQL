@@ -1,4 +1,4 @@
-package com.texttosql.backend.dto;
+package com.texttosql.backend.dto.llm;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

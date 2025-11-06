@@ -8,6 +8,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -22,6 +23,7 @@ public class CustomUserDetails implements UserDetails {
     private String password;
     private RoleEnum role;
     private Boolean active;
+    private LocalDateTime createdAt;
 
     public static CustomUserDetails fromUserEntity(UserEntity user) {
         return new CustomUserDetails(
@@ -30,7 +32,8 @@ public class CustomUserDetails implements UserDetails {
                 user.getEmail(),
                 user.getPassword(),
                 user.getRole(),
-                user.getActive()
+                user.getActive(),
+                user.getCreatedAt()
         );
     }
 

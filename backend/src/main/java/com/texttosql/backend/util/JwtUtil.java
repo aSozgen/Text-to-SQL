@@ -1,5 +1,6 @@
 package com.texttosql.backend.util;
 
+import com.texttosql.backend.security.CustomUserDetails;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -46,7 +47,14 @@ public class JwtUtil {
     }
 
     public String generateToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>(), userDetails);
+        Map<String, Object> claims = new HashMap<>();
+
+        if (userDetails instanceof CustomUserDetails customUser) {
+            claims.put("userId", customUser.getUserId().toString());
+            claims.put("role", customUser.getRole().name());
+        }
+
+        return generateToken(claims, userDetails);
     }
 
     public String generateToken(Map<String, Object> claims,
@@ -66,11 +74,16 @@ public class JwtUtil {
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
+    public boolean validateToken(String token) {
+        extractAllClaims(token);
+        return !isTokenExpired(token);
+    }
+
     private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 
-    private Date extractExpiration(String token) {
+    public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
 

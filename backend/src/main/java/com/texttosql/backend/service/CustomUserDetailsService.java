@@ -1,7 +1,8 @@
-package com.texttosql.backend.security;
+package com.texttosql.backend.service;
 
 import com.texttosql.backend.entity.UserEntity;
 import com.texttosql.backend.repository.UserRepository;
+import com.texttosql.backend.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
