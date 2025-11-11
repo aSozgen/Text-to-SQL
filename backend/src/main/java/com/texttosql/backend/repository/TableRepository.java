@@ -14,6 +14,7 @@ public interface TableRepository extends JpaRepository<TableEntity, UUID> {
     Optional<TableEntity> findByTableId(UUID tableId);
     List<TableEntity> findByDatabaseIdOrderByCreatedAtDesc(DatabaseEntity databaseId);
     List<TableEntity> findByDatabaseIdAndNameContainingIgnoreCaseOrderByCreatedAtDesc(DatabaseEntity databaseId, String name);
+    Optional<TableEntity>  findByDatabaseIdAndNameIgnoreCase(DatabaseEntity databaseId, String name);
     boolean existsByNameIgnoreCaseAndDatabaseId(String name, DatabaseEntity databaseId);
     long countAllByDatabaseId(DatabaseEntity databaseId);
 }

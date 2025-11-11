@@ -5,7 +5,6 @@ import com.texttosql.backend.dto.auth.LoginRequest;
 import com.texttosql.backend.dto.auth.RegisterRequest;
 import com.texttosql.backend.entity.UserEntity;
 import com.texttosql.backend.exception.DuplicatedResourceException;
-import com.texttosql.backend.exception.ResourceNotFoundException;
 import com.texttosql.backend.repository.UserRepository;
 import com.texttosql.backend.security.CustomUserDetails;
 import com.texttosql.backend.util.JwtUtil;
@@ -19,8 +18,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -50,7 +47,6 @@ public class AuthenticationService {
                 .password(passwordEncoder.encode(registerRequest.password()))
                 .role(RoleEnum.USER)
                 .active(true)
-                .createdAt(LocalDateTime.now())
                 .build();
 
         UserEntity savedUser = userRepository.save(newUser);
