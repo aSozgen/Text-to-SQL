@@ -1,6 +1,6 @@
 package com.texttosql.backend.service;
 
-import com.texttosql.backend.dto.DatabaseDTO;
+import com.texttosql.backend.dto.DatabaseDto;
 import com.texttosql.backend.entity.DatabaseEntity;
 import com.texttosql.backend.entity.UserEntity;
 import com.texttosql.backend.exception.DuplicatedResourceException;
@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -25,33 +24,30 @@ public class DatabaseService {
     private final SecurityUtil securityUtil;
 
     @Transactional(readOnly = true)
-    public List<DatabaseDTO> getDatabases() {
+    public List<DatabaseDto> getDatabases() {
         final UserEntity currentUser = getCurrentUserEntity();
         List<DatabaseEntity> databaseEntities = databaseRepository.findByUserIdOrderByCreatedAtDesc(currentUser);
+        databaseEntities.removeIf(databaseEntity -> !securityUtil.isResourceOwner(databaseEntity.getUserId().getUserId()));
 
         return databaseEntities.stream()
-                .map(entity -> new DatabaseDTO(entity.getDatabaseId(),entity.getName(), entity.getDescription()))
+                .map(entity -> new DatabaseDto(entity.getDatabaseId(),entity.getName(), entity.getDescription()))
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public DatabaseEntity getDatabaseEntity(UUID databaseId) {
-        return databaseRepository.findByDatabaseId(databaseId)
-                .orElseThrow(() -> new ResourceNotFoundException("Database not found"));
-    }
-
-    @Transactional(readOnly = true)
-    public DatabaseDTO getDatabase(UUID databaseId) {
+    public DatabaseDto getDatabase(UUID databaseId) {
         DatabaseEntity entity = getCurrentDatabaseEntity(databaseId);
-        return new DatabaseDTO(entity.getDatabaseId(), entity.getName(), entity.getDescription());
+        checkResourceOwner(entity);
+
+        return new DatabaseDto(entity.getDatabaseId(), entity.getName(), entity.getDescription());
     }
 
 
-    public @Valid DatabaseDTO createDatabase(DatabaseDTO databaseDTO) {
+    public @Valid DatabaseDto createDatabase(DatabaseDto databaseDTO) {
         final UserEntity currentUser = getCurrentUserEntity();
 
         if (databaseRepository.existsByNameIgnoreCaseAndUserId(databaseDTO.getName(), currentUser)) {
-            throw new DuplicatedResourceException("There is already a database with the name '" + databaseDTO.getName() + "'");
+            throw new DuplicatedResourceException("There is already a Database with the name '" + databaseDTO.getName() + "'");
         }
 
         DatabaseEntity databaseEntity = new DatabaseEntity();
@@ -64,16 +60,15 @@ public class DatabaseService {
         return databaseDTO;
     }
 
-    public @Valid DatabaseDTO updateDatabase(UUID databaseId, DatabaseDTO databaseDTO) {
+    public @Valid DatabaseDto updateDatabase(UUID databaseId, DatabaseDto databaseDTO) {
         final UserEntity currentUser = getCurrentUserEntity();
         DatabaseEntity oldEntity = getCurrentDatabaseEntity(databaseId);
+        checkResourceOwner(oldEntity);
 
         if (databaseRepository.existsByNameIgnoreCaseAndUserId(databaseDTO.getName(), currentUser)
                 && !oldEntity.getName().equalsIgnoreCase(databaseDTO.getName())) {
-            throw new DuplicatedResourceException("Database name already exists");
+            throw new DuplicatedResourceException("There is already a Database with the name '" + databaseDTO.getName() + "'");
         }
-
-        isResourceOwner(oldEntity.getUserId().getUserId());
 
         oldEntity.setName(databaseDTO.getName());
         oldEntity.setDescription(databaseDTO.getDescription());
@@ -86,7 +81,7 @@ public class DatabaseService {
     @Transactional
     public void deleteDatabase(UUID databaseId) {
         DatabaseEntity databaseEntity = getCurrentDatabaseEntity(databaseId);
-        isResourceOwner(databaseEntity.getUserId().getUserId());
+        checkResourceOwner(databaseEntity);
 
         databaseRepository.delete(databaseEntity);
     }
@@ -96,13 +91,13 @@ public class DatabaseService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
-    private DatabaseEntity getCurrentDatabaseEntity(UUID databaseId) {
+    public DatabaseEntity getCurrentDatabaseEntity(UUID databaseId) {
         return databaseRepository.findByDatabaseId(databaseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Database not found"));
     }
 
-    private void isResourceOwner(UUID uuid) {
-        if (!securityUtil.isResourceOwner(uuid)) {
+    private void checkResourceOwner(DatabaseEntity databaseEntity) {
+        if (!securityUtil.isResourceOwner(databaseEntity.getUserId().getUserId())) {
             throw new NotResourceOwnerException("User is not the owner of the resource");
         }
     }

@@ -1,0 +1,102 @@
+package com.texttosql.backend.service;
+
+import com.texttosql.backend.dto.ChatDto;
+import com.texttosql.backend.entity.ChatEntity;
+import com.texttosql.backend.entity.UserEntity;
+import com.texttosql.backend.exception.DuplicatedResourceException;
+import com.texttosql.backend.exception.NotResourceOwnerException;
+import com.texttosql.backend.exception.ResourceNotFoundException;
+import com.texttosql.backend.repository.ChatRepository;
+import com.texttosql.backend.util.SecurityUtil;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+public class ChatService {
+    private final ChatRepository chatRepository;
+    private final SecurityUtil securityUtil;
+
+    @Transactional(readOnly = true)
+    public List<ChatDto> getChats() {
+        List<ChatEntity> chatEntities = chatRepository.findByUserIdAndActiveTrueOrderByCreatedAtDesc(getCurrentUserEntity());
+        chatEntities.removeIf(chatEntity -> !securityUtil.isResourceOwner(chatEntity.getUserId().getUserId()));
+
+        return chatEntities.stream()
+                .map(entity -> new ChatDto(entity.getChatId(), entity.getName()))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public ChatDto getChat(UUID chatId) {
+        ChatEntity chatEntity = getCurrentChatEntity(chatId);
+        checkResourceOwner(chatEntity);
+
+        return new ChatDto(chatEntity.getChatId(), chatEntity.getName());
+    }
+
+
+    public @Valid ChatDto createChat(ChatDto chatDto) {
+        UserEntity currentUser = getCurrentUserEntity();
+
+        if (chatRepository.existsByNameIgnoreCaseAndUserIdAndActiveTrue(chatDto.getName(), currentUser)) {
+            throw new DuplicatedResourceException("There is already a Chat with the name '" + chatDto.getName() + "'");
+        }
+
+        ChatEntity chatEntity = new ChatEntity();
+        chatEntity.setUserId(currentUser);
+        chatEntity.setName(chatDto.getName());
+
+        ChatEntity savedChatEntity = chatRepository.save(chatEntity);
+        chatDto.setChatId(savedChatEntity.getChatId());
+        return chatDto;
+    }
+
+    public @Valid ChatDto updateChat(ChatEntity chatEntity, UUID chatID, ChatDto chatDto) {
+        checkResourceOwner(chatEntity);
+        UserEntity currentUser = getCurrentUserEntity();
+        ChatEntity oldEntity = getCurrentChatEntity(chatID);
+
+        if (chatRepository.existsByNameIgnoreCaseAndUserIdAndActiveTrue(chatDto.getName(), currentUser)
+                && !oldEntity.getName().equalsIgnoreCase(chatDto.getName())) {
+            throw new DuplicatedResourceException("There is already a Chat with the name '" + chatDto.getName() + "'");
+        }
+
+        oldEntity.setName(chatDto.getName());
+
+        ChatEntity updatedEntity = chatRepository.save(oldEntity);
+        chatDto.setChatId(updatedEntity.getChatId());
+        return chatDto;
+    }
+
+    @Transactional
+    public void deleteChat(UUID chatId) {
+        ChatEntity chatEntity = getCurrentChatEntity(chatId);
+        checkResourceOwner(chatEntity);
+
+        chatEntity.setActive(false);
+        chatRepository.save(chatEntity);
+    }
+
+    private UserEntity getCurrentUserEntity() {
+        return securityUtil.getCurrentUserEntity()
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    }
+
+    public ChatEntity getCurrentChatEntity(UUID chatId) {
+        return chatRepository.findByChatIdAndActiveTrue(chatId)
+                .orElseThrow(() -> new ResourceNotFoundException("Chat not found"));
+    }
+
+    private void checkResourceOwner(ChatEntity chatEntity) {
+        if (!securityUtil.isResourceOwner(chatEntity.getUserId().getUserId())) {
+            throw new NotResourceOwnerException("User is not the owner of the resource");
+        }
+    }
+}

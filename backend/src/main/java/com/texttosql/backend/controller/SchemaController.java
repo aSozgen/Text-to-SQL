@@ -1,7 +1,8 @@
 package com.texttosql.backend.controller;
 
-import com.texttosql.backend.dto.DatabaseDTO;
-import com.texttosql.backend.dto.TableDTO;
+import com.texttosql.backend.dto.ColumnDto;
+import com.texttosql.backend.dto.DatabaseDto;
+import com.texttosql.backend.dto.TableDto;
 import com.texttosql.backend.service.SchemaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,22 +21,22 @@ class SchemaController {
     private final SchemaService schemaService;
 
     @GetMapping("/databases")
-    private ResponseEntity<List<DatabaseDTO>> getDatabases() {
+    private ResponseEntity<List<DatabaseDto>> getDatabases() {
         return ResponseEntity.ok(schemaService.getDatabases());
     }
 
     @GetMapping("/databases/{databaseId}")
-    private ResponseEntity<DatabaseDTO> getDatabase(@PathVariable UUID databaseId) {
+    private ResponseEntity<DatabaseDto> getDatabase(@PathVariable UUID databaseId) {
         return ResponseEntity.ok(schemaService.getDatabase(databaseId));
     }
 
     @PostMapping("/databases")
-    private ResponseEntity<DatabaseDTO> createDatabase(@Valid @RequestBody DatabaseDTO databaseDTO) {
+    private ResponseEntity<DatabaseDto> createDatabase(@Valid @RequestBody DatabaseDto databaseDTO) {
         return ResponseEntity.status(HttpStatus.CREATED).body(schemaService.createDatabase(databaseDTO));
     }
 
     @PatchMapping("/databases/{databaseId}")
-    private ResponseEntity<DatabaseDTO> updateDatabase(@PathVariable UUID databaseId, @Valid @RequestBody DatabaseDTO databaseDTO) {
+    private ResponseEntity<DatabaseDto> updateDatabase(@PathVariable UUID databaseId, @Valid @RequestBody DatabaseDto databaseDTO) {
         return ResponseEntity.ok(schemaService.updateDatabase(databaseId, databaseDTO));
     }
 
@@ -46,32 +47,62 @@ class SchemaController {
     }
 
     @GetMapping("/databases/{databaseId}/tables")
-    public ResponseEntity<List<TableDTO>> getTables(@PathVariable UUID databaseId) {
+    public ResponseEntity<List<TableDto>> getTables(@PathVariable UUID databaseId) {
         return ResponseEntity.ok(schemaService.getTables(databaseId));
     }
 
     @GetMapping("/databases/{databaseId}/tables/{tableId}")
-    public ResponseEntity<TableDTO> getTable(@PathVariable UUID tableId, @PathVariable UUID databaseId) {
+    public ResponseEntity<TableDto> getTable(@PathVariable UUID tableId) {
         return ResponseEntity.ok(schemaService.getTable(tableId));
     }
 
     @PostMapping("/databases/{databaseId}/tables")
-    public ResponseEntity<TableDTO> createTable(@PathVariable UUID databaseId,
-                                                @Valid @RequestBody TableDTO tableDTO) {
+    public ResponseEntity<TableDto> createTable(@PathVariable UUID databaseId,
+                                                @Valid @RequestBody TableDto tableDTO) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(schemaService.createTable(databaseId, tableDTO));
     }
 
     @PatchMapping("/databases/{databaseId}/tables/{tableId}")
-    public ResponseEntity<TableDTO> updateTable(@PathVariable UUID databaseId,
+    public ResponseEntity<TableDto> updateTable(@PathVariable UUID databaseId,
                                                 @PathVariable UUID tableId,
-                                                @Valid @RequestBody TableDTO tableDTO) {
+                                                @Valid @RequestBody TableDto tableDTO) {
         return ResponseEntity.ok(schemaService.updateTable(databaseId, tableId, tableDTO));
     }
 
     @DeleteMapping("/databases/{databaseId}/tables/{tableId}")
-    public ResponseEntity<Void> deleteTable(@PathVariable UUID databaseId, @PathVariable UUID tableId) {
-        schemaService.deleteTable(databaseId, tableId);
+    public ResponseEntity<Void> deleteTable(@PathVariable UUID tableId) {
+        schemaService.deleteTable(tableId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/databases/{databaseId}/tables/{tableId}/columns")
+    public ResponseEntity<List<ColumnDto>> getColumns(@PathVariable UUID tableId) {
+        return ResponseEntity.ok(schemaService.getColumns(tableId));
+    }
+
+    @GetMapping("/databases/{databaseId}/tables/{tableId}/columns/{columnId}")
+    public ResponseEntity<ColumnDto> getColumn(@PathVariable UUID columnId) {
+        return ResponseEntity.ok(schemaService.getColumn(columnId));
+    }
+
+    @PostMapping("/databases/{databaseId}/tables/{tableId}/columns")
+    public ResponseEntity<ColumnDto> createColumn(@PathVariable UUID tableId,
+                                                @Valid @RequestBody ColumnDto columnDto) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(schemaService.createColumn(tableId, columnDto));
+    }
+
+    @PatchMapping("/databases/{databaseId}/tables/{tableId}/columns/{columnId}")
+    public ResponseEntity<ColumnDto> updateColumn(@PathVariable UUID tableId,
+                                                @PathVariable UUID columnId,
+                                                @Valid @RequestBody ColumnDto columnDto) {
+        return ResponseEntity.ok(schemaService.updateColumn(tableId, columnId, columnDto));
+    }
+
+    @DeleteMapping("/databases/{databaseId}/tables/{tableId}/columns/{columnId}")
+    public ResponseEntity<Void> deleteColumn(@PathVariable UUID columnId) {
+        schemaService.deleteColumn(columnId);
         return ResponseEntity.noContent().build();
     }
 }
