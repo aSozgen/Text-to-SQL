@@ -1,7 +1,6 @@
 package com.texttosql.backend.dto.llm;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.springframework.beans.MutablePropertyValues;
 
 import java.util.List;
 

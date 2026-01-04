@@ -39,7 +39,7 @@ public class MessageService {
         checkResourceOwner(chatEntity);
 
         return messageRepository
-                .findByChatIdAndActiveTrueOrderByCreatedAtDesc(chatEntity)
+                .findByChatIdAndActiveTrueOrderByCreatedAtAsc(chatEntity)
                 .stream()
                 .map(e -> new MessageDto(
                         e.getMessageId(),

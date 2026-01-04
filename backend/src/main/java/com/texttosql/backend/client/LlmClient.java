@@ -19,13 +19,14 @@ public class LlmClient {
 
     public LlmClient(@Value("${llm.service.url}") String baseUrl,
                      @Value("${llm.service.endpoint}") String endpoint,
-                     @Value("${llm.service.timeout}") int timeoutMs) {
+                     @Value("${llm.service.read-timeout}") int readTimeoutMs,
+                     @Value("${llm.service.connection-timeout}") int connectionTimeoutMs) {
 
         this.predictionEndpoint = endpoint;
 
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(5000);
-        factory.setReadTimeout(timeoutMs);
+        factory.setConnectTimeout(connectionTimeoutMs);
+        factory.setReadTimeout(readTimeoutMs);
 
         this.restClient = RestClient.builder()
                 .baseUrl(baseUrl)

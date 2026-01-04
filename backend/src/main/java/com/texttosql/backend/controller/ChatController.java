@@ -63,7 +63,7 @@ public class ChatController {
     }
 
     @PatchMapping("/chats/{chatID}/messages/{messageID}")
-    public ResponseEntity<MessageDto> updateMessage(@PathVariable UUID messageID, @Valid @RequestBody MessageDto messageDto) {
+    public ResponseEntity<MessageDto> updateMessage(@PathVariable UUID chatID, @PathVariable UUID messageID, @Valid @RequestBody MessageDto messageDto) {
         return ResponseEntity.ok(messageService.updateMessage(messageID, messageDto));
     }
 
