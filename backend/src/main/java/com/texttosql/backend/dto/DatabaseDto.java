@@ -17,8 +17,8 @@ public class DatabaseDto {
     UUID databaseId;
 
     @NotBlank(message = "Database name cannot be empty")
-    @Size(min = 3, max = 20, message = "Database name must be between 3 and 20 characters")
-    @Pattern(regexp = "^[a-zA-Z0-9_ ]*$", message = "Name contains invalid characters")
+    @Size(min = 2, max = 64, message = "Database name must be between 2 and 64 characters")
+    @Pattern(regexp = "^[a-zA-Z0-9_]*$", message = "Name contains invalid characters")
     String name;
 
     @Size(max = 255, message = "Description cannot exceed 255 characters")

@@ -12,11 +12,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 import java.util.UUID;
 
 @Service
+@Validated
 @RequiredArgsConstructor
 public class TableService {
     private final TableRepository tableRepository;
@@ -41,7 +43,7 @@ public class TableService {
     }
 
 
-    public @Valid TableDto createTable(DatabaseEntity databaseEntity, TableDto tableDTO) {
+    public TableDto createTable(DatabaseEntity databaseEntity, TableDto tableDTO) {
         checkResourceOwner(databaseEntity);
 
         if (tableRepository.existsByNameIgnoreCaseAndDatabaseId(tableDTO.getName(), databaseEntity)) {
@@ -58,7 +60,7 @@ public class TableService {
         return tableDTO;
     }
 
-    public @Valid TableDto updateTable(DatabaseEntity databaseEntity, UUID tableId, TableDto tableDTO) {
+    public TableDto updateTable(DatabaseEntity databaseEntity, UUID tableId, TableDto tableDTO) {
         TableEntity oldEntity = getCurrentTableEntity(tableId);
 
         if (tableRepository.existsByNameIgnoreCaseAndDatabaseId(tableDTO.getName(), databaseEntity)

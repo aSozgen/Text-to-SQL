@@ -51,7 +51,8 @@ jwt:
 llm:
   server:
     url: http://localhost:8000
-    timeout: 30000
+    endpoint: /predict
+    timeout: 60000
   conversation-turn: 2
 
 logging:

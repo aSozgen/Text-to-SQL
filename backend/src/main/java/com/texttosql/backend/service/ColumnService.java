@@ -13,11 +13,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 import java.util.UUID;
 
 @Service
+@Validated
 @RequiredArgsConstructor
 public class ColumnService {
     private final ColumnRepository columnRepository;
@@ -42,7 +44,7 @@ public class ColumnService {
     }
 
 
-    public @Valid ColumnDto createColumn(TableEntity tableEntity, ColumnDto columnDto) {
+    public ColumnDto createColumn(TableEntity tableEntity, ColumnDto columnDto) {
         checkResourceOwner(tableEntity.getDatabaseId());
 
         if (columnRepository.existsByNameIgnoreCaseAndTableId(columnDto.getName(), tableEntity)) {
@@ -59,7 +61,7 @@ public class ColumnService {
         return columnDto;
     }
 
-    public @Valid ColumnDto updateColumn(TableEntity tableEntity, UUID columnId, ColumnDto columnDto) {
+    public ColumnDto updateColumn(TableEntity tableEntity, UUID columnId, ColumnDto columnDto) {
         checkResourceOwner(tableEntity.getDatabaseId());
         ColumnEntity oldEntity = getCurrentColumnEntity(columnId);
         checkResourceOwner(oldEntity.getTableId().getDatabaseId());

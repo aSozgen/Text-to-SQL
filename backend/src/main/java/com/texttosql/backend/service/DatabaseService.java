@@ -13,11 +13,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 import java.util.UUID;
 
 @Service
+@Validated
 @RequiredArgsConstructor
 public class DatabaseService {
     private final DatabaseRepository databaseRepository;
@@ -43,7 +45,7 @@ public class DatabaseService {
     }
 
 
-    public @Valid DatabaseDto createDatabase(DatabaseDto databaseDTO) {
+    public DatabaseDto createDatabase(DatabaseDto databaseDTO) {
         final UserEntity currentUser = getCurrentUserEntity();
 
         if (databaseRepository.existsByNameIgnoreCaseAndUserId(databaseDTO.getName(), currentUser)) {
@@ -60,7 +62,7 @@ public class DatabaseService {
         return databaseDTO;
     }
 
-    public @Valid DatabaseDto updateDatabase(UUID databaseId, DatabaseDto databaseDTO) {
+    public DatabaseDto updateDatabase(UUID databaseId, DatabaseDto databaseDTO) {
         final UserEntity currentUser = getCurrentUserEntity();
         DatabaseEntity oldEntity = getCurrentDatabaseEntity(databaseId);
         checkResourceOwner(oldEntity);

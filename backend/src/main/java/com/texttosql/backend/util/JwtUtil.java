@@ -79,8 +79,6 @@ public class JwtUtil {
         try {
             final String username = extractUsername(token);
             return (username != null && username.equals(userDetails.getUsername()) && !isTokenExpired(token));
-        } catch (ExpiredJwtException e) {
-            return false;
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
@@ -90,8 +88,6 @@ public class JwtUtil {
         try {
             extractAllClaims(token);
             return !isTokenExpired(token);
-        } catch (ExpiredJwtException e) {
-            return false;
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }

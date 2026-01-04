@@ -18,8 +18,10 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 @Service
+@Validated
 @RequiredArgsConstructor
 public class AuthenticationService {
 
@@ -29,7 +31,7 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
 
     @Transactional
-    public AuthenticationResponse register(@Valid RegisterRequest registerRequest) {
+    public AuthenticationResponse register(RegisterRequest registerRequest) {
 
         String username = registerRequest.username();
         if(userRepository.existsByUsername(username)) {
@@ -56,7 +58,7 @@ public class AuthenticationService {
     }
 
     @Transactional(readOnly = true)
-    public AuthenticationResponse login(@Valid LoginRequest loginRequest) {
+    public AuthenticationResponse login(LoginRequest loginRequest) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.username(),

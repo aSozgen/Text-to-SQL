@@ -13,11 +13,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 import java.util.UUID;
 
 @Service
+@Validated
 @RequiredArgsConstructor
 public class ChatService {
     private final ChatRepository chatRepository;
@@ -42,7 +44,7 @@ public class ChatService {
     }
 
 
-    public @Valid ChatDto createChat(ChatDto chatDto) {
+    public ChatDto createChat(ChatDto chatDto) {
         UserEntity currentUser = getCurrentUserEntity();
 
         if (chatRepository.existsByNameIgnoreCaseAndUserIdAndActiveTrue(chatDto.getName(), currentUser)) {
@@ -58,7 +60,7 @@ public class ChatService {
         return chatDto;
     }
 
-    public @Valid ChatDto updateChat(ChatEntity chatEntity, UUID chatID, ChatDto chatDto) {
+    public ChatDto updateChat(ChatEntity chatEntity, UUID chatID, ChatDto chatDto) {
         checkResourceOwner(chatEntity);
         UserEntity currentUser = getCurrentUserEntity();
         ChatEntity oldEntity = getCurrentChatEntity(chatID);

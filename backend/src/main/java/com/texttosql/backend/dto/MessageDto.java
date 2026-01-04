@@ -20,9 +20,12 @@ public class MessageDto {
     UUID messageId;
 
     @NotBlank(message = "Message content is required")
-    @Size(max = 2000, message = "Message content cannot exceed 2000 characters")
+    @Size(max = 5000, message = "Message content cannot exceed 5000 characters")
     String content;
+
     Map<String, Object> schema;
+
     SenderTypeEnum senderType;
+
     FeedbackEnum feedback;
 }

@@ -14,11 +14,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Validated
 @RequiredArgsConstructor
 public class MessageService {
     private final MessageRepository messageRepository;
@@ -65,7 +67,7 @@ public class MessageService {
     }
 
     @Transactional
-    public @Valid MessageDto createMessage(ChatEntity chatEntity, MessageDto messageDto) {
+    public MessageDto createMessage(ChatEntity chatEntity, MessageDto messageDto) {
         checkResourceOwner(chatEntity);
 
         MessageEntity messageEntity = new MessageEntity();
@@ -93,7 +95,7 @@ public class MessageService {
                 savedEntity.getSenderType(), savedEntity.getFeedback());
     }
 
-    public @Valid MessageDto updateMessage(ChatEntity chatEntity, UUID messageId, MessageDto messageDto) {
+    public MessageDto updateMessage(ChatEntity chatEntity, UUID messageId, MessageDto messageDto) {
         checkResourceOwner(chatEntity);
         MessageEntity oldEntity = getCurrentMessageEntity(messageId);
         checkResourceOwner(oldEntity.getChatId());
