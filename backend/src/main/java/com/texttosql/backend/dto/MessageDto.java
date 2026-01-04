@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.boot.configurationprocessor.json.JSONObject;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -23,7 +24,9 @@ public class MessageDto {
     @Size(max = 5000, message = "Message content cannot exceed 5000 characters")
     String content;
 
-    Map<String, Object> schema;
+    String schema;
+
+    Double confidence;
 
     SenderTypeEnum senderType;
 

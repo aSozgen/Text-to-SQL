@@ -1,10 +1,14 @@
 package com.texttosql.backend.dto.llm;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.springframework.beans.MutablePropertyValues;
+
 import java.util.List;
 
 public record LLMRequest(
         String question,
         String schema,
+        @JsonProperty("conversation_history")
         List<ConversationTurn> conversationHistory
 ) {
     public LLMRequest(String question) {
@@ -18,4 +22,5 @@ public record LLMRequest(
     public LLMRequest(String question, List<ConversationTurn> conversationHistory) {
         this(question, null, conversationHistory);
     }
+
 }

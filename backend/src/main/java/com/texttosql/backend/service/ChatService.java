@@ -60,19 +60,20 @@ public class ChatService {
         return chatDto;
     }
 
-    public ChatDto updateChat(ChatEntity chatEntity, UUID chatID, ChatDto chatDto) {
+    public ChatDto updateChat(UUID chatID, ChatDto chatDto) {
+        ChatEntity chatEntity = getCurrentChatEntity(chatID);
         checkResourceOwner(chatEntity);
+
         UserEntity currentUser = getCurrentUserEntity();
-        ChatEntity oldEntity = getCurrentChatEntity(chatID);
 
         if (chatRepository.existsByNameIgnoreCaseAndUserIdAndActiveTrue(chatDto.getName(), currentUser)
-                && !oldEntity.getName().equalsIgnoreCase(chatDto.getName())) {
+                && !chatEntity.getName().equalsIgnoreCase(chatDto.getName())) {
             throw new DuplicatedResourceException("There is already a Chat with the name '" + chatDto.getName() + "'");
         }
 
-        oldEntity.setName(chatDto.getName());
+        chatEntity.setName(chatDto.getName());
 
-        ChatEntity updatedEntity = chatRepository.save(oldEntity);
+        ChatEntity updatedEntity = chatRepository.save(chatEntity);
         chatDto.setChatId(updatedEntity.getChatId());
         return chatDto;
     }

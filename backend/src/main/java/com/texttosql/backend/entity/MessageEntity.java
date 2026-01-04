@@ -30,12 +30,13 @@ public class MessageEntity {
     @JoinColumn(name = "chat_id", nullable = false)
     private ChatEntity chatId;
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(columnDefinition = "jsonb")
-    private Map<String, Object> schema;
+    @Column(columnDefinition = "TEXT")
+    private String schema;
 
     @Column(nullable = false)
     private String content;
+
+    private Double confidence;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)

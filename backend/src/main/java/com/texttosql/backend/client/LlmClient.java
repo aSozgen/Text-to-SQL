@@ -1,0 +1,59 @@
+package com.texttosql.backend.client;
+
+import com.texttosql.backend.dto.llm.LLMRequest;
+import com.texttosql.backend.dto.llm.LLMResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClient;
+
+@Component
+@Slf4j
+public class LlmClient {
+
+    private final RestClient restClient;
+    private final String predictionEndpoint;
+
+    public LlmClient(@Value("${llm.service.url}") String baseUrl,
+                     @Value("${llm.service.endpoint}") String endpoint,
+                     @Value("${llm.service.timeout}") int timeoutMs) {
+
+        this.predictionEndpoint = endpoint;
+
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(5000);
+        factory.setReadTimeout(timeoutMs);
+
+        this.restClient = RestClient.builder()
+                .baseUrl(baseUrl)
+                .requestFactory(factory)
+                .defaultHeader("Content-Type", "application/json")
+                .build();
+    }
+
+    public LLMResponse generateSql(LLMRequest request) {
+        log.info("Sending request to LLM Service: {}", request);
+
+        try {
+            return restClient.post()
+                    .uri(predictionEndpoint)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(request)
+                    .retrieve()
+                    .onStatus(HttpStatusCode::is4xxClientError, (req, resp) -> {
+                        throw new RuntimeException("LLM Client Error: " + resp.getStatusCode() + " " + resp.getStatusText());
+                    })
+                    .onStatus(HttpStatusCode::is5xxServerError, (req, resp) -> {
+                        throw new RuntimeException("LLM Server Error: " + resp.getStatusCode() + " " + resp.getStatusText());
+                    })
+                    .body(LLMResponse.class);
+
+        } catch (Exception e) {
+            log.error("Error communicating with LLM Service", e);
+            throw new RuntimeException("LLM Service unavailable: " + e.getMessage());
+        }
+    }
+}

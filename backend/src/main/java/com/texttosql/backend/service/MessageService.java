@@ -1,7 +1,10 @@
 package com.texttosql.backend.service;
 
+import com.texttosql.backend.client.LlmClient;
 import com.texttosql.backend.dto.MessageDto;
 import com.texttosql.backend.dto.llm.ConversationTurn;
+import com.texttosql.backend.dto.llm.LLMRequest;
+import com.texttosql.backend.dto.llm.LLMResponse;
 import com.texttosql.backend.entity.ChatEntity;
 import com.texttosql.backend.entity.MessageEntity;
 import com.texttosql.backend.exception.NotResourceOwnerException;
@@ -9,34 +12,42 @@ import com.texttosql.backend.exception.ResourceNotFoundException;
 import com.texttosql.backend.repository.MessageRepository;
 import com.texttosql.backend.util.SecurityUtil;
 import com.texttosql.backend.util.SenderTypeEnum;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @Validated
 @RequiredArgsConstructor
 public class MessageService {
+
     private final MessageRepository messageRepository;
+    private final LlmClient llmClient;
     private final SecurityUtil securityUtil;
 
-    @Value("${llm.conversation-turn:2}")
+    @Value("${llm.service.conversation-turn}")
     private int conversationTurns;
 
     @Transactional(readOnly = true)
     public List<MessageDto> getMessages(ChatEntity chatEntity) {
         checkResourceOwner(chatEntity);
 
-        List<MessageEntity> messageEntities = messageRepository.findByChatIdAndActiveTrueOrderByCreatedAtDesc(chatEntity);
-        return messageEntities.stream()
-                .map(entity -> new MessageDto(entity.getMessageId(), entity.getContent(), entity.getSchema(),
-                        entity.getSenderType(), entity.getFeedback()))
+        return messageRepository
+                .findByChatIdAndActiveTrueOrderByCreatedAtDesc(chatEntity)
+                .stream()
+                .map(e -> new MessageDto(
+                        e.getMessageId(),
+                        e.getContent(),
+                        e.getSchema(),
+                        e.getConfidence(),
+                        e.getSenderType(),
+                        e.getFeedback()))
                 .toList();
     }
 
@@ -44,78 +55,105 @@ public class MessageService {
     public List<ConversationTurn> getHistoryForLlm(ChatEntity chatEntity) {
         int maxMessages = conversationTurns * 2;
 
-        List<MessageEntity> messages = messageRepository.findByChatIdAndActiveTrueOrderByCreatedAtDesc(chatEntity);
+        Pageable pageable = PageRequest.of(0, maxMessages);
+        List<MessageEntity> messages =
+                messageRepository.findByChatIdAndActiveTrueOrderByCreatedAtDesc(chatEntity, pageable);
 
-        List<MessageEntity> recentMessages = messages.stream()
-                .limit(maxMessages)
-                .collect(Collectors.toList());
-        Collections.reverse(recentMessages);
+        if (messages.isEmpty()) {
+            return null;
+        }
+
+        Collections.reverse(messages);
 
         List<ConversationTurn> history = new ArrayList<>();
-        String lastUserContent = null;
+        String lastUserMessage = null;
 
-        for (MessageEntity msg : recentMessages) {
+        for (MessageEntity msg : messages) {
             if (msg.getSenderType() == SenderTypeEnum.USER) {
-                lastUserContent = msg.getContent();
-            } else if (msg.getSenderType() == SenderTypeEnum.LLM && lastUserContent != null) {
-                history.add(new ConversationTurn(lastUserContent, msg.getContent()));
-                lastUserContent = null;
+                lastUserMessage = msg.getContent();
+            } else if (msg.getSenderType() == SenderTypeEnum.LLM && lastUserMessage != null) {
+                history.add(new ConversationTurn(lastUserMessage, msg.getContent()));
+                lastUserMessage = null;
             }
         }
 
         return history;
     }
 
-    @Transactional
     public MessageDto createMessage(ChatEntity chatEntity, MessageDto messageDto) {
         checkResourceOwner(chatEntity);
 
-        MessageEntity messageEntity = new MessageEntity();
-        messageEntity.setChatId(chatEntity);
-        messageEntity.setSchema(messageDto.getSchema());
-        messageEntity.setContent(messageDto.getContent());
-        messageEntity.setSenderType(SenderTypeEnum.USER);
+        MessageEntity userMessage = new MessageEntity();
+        userMessage.setChatId(chatEntity);
+        userMessage.setSchema(messageDto.getSchema());
+        userMessage.setContent(messageDto.getContent());
+        userMessage.setSenderType(SenderTypeEnum.USER);
+        messageRepository.save(userMessage);
 
-        MessageEntity savedMessageEntity = messageRepository.save(messageEntity);
-        messageDto.setMessageId(savedMessageEntity.getMessageId());
-        return messageDto;
+        List<ConversationTurn> history = getHistoryForLlm(chatEntity);
+        LLMRequest request = new LLMRequest(
+                messageDto.getContent(),
+                messageDto.getSchema(),
+                history
+        );
+
+        LLMResponse response = llmClient.generateSql(request);
+
+        return createLLMMessage(
+                chatEntity,
+                response.sql(),
+                messageDto.getSchema(),
+                response.confidence()
+        );
     }
 
     @Transactional
-    public MessageDto createSystemMessage(ChatEntity chat, String sql, Map<String, Object> schema) {
+    public MessageDto createLLMMessage(ChatEntity chat, String sql, String schema, Double confidence) {
         MessageEntity message = MessageEntity.builder()
                 .chatId(chat)
                 .schema(schema)
                 .content(sql)
+                .confidence(confidence)
                 .senderType(SenderTypeEnum.LLM)
                 .build();
 
-        MessageEntity savedEntity =  messageRepository.save(message);
-        return new MessageDto(savedEntity.getMessageId(), savedEntity.getContent(), savedEntity.getSchema(),
-                savedEntity.getSenderType(), savedEntity.getFeedback());
+        MessageEntity saved = messageRepository.save(message);
+
+        return new MessageDto(
+                saved.getMessageId(),
+                saved.getContent(),
+                saved.getSchema(),
+                saved.getConfidence(),
+                saved.getSenderType(),
+                saved.getFeedback()
+        );
     }
 
-    public MessageDto updateMessage(ChatEntity chatEntity, UUID messageId, MessageDto messageDto) {
-        checkResourceOwner(chatEntity);
-        MessageEntity oldEntity = getCurrentMessageEntity(messageId);
-        checkResourceOwner(oldEntity.getChatId());
+    @Transactional
+    public MessageDto updateMessage(UUID messageId, MessageDto messageDto) {
+        MessageEntity entity = getCurrentMessageEntity(messageId);
+        checkResourceOwner(entity.getChatId());
 
-        oldEntity.setSchema(messageDto.getSchema());
-        oldEntity.setContent(messageDto.getContent());
-        oldEntity.setFeedback(messageDto.getFeedback());
+        if (entity.getSenderType() == SenderTypeEnum.LLM) {
+            throw new IllegalStateException("LLM messages cannot be updated");
+        }
 
-        messageRepository.save(oldEntity);
+        entity.setSchema(messageDto.getSchema());
+        entity.setContent(messageDto.getContent());
+        entity.setFeedback(messageDto.getFeedback());
+
+        messageRepository.save(entity);
         messageDto.setMessageId(messageId);
         return messageDto;
     }
 
     @Transactional
     public void deleteMessage(UUID messageId) {
-        MessageEntity messageEntity = getCurrentMessageEntity(messageId);
-        checkResourceOwner(messageEntity.getChatId());
+        MessageEntity entity = getCurrentMessageEntity(messageId);
+        checkResourceOwner(entity.getChatId());
 
-        messageEntity.setActive(false);
-        messageRepository.save(messageEntity);
+        entity.setActive(false);
+        messageRepository.save(entity);
     }
 
     private MessageEntity getCurrentMessageEntity(UUID messageId) {
