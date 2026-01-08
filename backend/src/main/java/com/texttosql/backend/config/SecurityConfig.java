@@ -35,10 +35,10 @@ public class SecurityConfig {
     private final CustomUserDetailsService userDetailsService;
 
     @Value("${llm.service.url}")
-    private final String LLMServerURL;
+    private String LLMServerURL;
 
     @Value("${api-gateway.service.url}")
-    private final String APIGatewayURL;
+    private String APIGatewayURL;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {

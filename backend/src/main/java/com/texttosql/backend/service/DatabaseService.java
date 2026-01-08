@@ -29,7 +29,6 @@ public class DatabaseService {
     public List<DatabaseDto> getDatabases() {
         final UserEntity currentUser = getCurrentUserEntity();
         List<DatabaseEntity> databaseEntities = databaseRepository.findByUserIdOrderByCreatedAtDesc(currentUser);
-        databaseEntities.removeIf(databaseEntity -> !securityUtil.isResourceOwner(databaseEntity.getUserId().getUserId()));
 
         return databaseEntities.stream()
                 .map(entity -> new DatabaseDto(entity.getDatabaseId(),entity.getName(), entity.getDescription()))
@@ -39,7 +38,6 @@ public class DatabaseService {
     @Transactional(readOnly = true)
     public DatabaseDto getDatabase(UUID databaseId) {
         DatabaseEntity entity = getCurrentDatabaseEntity(databaseId);
-        checkResourceOwner(entity);
 
         return new DatabaseDto(entity.getDatabaseId(), entity.getName(), entity.getDescription());
     }
@@ -65,7 +63,6 @@ public class DatabaseService {
     public DatabaseDto updateDatabase(UUID databaseId, DatabaseDto databaseDTO) {
         final UserEntity currentUser = getCurrentUserEntity();
         DatabaseEntity oldEntity = getCurrentDatabaseEntity(databaseId);
-        checkResourceOwner(oldEntity);
 
         if (databaseRepository.existsByNameIgnoreCaseAndUserId(databaseDTO.getName(), currentUser)
                 && !oldEntity.getName().equalsIgnoreCase(databaseDTO.getName())) {
@@ -83,7 +80,6 @@ public class DatabaseService {
     @Transactional
     public void deleteDatabase(UUID databaseId) {
         DatabaseEntity databaseEntity = getCurrentDatabaseEntity(databaseId);
-        checkResourceOwner(databaseEntity);
 
         databaseRepository.delete(databaseEntity);
     }
@@ -98,9 +94,4 @@ public class DatabaseService {
                 .orElseThrow(() -> new ResourceNotFoundException("Database not found"));
     }
 
-    private void checkResourceOwner(DatabaseEntity databaseEntity) {
-        if (!securityUtil.isResourceOwner(databaseEntity.getUserId().getUserId())) {
-            throw new NotResourceOwnerException("User is not the owner of the resource");
-        }
-    }
 }

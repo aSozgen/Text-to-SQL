@@ -48,8 +48,8 @@ public class SchemaService {
         return tableService.getTables(getCurrentDatabaseEntity(databaseId));
     }
 
-    public TableDto getTable(UUID tableId) {
-        return tableService.getTable(tableId);
+    public TableDto getTable(UUID databaseId, UUID tableId) {
+        return tableService.getTable(getCurrentDatabaseEntity(databaseId), tableId);
     }
 
     public TableDto createTable(UUID databaseId, @Valid TableDto tableDTO) {
@@ -60,8 +60,8 @@ public class SchemaService {
         return tableService.updateTable(getCurrentDatabaseEntity(databaseId), tableId, tableDTO);
     }
 
-    public void deleteTable(UUID tableId) {
-        tableService.deleteTable(tableId);
+    public void deleteTable(UUID databaseId, UUID tableId) {
+        tableService.deleteTable(getCurrentDatabaseEntity(databaseId), tableId);
     }
 
     private TableEntity getCurrentTableEntity(UUID tableId) {

@@ -26,26 +26,22 @@ public class TableService {
 
     @Transactional(readOnly = true)
     public List<TableDto> getTables(DatabaseEntity databaseEntity) {
-        checkResourceOwner(databaseEntity);
-
         List<TableEntity> tableEntities = tableRepository.findByDatabaseIdOrderByCreatedAtDesc(databaseEntity);
+
         return tableEntities.stream()
                 .map(entity -> new TableDto(entity.getTableId(), entity.getName(), entity.getDescription()))
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public TableDto getTable(UUID tableId) {
+    public TableDto getTable(DatabaseEntity databaseEntity, UUID tableId) {
         TableEntity tableEntity = getCurrentTableEntity(tableId);
-        checkResourceOwner(tableEntity.getDatabaseId());
 
         return new TableDto(tableEntity.getTableId(), tableEntity.getName(), tableEntity.getDescription());
     }
 
 
     public TableDto createTable(DatabaseEntity databaseEntity, TableDto tableDTO) {
-        checkResourceOwner(databaseEntity);
-
         if (tableRepository.existsByNameIgnoreCaseAndDatabaseId(tableDTO.getName(), databaseEntity)) {
             throw new DuplicatedResourceException("There is already a Table with the name '" + tableDTO.getName() + "'");
         }
@@ -57,6 +53,7 @@ public class TableService {
 
         TableEntity savedTableEntity = tableRepository.save(tableEntity);
         tableDTO.setTableId(savedTableEntity.getTableId());
+
         return tableDTO;
     }
 
@@ -68,20 +65,18 @@ public class TableService {
             throw new DuplicatedResourceException("There is already a Table with the name '" + tableDTO.getName() + "'");
         }
 
-        checkResourceOwner(oldEntity.getDatabaseId());
-
         oldEntity.setName(tableDTO.getName());
         oldEntity.setDescription(tableDTO.getDescription());
 
         TableEntity savedEntity = tableRepository.save(oldEntity);
         tableDTO.setTableId(savedEntity.getTableId());
+
         return tableDTO;
     }
 
     @Transactional
-    public void deleteTable(UUID tableId) {
+    public void deleteTable(DatabaseEntity databaseEntity, UUID tableId) {
         TableEntity tableEntity = getCurrentTableEntity(tableId);
-        checkResourceOwner(tableEntity.getDatabaseId());
 
         tableRepository.delete(tableEntity);
     }
@@ -89,11 +84,5 @@ public class TableService {
     public TableEntity getCurrentTableEntity(UUID tableId) {
         return tableRepository.findByTableId(tableId)
                 .orElseThrow(() -> new ResourceNotFoundException("Table not found"));
-    }
-
-    private void checkResourceOwner(DatabaseEntity databaseEntity) {
-        if (!securityUtil.isResourceOwner(databaseEntity.getUserId().getUserId())) {
-            throw new NotResourceOwnerException("User is not the owner of the resource");
-        }
     }
 }

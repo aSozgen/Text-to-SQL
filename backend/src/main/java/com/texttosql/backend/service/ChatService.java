@@ -28,7 +28,6 @@ public class ChatService {
     @Transactional(readOnly = true)
     public List<ChatDto> getChats() {
         List<ChatEntity> chatEntities = chatRepository.findByUserIdAndActiveTrueOrderByCreatedAtDesc(getCurrentUserEntity());
-        chatEntities.removeIf(chatEntity -> !securityUtil.isResourceOwner(chatEntity.getUserId().getUserId()));
 
         return chatEntities.stream()
                 .map(entity -> new ChatDto(entity.getChatId(), entity.getName()))
@@ -38,7 +37,6 @@ public class ChatService {
     @Transactional(readOnly = true)
     public ChatDto getChat(UUID chatId) {
         ChatEntity chatEntity = getCurrentChatEntity(chatId);
-        checkResourceOwner(chatEntity);
 
         return new ChatDto(chatEntity.getChatId(), chatEntity.getName());
     }
@@ -62,8 +60,6 @@ public class ChatService {
 
     public ChatDto updateChat(UUID chatID, ChatDto chatDto) {
         ChatEntity chatEntity = getCurrentChatEntity(chatID);
-        checkResourceOwner(chatEntity);
-
         UserEntity currentUser = getCurrentUserEntity();
 
         if (chatRepository.existsByNameIgnoreCaseAndUserIdAndActiveTrue(chatDto.getName(), currentUser)
@@ -81,9 +77,8 @@ public class ChatService {
     @Transactional
     public void deleteChat(UUID chatId) {
         ChatEntity chatEntity = getCurrentChatEntity(chatId);
-        checkResourceOwner(chatEntity);
-
         chatEntity.setActive(false);
+
         chatRepository.save(chatEntity);
     }
 
@@ -95,11 +90,5 @@ public class ChatService {
     public ChatEntity getCurrentChatEntity(UUID chatId) {
         return chatRepository.findByChatIdAndActiveTrue(chatId)
                 .orElseThrow(() -> new ResourceNotFoundException("Chat not found"));
-    }
-
-    private void checkResourceOwner(ChatEntity chatEntity) {
-        if (!securityUtil.isResourceOwner(chatEntity.getUserId().getUserId())) {
-            throw new NotResourceOwnerException("User is not the owner of the resource");
-        }
     }
 }

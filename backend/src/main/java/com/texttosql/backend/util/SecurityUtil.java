@@ -1,6 +1,7 @@
 package com.texttosql.backend.util;
 
 import com.texttosql.backend.entity.UserEntity;
+import com.texttosql.backend.exception.ResourceNotFoundException;
 import com.texttosql.backend.repository.UserRepository;
 import com.texttosql.backend.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,7 @@ public class SecurityUtil {
             return userDetails.getUserId();
         }
 
-        throw new IllegalStateException("No authenticated user found");
+        throw new ResourceNotFoundException("No authenticated user found");
     }
 
     public String getCurrentUsername() {
@@ -34,7 +35,7 @@ public class SecurityUtil {
             return userDetails.getUsername();
         }
 
-        throw new IllegalStateException("No authenticated user found");
+        throw new ResourceNotFoundException("No authenticated user found");
     }
 
     public CustomUserDetails getCurrentUser() {
@@ -44,7 +45,7 @@ public class SecurityUtil {
             return userDetails;
         }
 
-        throw new IllegalStateException("No authenticated user found");
+        throw new ResourceNotFoundException("No authenticated user found");
     }
 
     public Optional<UserEntity> getCurrentUserEntity() {
@@ -54,12 +55,7 @@ public class SecurityUtil {
             return userRepository.findByUserId(userDetails.getUserId());
         }
 
-        throw new IllegalStateException("No authenticated user found");
-    }
-
-    public boolean isResourceOwner(UUID resourceUserId) {
-        UUID currentUserId = getCurrentUserId();
-        return currentUserId.equals(resourceUserId);
+        throw new ResourceNotFoundException("No authenticated user found");
     }
 
     public boolean hasRole(RoleEnum role) {

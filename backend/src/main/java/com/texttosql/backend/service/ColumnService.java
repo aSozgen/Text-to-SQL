@@ -27,9 +27,8 @@ public class ColumnService {
 
     @Transactional(readOnly = true)
     public List<ColumnDto> getColumns(TableEntity tableEntity) {
-        checkResourceOwner(tableEntity.getDatabaseId());
-
         List<ColumnEntity> columnEntities = columnRepository.findByTableIdOrderByCreatedAtDesc(tableEntity);
+
         return columnEntities.stream()
                 .map(entity -> new ColumnDto(entity.getColumnId(), entity.getName(), entity.getDataType()))
                 .toList();
@@ -38,15 +37,12 @@ public class ColumnService {
     @Transactional(readOnly = true)
     public ColumnDto getColumn(UUID columnId) {
         ColumnEntity columnEntity = getCurrentColumnEntity(columnId);
-        checkResourceOwner(columnEntity.getTableId().getDatabaseId());
 
         return new ColumnDto(columnEntity.getColumnId(), columnEntity.getName(), columnEntity.getDataType());
     }
 
 
     public ColumnDto createColumn(TableEntity tableEntity, ColumnDto columnDto) {
-        checkResourceOwner(tableEntity.getDatabaseId());
-
         if (columnRepository.existsByNameIgnoreCaseAndTableId(columnDto.getName(), tableEntity)) {
             throw new DuplicatedResourceException("There is already a Column with the name '" + columnDto.getName() + "'");
         }
@@ -58,13 +54,12 @@ public class ColumnService {
 
         ColumnEntity savedColumnEntity = columnRepository.save(columnEntity);
         columnDto.setColumnId(savedColumnEntity.getColumnId());
+
         return columnDto;
     }
 
     public ColumnDto updateColumn(TableEntity tableEntity, UUID columnId, ColumnDto columnDto) {
-        checkResourceOwner(tableEntity.getDatabaseId());
         ColumnEntity oldEntity = getCurrentColumnEntity(columnId);
-        checkResourceOwner(oldEntity.getTableId().getDatabaseId());
 
         if (columnRepository.existsByNameIgnoreCaseAndTableId(columnDto.getName(), tableEntity)
                 && !oldEntity.getName().equalsIgnoreCase(columnDto.getName())) {
@@ -76,13 +71,13 @@ public class ColumnService {
 
         ColumnEntity updatedEntity = columnRepository.save(oldEntity);
         columnDto.setColumnId(updatedEntity.getColumnId());
+
         return columnDto;
     }
 
     @Transactional
     public void deleteColumn(UUID columnId) {
         ColumnEntity columnEntity = getCurrentColumnEntity(columnId);
-        checkResourceOwner(columnEntity.getTableId().getDatabaseId());
 
         columnRepository.delete(columnEntity);
     }
@@ -90,11 +85,5 @@ public class ColumnService {
     private ColumnEntity getCurrentColumnEntity(UUID columnId) {
         return columnRepository.findByColumnId(columnId)
                 .orElseThrow(() -> new ResourceNotFoundException("Column not found"));
-    }
-
-    private void checkResourceOwner(DatabaseEntity databaseEntity) {
-        if (!securityUtil.isResourceOwner(databaseEntity.getUserId().getUserId())) {
-            throw new NotResourceOwnerException("User is not the owner of the resource");
-        }
     }
 }

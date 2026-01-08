@@ -52,8 +52,8 @@ class SchemaController {
     }
 
     @GetMapping("/databases/{databaseId}/tables/{tableId}")
-    public ResponseEntity<TableDto> getTable(@PathVariable UUID tableId) {
-        return ResponseEntity.ok(schemaService.getTable(tableId));
+    public ResponseEntity<TableDto> getTable(@PathVariable UUID databaseId, @PathVariable UUID tableId) {
+        return ResponseEntity.ok(schemaService.getTable(databaseId, tableId));
     }
 
     @PostMapping("/databases/{databaseId}/tables")
@@ -71,8 +71,8 @@ class SchemaController {
     }
 
     @DeleteMapping("/databases/{databaseId}/tables/{tableId}")
-    public ResponseEntity<Void> deleteTable(@PathVariable UUID tableId) {
-        schemaService.deleteTable(tableId);
+    public ResponseEntity<Void> deleteTable(@PathVariable UUID databaseId, @PathVariable UUID tableId) {
+        schemaService.deleteTable(databaseId, tableId);
         return ResponseEntity.noContent().build();
     }
 

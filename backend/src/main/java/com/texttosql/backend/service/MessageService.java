@@ -36,7 +36,6 @@ public class MessageService {
 
     @Transactional(readOnly = true)
     public List<MessageDto> getMessages(ChatEntity chatEntity) {
-        checkResourceOwner(chatEntity);
 
         return messageRepository
                 .findByChatIdAndActiveTrueOrderByCreatedAtAsc(chatEntity)
@@ -81,7 +80,6 @@ public class MessageService {
     }
 
     public MessageDto createMessage(ChatEntity chatEntity, MessageDto messageDto) {
-        checkResourceOwner(chatEntity);
 
         MessageEntity userMessage = new MessageEntity();
         userMessage.setChatId(chatEntity);
@@ -132,7 +130,6 @@ public class MessageService {
     @Transactional
     public MessageDto updateMessage(UUID messageId, MessageDto messageDto) {
         MessageEntity entity = getCurrentMessageEntity(messageId);
-        checkResourceOwner(entity.getChatId());
 
         if (entity.getSenderType() == SenderTypeEnum.LLM) {
             throw new IllegalStateException("LLM messages cannot be updated");
@@ -150,7 +147,6 @@ public class MessageService {
     @Transactional
     public void deleteMessage(UUID messageId) {
         MessageEntity entity = getCurrentMessageEntity(messageId);
-        checkResourceOwner(entity.getChatId());
 
         entity.setActive(false);
         messageRepository.save(entity);
@@ -159,11 +155,5 @@ public class MessageService {
     private MessageEntity getCurrentMessageEntity(UUID messageId) {
         return messageRepository.findByMessageIdAndActiveTrue(messageId)
                 .orElseThrow(() -> new ResourceNotFoundException("Message not found"));
-    }
-
-    private void checkResourceOwner(ChatEntity chatEntity) {
-        if (!securityUtil.isResourceOwner(chatEntity.getUserId().getUserId())) {
-            throw new NotResourceOwnerException("User is not the owner of the resource");
-        }
     }
 }
