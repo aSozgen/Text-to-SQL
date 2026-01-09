@@ -7,7 +7,6 @@ import com.texttosql.backend.dto.llm.LLMRequest;
 import com.texttosql.backend.dto.llm.LLMResponse;
 import com.texttosql.backend.entity.ChatEntity;
 import com.texttosql.backend.entity.MessageEntity;
-import com.texttosql.backend.exception.NotResourceOwnerException;
 import com.texttosql.backend.exception.ResourceNotFoundException;
 import com.texttosql.backend.repository.MessageRepository;
 import com.texttosql.backend.util.SecurityUtil;

@@ -1,15 +1,12 @@
 package com.texttosql.backend.service;
 
 import com.texttosql.backend.dto.ColumnDto;
-import com.texttosql.backend.entity.DatabaseEntity;
 import com.texttosql.backend.entity.TableEntity;
 import com.texttosql.backend.entity.ColumnEntity;
 import com.texttosql.backend.exception.DuplicatedResourceException;
-import com.texttosql.backend.exception.NotResourceOwnerException;
 import com.texttosql.backend.exception.ResourceNotFoundException;
 import com.texttosql.backend.repository.ColumnRepository;
 import com.texttosql.backend.util.SecurityUtil;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
