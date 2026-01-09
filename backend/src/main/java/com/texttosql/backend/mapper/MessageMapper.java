@@ -11,11 +11,13 @@ import java.util.List;
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface MessageMapper {
 
+    @Mapping(target = "databaseId", ignore = true)
     MessageDto toDto(MessageEntity entity);
 
     @Mapping(target = "chat", ignore = true)
     @Mapping(target = "active", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "schemaVersion", ignore = true)
     MessageEntity toEntity(MessageDto dto);
 
     List<MessageDto> toDtoList(List<MessageEntity> entities);

@@ -21,20 +21,22 @@ import java.util.UUID;
 public class TableService {
     private final TableRepository tableRepository;
     private final TableMapper tableMapper;
+    private final SchemaVersionService versionService;
 
     @Transactional(readOnly = true)
-    public List<TableDto> getTables(DatabaseEntity database) {
-        List<TableEntity> entities = tableRepository.findByDatabaseAndActiveTrueOrderByCreatedAtDesc(database);
+    public List<TableDto> getTables(DatabaseEntity databaseEntity) {
+        List<TableEntity> entities = tableRepository.findByDatabaseAndActiveTrueOrderByCreatedAtDesc(databaseEntity);
         return tableMapper.toDtoList(entities);
     }
 
     @Transactional(readOnly = true)
-    public TableDto getTable(DatabaseEntity database, UUID tableId) {
-        TableEntity entity = getCurrentTableEntity(database, tableId);
+    public TableDto getTable(DatabaseEntity databaseEntity, UUID tableId) {
+        TableEntity entity = getCurrentTableEntity(databaseEntity, tableId);
         return tableMapper.toDto(entity);
     }
 
-    public TableDto createTable(DatabaseEntity databaseEntity, TableDto tableDTO) {
+    @Transactional
+    public TableDto createTable(DatabaseEntity databaseEntity, TableDto tableDTO, boolean versionUsedInMessages) {
         if (tableRepository.existsByNameIgnoreCaseAndDatabaseAndActiveTrue(tableDTO.getName(), databaseEntity)) {
             throw new DuplicatedResourceException("There is already a Table with the name '" + tableDTO.getName() + "'");
         }
@@ -47,32 +49,48 @@ public class TableService {
         TableEntity savedTableEntity = tableRepository.save(tableEntity);
         tableDTO.setTableId(savedTableEntity.getTableId());
 
+        // If the current SchemaVersion is not used in any message don't create a new SchemaVersion just update existing one
+        // Else create a new SchemaVersion
+        versionService.createOrUpdateSchemaSnapshot(databaseEntity, versionUsedInMessages);
+
         return tableDTO;
     }
 
-    public TableDto updateTable(DatabaseEntity database, UUID tableId, TableDto tableDTO) {
-        TableEntity oldEntity = getCurrentTableEntity(database, tableId);
+    @Transactional
+    public TableDto updateTable(DatabaseEntity databaseEntity, UUID tableId, TableDto tableDTO, boolean versionUsedInMessages) {
+        TableEntity oldEntity = getCurrentTableEntity(databaseEntity, tableId);
 
-        if (tableRepository.existsByNameIgnoreCaseAndDatabaseAndActiveTrue(tableDTO.getName(), database)
+        if (tableRepository.existsByNameIgnoreCaseAndDatabaseAndActiveTrue(tableDTO.getName(), databaseEntity)
                 && !oldEntity.getName().equalsIgnoreCase(tableDTO.getName())) {
             throw new DuplicatedResourceException("There is already a Table with the name '" + tableDTO.getName() + "'");
         }
 
+        String oldName = oldEntity.getName();
         oldEntity.setName(tableDTO.getName());
         oldEntity.setDescription(tableDTO.getDescription());
 
         tableRepository.save(oldEntity);
         tableDTO.setTableId(oldEntity.getTableId());
 
+        // If the current SchemaVersion is not used in any message don't create a new SchemaVersion just update existing one
+        // Else create a new SchemaVersion iff Table name has changed (Table description don't matter)
+        if (!oldName.equalsIgnoreCase(tableDTO.getName())) {
+            versionService.createOrUpdateSchemaSnapshot(databaseEntity, versionUsedInMessages);
+        }
+
         return tableDTO;
     }
 
     @Transactional
-    public void deleteTable(DatabaseEntity database, UUID tableId) {
-        TableEntity oldEntity = getCurrentTableEntity(database, tableId);
+    public void deleteTable(DatabaseEntity databaseEntity, UUID tableId, boolean versionUsedInMessages) {
+        TableEntity oldEntity = getCurrentTableEntity(databaseEntity, tableId);
 
         oldEntity.setActive(false);
         tableRepository.save(oldEntity);
+
+        // If the current SchemaVersion is not used in any message don't create a new SchemaVersion just update existing one
+        // Else create a new SchemaVersion
+        versionService.createOrUpdateSchemaSnapshot(databaseEntity, versionUsedInMessages);
     }
 
     public TableEntity getCurrentTableEntity(DatabaseEntity database, UUID tableId) {

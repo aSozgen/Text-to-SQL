@@ -29,6 +29,7 @@ public class MessageService {
     private final MessageRepository messageRepository;
     private final LlmClient llmClient;
     private final MessageMapper messageMapper;
+    private final SchemaVersionService versionService;
 
     @Value("${llm.service.conversation-turn}")
     private int conversationTurns;
@@ -70,10 +71,11 @@ public class MessageService {
 
     public MessageDto createMessage(ChatEntity chatEntity, MessageDto messageDto) {
 
+        String schema = versionService.getSchemaStructure(messageDto.getDatabaseId());
         List<ConversationTurn> history = getHistoryForLlm(chatEntity);
         LLMRequest request = new LLMRequest(
                 messageDto.getContent(),
-                messageDto.getSchema(),
+                schema,
                 history
         );
 
@@ -81,7 +83,7 @@ public class MessageService {
         MessageEntity userMessage = messageMapper.toEntity(messageDto);
         MessageEntity llmMessage = MessageEntity.builder()
                 .chat(chatEntity)
-                .schema(messageDto.getSchema())
+                .schemaVersion(versionService.getSchemaVersion(messageDto.getDatabaseId()))
                 .content(response.sql())
                 .confidence(response.confidence())
                 .senderType(SenderType.LLM)
@@ -101,7 +103,7 @@ public class MessageService {
             throw new IllegalStateException("LLM messages cannot be updated");
         }
 
-        entity.setSchema(messageDto.getSchema());
+        entity.setSchemaVersion(versionService.getSchemaVersion(messageDto.getDatabaseId()));
         entity.setContent(messageDto.getContent());
         entity.setFeedback(messageDto.getFeedback());
 
@@ -121,5 +123,9 @@ public class MessageService {
     private MessageEntity getCurrentMessageEntity(ChatEntity chat, UUID messageId) {
         return messageRepository.findByChatAndMessageIdAndActiveTrue(chat, messageId)
                 .orElseThrow(() -> new ResourceNotFoundException("Message not found"));
+    }
+
+    public boolean isVersionUsedInMessages(UUID databaseId, int currentVersion) {
+        return messageRepository.isVersionUsedInMessages(databaseId, currentVersion);
     }
 }

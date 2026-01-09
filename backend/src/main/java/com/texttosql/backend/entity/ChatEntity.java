@@ -22,7 +22,7 @@ public class ChatEntity {
     private UUID chatId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false, updatable = false)
     private UserEntity user;
 
     @Column(nullable = false)

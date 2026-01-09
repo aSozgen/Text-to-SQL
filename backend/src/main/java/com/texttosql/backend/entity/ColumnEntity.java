@@ -22,7 +22,7 @@ public class ColumnEntity {
     private UUID columnId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "table_id", nullable = false)
+    @JoinColumn(name = "table_id", nullable = false, updatable = false)
     private TableEntity table;
 
     @Column(nullable = false)

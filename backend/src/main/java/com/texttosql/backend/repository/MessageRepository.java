@@ -6,6 +6,8 @@ import com.texttosql.backend.util.Feedback;
 import com.texttosql.backend.util.SenderType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -33,4 +35,10 @@ public interface MessageRepository extends JpaRepository<MessageEntity, UUID> {
     List<MessageEntity> findByChatAndActiveTrueAndSenderTypeAndContentContainingIgnoreCaseOrderByCreatedAtDesc(ChatEntity chat, SenderType senderType, String content);
     long countAllByChatAndActiveTrue(ChatEntity chat);
     long countAllByFeedback(Feedback feedback);
+
+    @Query("SELECT COUNT(m) > 0 FROM MessageEntity m " +
+            "WHERE m.schemaVersion.database.databaseId = :databaseId " +
+            "AND m.schemaVersion.versionNumber = :currentVersion")
+    boolean isVersionUsedInMessages(@Param("databaseId") UUID databaseId,
+                                    @Param("currentVersion") int currentVersion);
 }

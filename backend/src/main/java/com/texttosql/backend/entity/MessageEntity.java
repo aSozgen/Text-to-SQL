@@ -24,18 +24,19 @@ public class MessageEntity {
     private UUID messageId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "chat_id", nullable = false)
+    @JoinColumn(name = "chat_id", nullable = false, updatable = false)
     private ChatEntity chat;
 
-    @Column(columnDefinition = "TEXT")
-    private String schema;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "schema_version_id", updatable = false)
+    private SchemaVersionEntity schemaVersion;
 
-    @Column(nullable = false)
+    @Column(nullable = false, updatable = false)
     private String content;
 
     private Double confidence;
 
-    @Column(nullable = false)
+    @Column(nullable = false, updatable = false)
     @Enumerated(EnumType.STRING)
     private SenderType senderType;
 

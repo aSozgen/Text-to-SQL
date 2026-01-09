@@ -8,35 +8,30 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "databases")
+@Table(name = "schema_versions")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DatabaseEntity {
+public class SchemaVersionEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "database_id", columnDefinition = "UUID")
-    private UUID databaseId;
+    @Column(name = "version_id", columnDefinition = "UUID")
+    private UUID versionId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, updatable = false)
-    private UserEntity user;
+    @JoinColumn(name = "database_id", nullable = false, updatable = false)
+    private DatabaseEntity database;
 
-    @Column(nullable = false)
-    private String name;
-
-    private String description;
-
-    @Column(name = "version", nullable = false)
+    @Column(name = "version_number", nullable = false, updatable = false)
     @Builder.Default
-    private int currentVersion = 0;
+    private int versionNumber = 0;
 
-    @Column(nullable = false)
-    @Builder.Default
-    private Boolean active = true;
+    @Lob
+    @Column(name = "schema_structure", nullable = false, columnDefinition = "TEXT")
+    private String schemaStructure;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

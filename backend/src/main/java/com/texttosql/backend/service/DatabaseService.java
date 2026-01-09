@@ -2,6 +2,7 @@ package com.texttosql.backend.service;
 
 import com.texttosql.backend.dto.DatabaseDto;
 import com.texttosql.backend.entity.DatabaseEntity;
+import com.texttosql.backend.entity.SchemaVersionEntity;
 import com.texttosql.backend.entity.UserEntity;
 import com.texttosql.backend.exception.DuplicatedResourceException;
 import com.texttosql.backend.exception.ResourceNotFoundException;
@@ -24,6 +25,7 @@ public class DatabaseService {
     private final DatabaseRepository databaseRepository;
     private final DatabaseMapper databaseMapper;
     private final UserMapper  userMapper;
+    private final SchemaVersionService versionService;
 
     @Transactional(readOnly = true)
     public List<DatabaseDto> getDatabases(CustomUserDetails userDetails) {
@@ -37,6 +39,7 @@ public class DatabaseService {
         return databaseMapper.toDto(entity);
     }
 
+    @Transactional
     public DatabaseDto createDatabase(DatabaseDto databaseDTO, CustomUserDetails userDetails) {
         if (databaseRepository.existsByNameIgnoreCaseAndUserAndActiveTrue(databaseDTO.getName(), userMapper.toEntity(userDetails))) {
             throw new DuplicatedResourceException("There is already a Database with the name '" + databaseDTO.getName() + "'");
@@ -47,24 +50,39 @@ public class DatabaseService {
         databaseEntity.setName(databaseDTO.getName());
         databaseEntity.setDescription(databaseDTO.getDescription());
 
-        DatabaseEntity savedEntity = databaseRepository.save(databaseEntity);
-        databaseDTO.setDatabaseId(savedEntity.getDatabaseId());
+        DatabaseEntity savedDatabaseEntity = databaseRepository.save(databaseEntity);
+        databaseDTO.setDatabaseId(savedDatabaseEntity.getDatabaseId());
+
+        // Create an initial SchemaVersion
+        SchemaVersionEntity schemaVersion = SchemaVersionEntity.builder()
+                .database(savedDatabaseEntity)
+                .build();
+        versionService.createSchemaVersion(schemaVersion);
+
         return databaseDTO;
     }
 
-    public DatabaseDto updateDatabase(UUID databaseId, DatabaseDto databaseDTO, CustomUserDetails userDetails) {
-        DatabaseEntity oldEntity = getCurrentDatabaseEntity(databaseId, userMapper.toEntity(userDetails));
+    @Transactional
+    public DatabaseDto updateDatabase(UUID databaseId, DatabaseDto databaseDTO, CustomUserDetails userDetails, boolean versionUsedInMessages) {
+        DatabaseEntity entity = getCurrentDatabaseEntity(databaseId, userMapper.toEntity(userDetails));
 
         if (databaseRepository.existsByNameIgnoreCaseAndUserAndActiveTrue(databaseDTO.getName(), userMapper.toEntity(userDetails))
-                && !oldEntity.getName().equalsIgnoreCase(databaseDTO.getName())) {
+                && !entity.getName().equalsIgnoreCase(databaseDTO.getName())) {
             throw new DuplicatedResourceException("There is already a Database with the name '" + databaseDTO.getName() + "'");
         }
 
-        oldEntity.setName(databaseDTO.getName());
-        oldEntity.setDescription(databaseDTO.getDescription());
+        String oldName = entity.getName();
+        entity.setName(databaseDTO.getName());
+        entity.setDescription(databaseDTO.getDescription());
 
-        databaseRepository.save(oldEntity);
-        databaseDTO.setDatabaseId(oldEntity.getDatabaseId());
+        // If the current SchemaVersion is not used in any message don't create a new SchemaVersion just update existing one
+        // Else create a new SchemaVersion iff Database name has changed (Database description don't matter)
+        if (!oldName.equalsIgnoreCase(databaseDTO.getName())) {
+            versionService.createOrUpdateSchemaSnapshot(entity, versionUsedInMessages);
+        } else {
+            databaseRepository.save(entity);
+        }
+
         return databaseDTO;
     }
 

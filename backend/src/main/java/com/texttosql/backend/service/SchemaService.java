@@ -21,13 +21,18 @@ public class SchemaService {
     private final DatabaseService databaseService;
     private final TableService tableService;
     private final ColumnService columnService;
+    private final MessageService messageService;
     private final UserMapper userMapper;
+
+    private boolean isVersionUsedInMessages(UUID databaseId, CustomUserDetails userDetails) {
+        return messageService.isVersionUsedInMessages(databaseId, getCurrentDatabaseEntity(databaseId, userDetails).getCurrentVersion());
+    }
 
     public List<DatabaseDto> getDatabases(CustomUserDetails userDetails) {
         return databaseService.getDatabases(userDetails);
     }
 
-    public DatabaseDto createDatabase(@Valid DatabaseDto databaseDTO, CustomUserDetails userDetails) {
+    public DatabaseDto createDatabase(DatabaseDto databaseDTO, CustomUserDetails userDetails) {
         return databaseService.createDatabase(databaseDTO, userDetails);
     }
 
@@ -35,8 +40,8 @@ public class SchemaService {
         return databaseService.getDatabase(databaseId, userDetails);
     }
 
-    public DatabaseDto updateDatabase(UUID databaseId, @Valid DatabaseDto databaseDTO, CustomUserDetails userDetails) {
-        return databaseService.updateDatabase(databaseId, databaseDTO ,userDetails);
+    public DatabaseDto updateDatabase(UUID databaseId, DatabaseDto databaseDTO, CustomUserDetails userDetails) {
+        return databaseService.updateDatabase(databaseId, databaseDTO, userDetails, isVersionUsedInMessages(databaseId, userDetails));
     }
 
     public void deleteDatabase(UUID databaseId, CustomUserDetails userDetails) {
@@ -55,16 +60,16 @@ public class SchemaService {
         return tableService.getTable(getCurrentDatabaseEntity(databaseId, userDetails), tableId);
     }
 
-    public TableDto createTable(UUID databaseId, @Valid TableDto tableDTO, CustomUserDetails userDetails) {
-        return tableService.createTable(getCurrentDatabaseEntity(databaseId, userDetails), tableDTO);
+    public TableDto createTable(UUID databaseId, TableDto tableDTO, CustomUserDetails userDetails) {
+        return tableService.createTable(getCurrentDatabaseEntity(databaseId, userDetails), tableDTO, isVersionUsedInMessages(databaseId, userDetails));
     }
 
-    public TableDto updateTable(UUID databaseId, UUID tableId, @Valid TableDto tableDTO, CustomUserDetails userDetails) {
-        return tableService.updateTable(getCurrentDatabaseEntity(databaseId, userDetails), tableId, tableDTO);
+    public TableDto updateTable(UUID databaseId, UUID tableId, TableDto tableDTO, CustomUserDetails userDetails) {
+        return tableService.updateTable(getCurrentDatabaseEntity(databaseId, userDetails), tableId, tableDTO, isVersionUsedInMessages(databaseId, userDetails));
     }
 
     public void deleteTable(UUID databaseId, UUID tableId, CustomUserDetails userDetails) {
-        tableService.deleteTable(getCurrentDatabaseEntity(databaseId, userDetails), tableId);
+        tableService.deleteTable(getCurrentDatabaseEntity(databaseId, userDetails), tableId, isVersionUsedInMessages(databaseId, userDetails));
     }
 
     private TableEntity getCurrentTableEntity(UUID databaseId, UUID tableId, CustomUserDetails userDetails) {
@@ -79,15 +84,15 @@ public class SchemaService {
         return columnService.getColumn(getCurrentTableEntity(databaseId, tableId, userDetails) ,columnId);
     }
 
-    public ColumnDto createColumn(UUID databaseId, UUID tableId, @Valid ColumnDto columnDto, CustomUserDetails userDetails) {
-        return columnService.createColumn(getCurrentTableEntity(databaseId, tableId, userDetails), columnDto);
+    public ColumnDto createColumn(UUID databaseId, UUID tableId, ColumnDto columnDto, CustomUserDetails userDetails) {
+        return columnService.createColumn(getCurrentDatabaseEntity(databaseId, userDetails), getCurrentTableEntity(databaseId, tableId, userDetails), columnDto, isVersionUsedInMessages(databaseId, userDetails));
     }
 
-    public ColumnDto updateColumn(UUID databaseId, UUID tableId, UUID columnId, @Valid ColumnDto columnDto, CustomUserDetails userDetails) {
-        return columnService.updateColumn(getCurrentTableEntity(databaseId, tableId, userDetails), columnId, columnDto);
+    public ColumnDto updateColumn(UUID databaseId, UUID tableId, UUID columnId, ColumnDto columnDto, CustomUserDetails userDetails) {
+        return columnService.updateColumn(getCurrentDatabaseEntity(databaseId, userDetails), getCurrentTableEntity(databaseId, tableId, userDetails), columnId, columnDto, isVersionUsedInMessages(databaseId, userDetails));
     }
 
     public void deleteColumn(UUID databaseId, UUID tableId, UUID columnId, CustomUserDetails userDetails) {
-        columnService.deleteColumn(getCurrentTableEntity(databaseId, tableId, userDetails), columnId);
+        columnService.deleteColumn(getCurrentDatabaseEntity(databaseId, userDetails), getCurrentTableEntity(databaseId, tableId, userDetails), columnId, isVersionUsedInMessages(databaseId, userDetails));
     }
 }

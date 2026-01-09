@@ -1,6 +1,7 @@
 package com.texttosql.backend.service;
 
 import com.texttosql.backend.dto.ColumnDto;
+import com.texttosql.backend.entity.DatabaseEntity;
 import com.texttosql.backend.entity.TableEntity;
 import com.texttosql.backend.entity.ColumnEntity;
 import com.texttosql.backend.exception.DuplicatedResourceException;
@@ -21,6 +22,7 @@ import java.util.UUID;
 public class ColumnService {
     private final ColumnRepository columnRepository;
     private final ColumnMapper columnMapper;
+    private final SchemaVersionService versionService;
 
     @Transactional(readOnly = true)
     public List<ColumnDto> getColumns(TableEntity tableEntity) {
@@ -34,7 +36,8 @@ public class ColumnService {
         return columnMapper.toDto(entity);
     }
 
-    public ColumnDto createColumn(TableEntity tableEntity, ColumnDto columnDto) {
+    @Transactional
+    public ColumnDto createColumn(DatabaseEntity databaseEntity, TableEntity tableEntity, ColumnDto columnDto, boolean versionUsedInMessages) {
         if (columnRepository.existsByNameIgnoreCaseAndTableAndActiveTrue(columnDto.getName(), tableEntity)) {
             throw new DuplicatedResourceException("There is already a Column with the name '" + columnDto.getName() + "'");
         }
@@ -47,10 +50,15 @@ public class ColumnService {
         ColumnEntity savedColumnEntity = columnRepository.save(columnEntity);
         columnDto.setColumnId(savedColumnEntity.getColumnId());
 
+        // If the current SchemaVersion is not used in any message don't create a new SchemaVersion just update existing one
+        // Else create a new SchemaVersion
+        versionService.createOrUpdateSchemaSnapshot(databaseEntity, versionUsedInMessages);
+
         return columnDto;
     }
 
-    public ColumnDto updateColumn(TableEntity tableEntity, UUID columnId, ColumnDto columnDto) {
+    @Transactional
+    public ColumnDto updateColumn(DatabaseEntity databaseEntity, TableEntity tableEntity, UUID columnId, ColumnDto columnDto, boolean versionUsedInMessages) {
         ColumnEntity oldEntity = getCurrentColumnEntity(tableEntity, columnId);
 
         if (columnRepository.existsByNameIgnoreCaseAndTableAndActiveTrue(columnDto.getName(), tableEntity)
@@ -58,21 +66,33 @@ public class ColumnService {
             throw new DuplicatedResourceException("There is already a Column with the name '" + columnDto.getName() + "'");
         }
 
+        String oldName = oldEntity.getName();
+        String oldDataType = oldEntity.getDataType();
         oldEntity.setName(columnDto.getName());
         oldEntity.setDataType(columnDto.getDataType());
 
         columnRepository.save(oldEntity);
         columnDto.setColumnId(oldEntity.getColumnId());
 
+        // If the current SchemaVersion is not used in any message don't create a new SchemaVersion just update existing one
+        // Else create a new SchemaVersion iff Column name/datatype has changed (Column description don't matter)
+        if (!oldName.equalsIgnoreCase(columnDto.getName()) || !oldDataType.equalsIgnoreCase(columnDto.getDataType())) {
+            versionService.createOrUpdateSchemaSnapshot(databaseEntity, versionUsedInMessages);
+        }
+
         return columnDto;
     }
 
     @Transactional
-    public void deleteColumn(TableEntity tableEntity, UUID columnId) {
+    public void deleteColumn(DatabaseEntity databaseEntity, TableEntity tableEntity, UUID columnId, boolean versionUsedInMessages) {
         ColumnEntity columnEntity = getCurrentColumnEntity(tableEntity, columnId);
 
         columnEntity.setActive(false);
         columnRepository.save(columnEntity);
+
+        // If the current SchemaVersion is not used in any message don't create a new SchemaVersion just update existing one
+        // Else create a new SchemaVersion
+        versionService.createOrUpdateSchemaSnapshot(databaseEntity, versionUsedInMessages);
     }
 
     private ColumnEntity getCurrentColumnEntity(TableEntity tableEntity, UUID columnId) {
