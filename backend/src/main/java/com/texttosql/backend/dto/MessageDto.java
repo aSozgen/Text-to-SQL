@@ -1,16 +1,13 @@
 package com.texttosql.backend.dto;
 
-import com.texttosql.backend.util.FeedbackEnum;
-import com.texttosql.backend.util.SenderTypeEnum;
+import com.texttosql.backend.util.Feedback;
+import com.texttosql.backend.util.SenderType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.boot.configurationprocessor.json.JSONObject;
 
-import java.time.LocalDateTime;
-import java.util.Map;
 import java.util.UUID;
 
 @Data
@@ -19,16 +16,12 @@ import java.util.UUID;
 public class MessageDto {
 
     UUID messageId;
+    String schema;
 
     @NotBlank(message = "Message content is required")
     @Size(max = 5000, message = "Message content cannot exceed 5000 characters")
     String content;
-
-    String schema;
-
     Double confidence;
-
-    SenderTypeEnum senderType;
-
-    FeedbackEnum feedback;
+    SenderType senderType;
+    Feedback feedback;
 }

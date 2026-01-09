@@ -1,6 +1,6 @@
 package com.texttosql.backend.util;
 
-public enum FeedbackEnum {
+public enum Feedback {
     GOOD,
     BAD,
     NONE

@@ -1,6 +1,6 @@
 package com.texttosql.backend.util;
 
-public enum SenderTypeEnum {
+public enum SenderType {
     LLM,
     USER
 }

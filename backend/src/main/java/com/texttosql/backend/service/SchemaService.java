@@ -5,6 +5,8 @@ import com.texttosql.backend.dto.DatabaseDto;
 import com.texttosql.backend.dto.TableDto;
 import com.texttosql.backend.entity.DatabaseEntity;
 import com.texttosql.backend.entity.TableEntity;
+import com.texttosql.backend.mapper.UserMapper;
+import com.texttosql.backend.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,72 +21,73 @@ public class SchemaService {
     private final DatabaseService databaseService;
     private final TableService tableService;
     private final ColumnService columnService;
+    private final UserMapper userMapper;
 
-    public List<DatabaseDto> getDatabases() {
-        return databaseService.getDatabases();
+    public List<DatabaseDto> getDatabases(CustomUserDetails userDetails) {
+        return databaseService.getDatabases(userDetails);
     }
 
-    public DatabaseDto createDatabase(@Valid DatabaseDto databaseDTO) {
-        return databaseService.createDatabase(databaseDTO);
+    public DatabaseDto createDatabase(@Valid DatabaseDto databaseDTO, CustomUserDetails userDetails) {
+        return databaseService.createDatabase(databaseDTO, userDetails);
     }
 
-    public DatabaseDto getDatabase(UUID databaseId) {
-        return databaseService.getDatabase(databaseId);
+    public DatabaseDto getDatabase(UUID databaseId, CustomUserDetails userDetails) {
+        return databaseService.getDatabase(databaseId, userDetails);
     }
 
-    public DatabaseDto updateDatabase(UUID databaseId, @Valid DatabaseDto databaseDTO) {
-        return databaseService.updateDatabase(databaseId, databaseDTO);
+    public DatabaseDto updateDatabase(UUID databaseId, @Valid DatabaseDto databaseDTO, CustomUserDetails userDetails) {
+        return databaseService.updateDatabase(databaseId, databaseDTO ,userDetails);
     }
 
-    public void deleteDatabase(UUID databaseId) {
-        databaseService.deleteDatabase(databaseId);
+    public void deleteDatabase(UUID databaseId, CustomUserDetails userDetails) {
+        databaseService.deleteDatabase(databaseId ,userDetails);
     }
 
-    private DatabaseEntity getCurrentDatabaseEntity(UUID databaseId) {
-        return databaseService.getCurrentDatabaseEntity(databaseId);
+    private DatabaseEntity getCurrentDatabaseEntity(UUID databaseId, CustomUserDetails userDetails) {
+        return databaseService.getCurrentDatabaseEntity(databaseId, userMapper.toEntity(userDetails));
     }
 
-    public List<TableDto> getTables(UUID databaseId) {
-        return tableService.getTables(getCurrentDatabaseEntity(databaseId));
+    public List<TableDto> getTables(UUID databaseId, CustomUserDetails userDetails) {
+        return tableService.getTables(getCurrentDatabaseEntity(databaseId, userDetails));
     }
 
-    public TableDto getTable(UUID databaseId, UUID tableId) {
-        return tableService.getTable(getCurrentDatabaseEntity(databaseId), tableId);
+    public TableDto getTable(UUID databaseId, UUID tableId, CustomUserDetails userDetails) {
+        return tableService.getTable(getCurrentDatabaseEntity(databaseId, userDetails), tableId);
     }
 
-    public TableDto createTable(UUID databaseId, @Valid TableDto tableDTO) {
-        return tableService.createTable(getCurrentDatabaseEntity(databaseId), tableDTO);
+    public TableDto createTable(UUID databaseId, @Valid TableDto tableDTO, CustomUserDetails userDetails) {
+        return tableService.createTable(getCurrentDatabaseEntity(databaseId, userDetails), tableDTO);
     }
 
-    public TableDto updateTable(UUID databaseId, UUID tableId, @Valid TableDto tableDTO) {
-        return tableService.updateTable(getCurrentDatabaseEntity(databaseId), tableId, tableDTO);
+    public TableDto updateTable(UUID databaseId, UUID tableId, @Valid TableDto tableDTO, CustomUserDetails userDetails) {
+        return tableService.updateTable(getCurrentDatabaseEntity(databaseId, userDetails), tableId, tableDTO);
     }
 
-    public void deleteTable(UUID databaseId, UUID tableId) {
-        tableService.deleteTable(getCurrentDatabaseEntity(databaseId), tableId);
+    public void deleteTable(UUID databaseId, UUID tableId, CustomUserDetails userDetails) {
+        tableService.deleteTable(getCurrentDatabaseEntity(databaseId, userDetails), tableId);
     }
 
-    private TableEntity getCurrentTableEntity(UUID tableId) {
-        return tableService.getCurrentTableEntity(tableId);
+    private TableEntity getCurrentTableEntity(UUID databaseId, UUID tableId, CustomUserDetails userDetails) {
+        return tableService.getCurrentTableEntity(getCurrentDatabaseEntity(databaseId, userDetails), tableId);
     }
 
-    public List<ColumnDto> getColumns(UUID tableId) {
-        return columnService.getColumns(getCurrentTableEntity(tableId));
+    public List<ColumnDto> getColumns(UUID databaseId, UUID tableId, CustomUserDetails userDetails) {
+        return columnService.getColumns(getCurrentTableEntity(databaseId, tableId, userDetails));
     }
 
-    public ColumnDto getColumn(UUID columnId) {
-        return columnService.getColumn(columnId);
+    public ColumnDto getColumn(UUID databaseId, UUID tableId, UUID columnId, CustomUserDetails userDetails) {
+        return columnService.getColumn(getCurrentTableEntity(databaseId, tableId, userDetails) ,columnId);
     }
 
-    public ColumnDto createColumn(UUID tableId, @Valid ColumnDto columnDto) {
-        return columnService.createColumn(getCurrentTableEntity(tableId), columnDto);
+    public ColumnDto createColumn(UUID databaseId, UUID tableId, @Valid ColumnDto columnDto, CustomUserDetails userDetails) {
+        return columnService.createColumn(getCurrentTableEntity(databaseId, tableId, userDetails), columnDto);
     }
 
-    public ColumnDto updateColumn(UUID tableId, UUID columnId, @Valid ColumnDto columnDto) {
-        return columnService.updateColumn(getCurrentTableEntity(tableId), columnId, columnDto);
+    public ColumnDto updateColumn(UUID databaseId, UUID tableId, UUID columnId, @Valid ColumnDto columnDto, CustomUserDetails userDetails) {
+        return columnService.updateColumn(getCurrentTableEntity(databaseId, tableId, userDetails), columnId, columnDto);
     }
 
-    public void deleteColumn(UUID columnId) {
-        columnService.deleteColumn(columnId);
+    public void deleteColumn(UUID databaseId, UUID tableId, UUID columnId, CustomUserDetails userDetails) {
+        columnService.deleteColumn(getCurrentTableEntity(databaseId, tableId, userDetails), columnId);
     }
 }

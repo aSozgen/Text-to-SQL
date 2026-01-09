@@ -5,8 +5,6 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -25,15 +23,16 @@ public class DatabaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private UserEntity userId;
+    private UserEntity user;
 
     @Column(nullable = false)
     private String name;
 
     private String description;
 
-    @OneToMany(mappedBy = "databaseId", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TableEntity> tables = new ArrayList<>();
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean active = true;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

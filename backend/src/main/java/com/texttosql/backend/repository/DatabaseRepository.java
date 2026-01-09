@@ -11,10 +11,10 @@ import java.util.UUID;
 
 @Repository
 public interface DatabaseRepository extends JpaRepository<DatabaseEntity, UUID> {
-    Optional<DatabaseEntity> findByDatabaseId(UUID databaseId);
-    List<DatabaseEntity> findByUserIdOrderByCreatedAtDesc(UserEntity userId);
-    List<DatabaseEntity> findByUserIdAndNameContainingIgnoreCaseOrderByCreatedAtDesc(UserEntity userId, String name);
-    Optional<DatabaseEntity> findByUserIdAndNameIgnoreCase(UserEntity userId, String name);
-    boolean existsByNameIgnoreCaseAndUserId(String username, UserEntity userId);
-    long countAllByUserId(UserEntity userId);
+    Optional<DatabaseEntity> findByUserAndDatabaseIdAndActiveTrue(UserEntity user, UUID databaseId);
+    List<DatabaseEntity> findByUserAndActiveTrueOrderByCreatedAtDesc(UserEntity user);
+    List<DatabaseEntity> findByUserAndActiveTrueAndNameContainingIgnoreCaseOrderByCreatedAtDesc(UserEntity user, String name);
+    Optional<DatabaseEntity> findByUserAndActiveTrueAndNameIgnoreCase(UserEntity user, String name);
+    boolean existsByNameIgnoreCaseAndUserAndActiveTrue(String username, UserEntity user);
+    long countAllByUserAndActiveTrue(UserEntity user);
 }

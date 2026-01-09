@@ -2,13 +2,13 @@ package com.texttosql.backend.service;
 
 import com.texttosql.backend.dto.ChatDto;
 import com.texttosql.backend.entity.ChatEntity;
-import com.texttosql.backend.entity.UserEntity;
 import com.texttosql.backend.exception.DuplicatedResourceException;
 import com.texttosql.backend.exception.ResourceNotFoundException;
+import com.texttosql.backend.mapper.ChatMapper;
+import com.texttosql.backend.mapper.UserMapper;
 import com.texttosql.backend.repository.ChatRepository;
-import com.texttosql.backend.util.SecurityUtil;
+import com.texttosql.backend.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -21,34 +21,29 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ChatService {
     private final ChatRepository chatRepository;
-    private final SecurityUtil securityUtil;
+    private final ChatMapper chatMapper;
+    private final UserMapper userMapper;
 
     @Transactional(readOnly = true)
-    public List<ChatDto> getChats() {
-        List<ChatEntity> chatEntities = chatRepository.findByUserIdAndActiveTrueOrderByCreatedAtDesc(getCurrentUserEntity());
-
-        return chatEntities.stream()
-                .map(entity -> new ChatDto(entity.getChatId(), entity.getName()))
-                .toList();
+    public List<ChatDto> getChats(CustomUserDetails userDetails) {
+        List<ChatEntity> chatEntities = chatRepository.findByUserAndActiveTrueOrderByCreatedAtDesc(userMapper.toEntity(userDetails));
+        return chatMapper.toDtoList(chatEntities);
     }
 
     @Transactional(readOnly = true)
-    public ChatDto getChat(UUID chatId) {
-        ChatEntity chatEntity = getCurrentChatEntity(chatId);
-
-        return new ChatDto(chatEntity.getChatId(), chatEntity.getName());
+    public ChatDto getChat(UUID chatId, CustomUserDetails userDetails) {
+        ChatEntity chatEntity = getCurrentChatEntity(chatId, userDetails);
+        return chatMapper.toDto(chatEntity);
     }
 
+    public ChatDto createChat(ChatDto chatDto, CustomUserDetails userDetails) {
 
-    public ChatDto createChat(ChatDto chatDto) {
-        UserEntity currentUser = getCurrentUserEntity();
-
-        if (chatRepository.existsByNameIgnoreCaseAndUserIdAndActiveTrue(chatDto.getName(), currentUser)) {
+        if (chatRepository.existsByNameIgnoreCaseAndUserAndActiveTrue(chatDto.getName(), userMapper.toEntity(userDetails))) {
             throw new DuplicatedResourceException("There is already a Chat with the name '" + chatDto.getName() + "'");
         }
 
         ChatEntity chatEntity = new ChatEntity();
-        chatEntity.setUserId(currentUser);
+        chatEntity.setUser(userMapper.toEntity(userDetails));
         chatEntity.setName(chatDto.getName());
 
         ChatEntity savedChatEntity = chatRepository.save(chatEntity);
@@ -56,37 +51,31 @@ public class ChatService {
         return chatDto;
     }
 
-    public ChatDto updateChat(UUID chatID, ChatDto chatDto) {
-        ChatEntity chatEntity = getCurrentChatEntity(chatID);
-        UserEntity currentUser = getCurrentUserEntity();
+    public ChatDto updateChat(UUID chatID, ChatDto chatDto, CustomUserDetails userDetails) {
+        ChatEntity chatEntity = getCurrentChatEntity(chatID, userDetails);
 
-        if (chatRepository.existsByNameIgnoreCaseAndUserIdAndActiveTrue(chatDto.getName(), currentUser)
+        if (chatRepository.existsByNameIgnoreCaseAndUserAndActiveTrue(chatDto.getName(), userMapper.toEntity(userDetails))
                 && !chatEntity.getName().equalsIgnoreCase(chatDto.getName())) {
             throw new DuplicatedResourceException("There is already a Chat with the name '" + chatDto.getName() + "'");
         }
 
         chatEntity.setName(chatDto.getName());
 
-        ChatEntity updatedEntity = chatRepository.save(chatEntity);
-        chatDto.setChatId(updatedEntity.getChatId());
+        chatRepository.save(chatEntity);
+        chatDto.setChatId(chatEntity.getChatId());
         return chatDto;
     }
 
     @Transactional
-    public void deleteChat(UUID chatId) {
-        ChatEntity chatEntity = getCurrentChatEntity(chatId);
+    public void deleteChat(UUID chatId, CustomUserDetails userDetails) {
+        ChatEntity chatEntity = getCurrentChatEntity(chatId, userDetails);
         chatEntity.setActive(false);
 
         chatRepository.save(chatEntity);
     }
 
-    private UserEntity getCurrentUserEntity() {
-        return securityUtil.getCurrentUserEntity()
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-    }
-
-    public ChatEntity getCurrentChatEntity(UUID chatId) {
-        return chatRepository.findByChatIdAndActiveTrue(chatId)
+    public ChatEntity getCurrentChatEntity(UUID chatId, CustomUserDetails userDetails) {
+        return chatRepository.findByChatIdAndUserAndActiveTrue(chatId, userMapper.toEntity(userDetails))
                 .orElseThrow(() -> new ResourceNotFoundException("Chat not found"));
     }
 }

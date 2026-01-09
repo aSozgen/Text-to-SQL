@@ -5,8 +5,8 @@ import com.texttosql.backend.entity.DatabaseEntity;
 import com.texttosql.backend.entity.TableEntity;
 import com.texttosql.backend.exception.DuplicatedResourceException;
 import com.texttosql.backend.exception.ResourceNotFoundException;
+import com.texttosql.backend.mapper.TableMapper;
 import com.texttosql.backend.repository.TableRepository;
-import com.texttosql.backend.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,32 +20,27 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class TableService {
     private final TableRepository tableRepository;
-    private final SecurityUtil securityUtil;
+    private final TableMapper tableMapper;
 
     @Transactional(readOnly = true)
-    public List<TableDto> getTables(DatabaseEntity databaseEntity) {
-        List<TableEntity> tableEntities = tableRepository.findByDatabaseIdOrderByCreatedAtDesc(databaseEntity);
-
-        return tableEntities.stream()
-                .map(entity -> new TableDto(entity.getTableId(), entity.getName(), entity.getDescription()))
-                .toList();
+    public List<TableDto> getTables(DatabaseEntity database) {
+        List<TableEntity> entities = tableRepository.findByDatabaseAndActiveTrueOrderByCreatedAtDesc(database);
+        return tableMapper.toDtoList(entities);
     }
 
     @Transactional(readOnly = true)
-    public TableDto getTable(DatabaseEntity databaseEntity, UUID tableId) {
-        TableEntity tableEntity = getCurrentTableEntity(tableId);
-
-        return new TableDto(tableEntity.getTableId(), tableEntity.getName(), tableEntity.getDescription());
+    public TableDto getTable(DatabaseEntity database, UUID tableId) {
+        TableEntity entity = getCurrentTableEntity(database, tableId);
+        return tableMapper.toDto(entity);
     }
-
 
     public TableDto createTable(DatabaseEntity databaseEntity, TableDto tableDTO) {
-        if (tableRepository.existsByNameIgnoreCaseAndDatabaseId(tableDTO.getName(), databaseEntity)) {
+        if (tableRepository.existsByNameIgnoreCaseAndDatabaseAndActiveTrue(tableDTO.getName(), databaseEntity)) {
             throw new DuplicatedResourceException("There is already a Table with the name '" + tableDTO.getName() + "'");
         }
 
         TableEntity tableEntity = new TableEntity();
-        tableEntity.setDatabaseId(databaseEntity);
+        tableEntity.setDatabase(databaseEntity);
         tableEntity.setName(tableDTO.getName());
         tableEntity.setDescription(tableDTO.getDescription());
 
@@ -55,10 +50,10 @@ public class TableService {
         return tableDTO;
     }
 
-    public TableDto updateTable(DatabaseEntity databaseEntity, UUID tableId, TableDto tableDTO) {
-        TableEntity oldEntity = getCurrentTableEntity(tableId);
+    public TableDto updateTable(DatabaseEntity database, UUID tableId, TableDto tableDTO) {
+        TableEntity oldEntity = getCurrentTableEntity(database, tableId);
 
-        if (tableRepository.existsByNameIgnoreCaseAndDatabaseId(tableDTO.getName(), databaseEntity)
+        if (tableRepository.existsByNameIgnoreCaseAndDatabaseAndActiveTrue(tableDTO.getName(), database)
                 && !oldEntity.getName().equalsIgnoreCase(tableDTO.getName())) {
             throw new DuplicatedResourceException("There is already a Table with the name '" + tableDTO.getName() + "'");
         }
@@ -66,21 +61,22 @@ public class TableService {
         oldEntity.setName(tableDTO.getName());
         oldEntity.setDescription(tableDTO.getDescription());
 
-        TableEntity savedEntity = tableRepository.save(oldEntity);
-        tableDTO.setTableId(savedEntity.getTableId());
+        tableRepository.save(oldEntity);
+        tableDTO.setTableId(oldEntity.getTableId());
 
         return tableDTO;
     }
 
     @Transactional
-    public void deleteTable(DatabaseEntity databaseEntity, UUID tableId) {
-        TableEntity tableEntity = getCurrentTableEntity(tableId);
+    public void deleteTable(DatabaseEntity database, UUID tableId) {
+        TableEntity oldEntity = getCurrentTableEntity(database, tableId);
 
-        tableRepository.delete(tableEntity);
+        oldEntity.setActive(false);
+        tableRepository.save(oldEntity);
     }
 
-    public TableEntity getCurrentTableEntity(UUID tableId) {
-        return tableRepository.findByTableId(tableId)
+    public TableEntity getCurrentTableEntity(DatabaseEntity database, UUID tableId) {
+        return tableRepository.findByDatabaseAndTableIdAndActiveTrue(database, tableId)
                 .orElseThrow(() -> new ResourceNotFoundException("Table not found"));
     }
 }

@@ -1,8 +1,8 @@
 package com.texttosql.backend.service;
 
 import com.texttosql.backend.entity.UserEntity;
+import com.texttosql.backend.mapper.UserMapper;
 import com.texttosql.backend.repository.UserRepository;
-import com.texttosql.backend.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -21,6 +22,6 @@ public class CustomUserDetailsService implements UserDetailsService {
         UserEntity user = userRepository.findByUsernameAndActiveTrue(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
 
-        return CustomUserDetails.fromUserEntity(user);
+        return userMapper.toDto(user);
     }
 }

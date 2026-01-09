@@ -23,13 +23,17 @@ public class ColumnEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "table_id", nullable = false)
-    private TableEntity tableId;
+    private TableEntity table;
 
     @Column(nullable = false)
     private String name;
 
     @Column(name = "data_type")
     private String dataType;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean active = true;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

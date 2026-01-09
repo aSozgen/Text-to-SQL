@@ -5,11 +5,10 @@ import com.texttosql.backend.dto.auth.LoginRequest;
 import com.texttosql.backend.dto.auth.RegisterRequest;
 import com.texttosql.backend.entity.UserEntity;
 import com.texttosql.backend.exception.DuplicatedResourceException;
+import com.texttosql.backend.mapper.UserMapper;
 import com.texttosql.backend.repository.UserRepository;
-import com.texttosql.backend.security.CustomUserDetails;
 import com.texttosql.backend.util.JwtUtil;
-import com.texttosql.backend.util.RoleEnum;
-import jakarta.validation.Valid;
+import com.texttosql.backend.util.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -29,6 +28,7 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
+    private final UserMapper userMapper;
 
     @Transactional
     public AuthenticationResponse register(RegisterRequest registerRequest) {
@@ -47,12 +47,12 @@ public class AuthenticationService {
                 .username(registerRequest.username())
                 .email(registerRequest.email())
                 .password(passwordEncoder.encode(registerRequest.password()))
-                .role(RoleEnum.USER)
+                .role(Role.USER)
                 .active(true)
                 .build();
 
         UserEntity savedUser = userRepository.save(newUser);
-        String jwtToken = jwtUtil.generateToken(CustomUserDetails.fromUserEntity(savedUser));
+        String jwtToken = jwtUtil.generateToken(userMapper.toDto(savedUser));
 
         return new AuthenticationResponse(jwtToken);
     }
@@ -68,7 +68,7 @@ public class AuthenticationService {
 
         UserEntity user = userRepository.findByUsernameAndActiveTrue(loginRequest.username()).
                 orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + loginRequest.username()));
-        String jwtToken = jwtUtil.generateToken(CustomUserDetails.fromUserEntity(user));
+        String jwtToken = jwtUtil.generateToken(userMapper.toDto(user));
 
         return new AuthenticationResponse(jwtToken);
     }

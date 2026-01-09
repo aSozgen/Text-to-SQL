@@ -1,15 +1,12 @@
 package com.texttosql.backend.entity;
 
-import com.texttosql.backend.util.FeedbackEnum;
-import com.texttosql.backend.util.SenderTypeEnum;
+import com.texttosql.backend.util.Feedback;
+import com.texttosql.backend.util.SenderType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
-import java.util.Map;
 import java.util.UUID;
 
 @Entity
@@ -28,7 +25,7 @@ public class MessageEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chat_id", nullable = false)
-    private ChatEntity chatId;
+    private ChatEntity chat;
 
     @Column(columnDefinition = "TEXT")
     private String schema;
@@ -40,11 +37,11 @@ public class MessageEntity {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private SenderTypeEnum senderType;
+    private SenderType senderType;
 
     @Builder.Default
     @Enumerated(EnumType.STRING)
-    private FeedbackEnum feedback = FeedbackEnum.NONE;
+    private Feedback feedback = Feedback.NONE;
 
     @Column(nullable = false)
     @Builder.Default

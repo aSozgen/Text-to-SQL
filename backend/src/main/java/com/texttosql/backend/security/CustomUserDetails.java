@@ -1,9 +1,9 @@
 package com.texttosql.backend.security;
 
-import com.texttosql.backend.entity.UserEntity;
-import com.texttosql.backend.util.RoleEnum;
+import com.texttosql.backend.util.Role;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,27 +15,16 @@ import java.util.UUID;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class CustomUserDetails implements UserDetails {
 
     private UUID userId;
     private String username;
     private String email;
     private String password;
-    private RoleEnum role;
+    private Role role;
     private Boolean active;
     private LocalDateTime createdAt;
-
-    public static CustomUserDetails fromUserEntity(UserEntity user) {
-        return new CustomUserDetails(
-                user.getUserId(),
-                user.getUsername(),
-                user.getEmail(),
-                user.getPassword(),
-                user.getRole(),
-                user.getActive(),
-                user.getCreatedAt()
-        );
-    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

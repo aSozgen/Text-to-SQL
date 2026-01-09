@@ -5,8 +5,8 @@ import com.texttosql.backend.entity.TableEntity;
 import com.texttosql.backend.entity.ColumnEntity;
 import com.texttosql.backend.exception.DuplicatedResourceException;
 import com.texttosql.backend.exception.ResourceNotFoundException;
+import com.texttosql.backend.mapper.ColumnMapper;
 import com.texttosql.backend.repository.ColumnRepository;
-import com.texttosql.backend.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,32 +20,27 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ColumnService {
     private final ColumnRepository columnRepository;
-    private final SecurityUtil securityUtil;
+    private final ColumnMapper columnMapper;
 
     @Transactional(readOnly = true)
     public List<ColumnDto> getColumns(TableEntity tableEntity) {
-        List<ColumnEntity> columnEntities = columnRepository.findByTableIdOrderByCreatedAtDesc(tableEntity);
-
-        return columnEntities.stream()
-                .map(entity -> new ColumnDto(entity.getColumnId(), entity.getName(), entity.getDataType()))
-                .toList();
+        List<ColumnEntity> entities = columnRepository.findByTableAndActiveTrueOrderByCreatedAtDesc(tableEntity);
+        return columnMapper.toDtoList(entities);
     }
 
     @Transactional(readOnly = true)
-    public ColumnDto getColumn(UUID columnId) {
-        ColumnEntity columnEntity = getCurrentColumnEntity(columnId);
-
-        return new ColumnDto(columnEntity.getColumnId(), columnEntity.getName(), columnEntity.getDataType());
+    public ColumnDto getColumn(TableEntity tableEntity, UUID columnId) {
+        ColumnEntity entity = getCurrentColumnEntity(tableEntity, columnId);
+        return columnMapper.toDto(entity);
     }
 
-
     public ColumnDto createColumn(TableEntity tableEntity, ColumnDto columnDto) {
-        if (columnRepository.existsByNameIgnoreCaseAndTableId(columnDto.getName(), tableEntity)) {
+        if (columnRepository.existsByNameIgnoreCaseAndTableAndActiveTrue(columnDto.getName(), tableEntity)) {
             throw new DuplicatedResourceException("There is already a Column with the name '" + columnDto.getName() + "'");
         }
 
         ColumnEntity columnEntity = new ColumnEntity();
-        columnEntity.setTableId(tableEntity);
+        columnEntity.setTable(tableEntity);
         columnEntity.setName(columnDto.getName());
         columnEntity.setDataType(columnDto.getDataType());
 
@@ -56,9 +51,9 @@ public class ColumnService {
     }
 
     public ColumnDto updateColumn(TableEntity tableEntity, UUID columnId, ColumnDto columnDto) {
-        ColumnEntity oldEntity = getCurrentColumnEntity(columnId);
+        ColumnEntity oldEntity = getCurrentColumnEntity(tableEntity, columnId);
 
-        if (columnRepository.existsByNameIgnoreCaseAndTableId(columnDto.getName(), tableEntity)
+        if (columnRepository.existsByNameIgnoreCaseAndTableAndActiveTrue(columnDto.getName(), tableEntity)
                 && !oldEntity.getName().equalsIgnoreCase(columnDto.getName())) {
             throw new DuplicatedResourceException("There is already a Column with the name '" + columnDto.getName() + "'");
         }
@@ -66,21 +61,22 @@ public class ColumnService {
         oldEntity.setName(columnDto.getName());
         oldEntity.setDataType(columnDto.getDataType());
 
-        ColumnEntity updatedEntity = columnRepository.save(oldEntity);
-        columnDto.setColumnId(updatedEntity.getColumnId());
+        columnRepository.save(oldEntity);
+        columnDto.setColumnId(oldEntity.getColumnId());
 
         return columnDto;
     }
 
     @Transactional
-    public void deleteColumn(UUID columnId) {
-        ColumnEntity columnEntity = getCurrentColumnEntity(columnId);
+    public void deleteColumn(TableEntity tableEntity, UUID columnId) {
+        ColumnEntity columnEntity = getCurrentColumnEntity(tableEntity, columnId);
 
-        columnRepository.delete(columnEntity);
+        columnEntity.setActive(false);
+        columnRepository.save(columnEntity);
     }
 
-    private ColumnEntity getCurrentColumnEntity(UUID columnId) {
-        return columnRepository.findByColumnId(columnId)
+    private ColumnEntity getCurrentColumnEntity(TableEntity tableEntity, UUID columnId) {
+        return columnRepository.findByTableAndColumnIdAndActiveTrue(tableEntity, columnId)
                 .orElseThrow(() -> new ResourceNotFoundException("Column not found"));
     }
 }
