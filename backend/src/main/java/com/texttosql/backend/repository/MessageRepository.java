@@ -2,6 +2,7 @@ package com.texttosql.backend.repository;
 
 import com.texttosql.backend.entity.ChatEntity;
 import com.texttosql.backend.entity.MessageEntity;
+import com.texttosql.backend.entity.SchemaVersionEntity;
 import com.texttosql.backend.util.Feedback;
 import com.texttosql.backend.util.SenderType;
 import org.springframework.data.domain.Pageable;
@@ -22,7 +23,7 @@ public interface MessageRepository extends JpaRepository<MessageEntity, UUID> {
     List<MessageEntity> findByChatOrderByCreatedAtDesc(ChatEntity chat);
     List<MessageEntity> findByChatAndActiveTrueOrderByCreatedAtDesc(ChatEntity chat);
     List<MessageEntity> findByChatAndActiveTrueOrderByCreatedAtAsc(ChatEntity chat);
-    List<MessageEntity> findByChatAndActiveTrueOrderByCreatedAtDesc(ChatEntity chat, Pageable pageable);
+    List<MessageEntity> findByChatAndSchemaVersionAndActiveTrueOrderByCreatedAtDesc(ChatEntity chat, SchemaVersionEntity schemaVersion, Pageable pageable);
     List<MessageEntity> findByChatAndSenderTypeOrderByCreatedAtDesc(ChatEntity chat, SenderType senderType);
     List<MessageEntity> findByChatAndSenderTypeAndActiveTrueOrderByCreatedAtDesc(ChatEntity chat, SenderType senderType);
     List<MessageEntity> findByChatAndFeedbackOrderByCreatedAtDesc(ChatEntity chat, Feedback feedback);

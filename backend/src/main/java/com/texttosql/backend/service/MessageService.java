@@ -43,11 +43,11 @@ public class MessageService {
     }
 
     @Transactional(readOnly = true)
-    public List<ConversationTurn> getHistoryForLlm(ChatEntity chat) {
+    public List<ConversationTurn> getHistoryForLlm(ChatEntity chat, SchemaVersionEntity schemaVersion) {
         int maxMessages = conversationTurns * 2;
 
         Pageable pageable = PageRequest.of(0, maxMessages);
-        List<MessageEntity> messages = messageRepository.findByChatAndActiveTrueOrderByCreatedAtDesc(chat, pageable);
+        List<MessageEntity> messages = messageRepository.findByChatAndSchemaVersionAndActiveTrueOrderByCreatedAtDesc(chat, schemaVersion, pageable);
 
         if (messages.isEmpty()) {
             return null;
@@ -73,7 +73,7 @@ public class MessageService {
     @Transactional
     public MessageDto createMessage(ChatEntity chatEntity, MessageDto messageDto) {
         SchemaVersionEntity schemaVersion = versionService.getSchemaVersion(messageDto.getDatabaseId());
-        List<ConversationTurn> history = getHistoryForLlm(chatEntity);
+        List<ConversationTurn> history = getHistoryForLlm(chatEntity, schemaVersion);
         LLMRequest request = new LLMRequest(
                 messageDto.getContent(),
                 schemaVersion.getSchemaStructure(),
