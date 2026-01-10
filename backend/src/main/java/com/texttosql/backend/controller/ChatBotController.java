@@ -79,7 +79,7 @@ public class ChatBotController {
     @PatchMapping("/chats/{chatID}/messages/{messageID}/feedback")
     public ResponseEntity<MessageDto> updateMessageFeedback(@PathVariable UUID chatID,
                                                             @PathVariable UUID messageID,
-                                                            @RequestBody FeedbackRequest request,
+                                                            @Valid @RequestBody FeedbackRequest request,
                                                             @AuthenticationPrincipal CustomUserDetails userDetails) {
         return ResponseEntity.ok(chatBotService.updateMessageFeedback(chatID, messageID, request.feedback(), userDetails));
     }
