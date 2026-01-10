@@ -34,11 +34,13 @@ public class MessageEntity {
     @Column(nullable = false, updatable = false)
     private String content;
 
-    private Double confidence;
+    @Builder.Default
+    private Double confidence = -1.0;
 
     @Column(nullable = false, updatable = false)
     @Enumerated(EnumType.STRING)
-    private SenderType senderType;
+    @Builder.Default
+    private SenderType senderType = SenderType.USER;
 
     @Builder.Default
     @Enumerated(EnumType.STRING)

@@ -1,6 +1,5 @@
 package com.texttosql.backend.dto;
 
-import com.texttosql.backend.entity.DatabaseEntity;
 import com.texttosql.backend.util.Feedback;
 import com.texttosql.backend.util.SenderType;
 import jakarta.validation.constraints.NotBlank;
@@ -17,7 +16,7 @@ import java.util.UUID;
 public class MessageDto {
 
     UUID messageId;
-    DatabaseEntity databaseId;
+    UUID databaseId;
 
     @NotBlank(message = "Message content is required")
     @Size(max = 5000, message = "Message content cannot exceed 5000 characters")

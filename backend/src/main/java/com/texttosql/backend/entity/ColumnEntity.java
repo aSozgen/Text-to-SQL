@@ -31,6 +31,10 @@ public class ColumnEntity {
     @Column(name = "data_type")
     private String dataType;
 
+    @Column(name = "is_primary_key")
+    @Builder.Default
+    private boolean isPrimaryKey = false;
+
     @Column(nullable = false)
     @Builder.Default
     private Boolean active = true;

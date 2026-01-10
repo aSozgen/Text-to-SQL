@@ -24,4 +24,6 @@ public class ColumnDto {
     @NotBlank(message = "Data type is required")
     @Size(max = 50, message = "Data type usually shouldn't be that long")
     String dataType;
+
+    private boolean isPrimaryKey;
 }

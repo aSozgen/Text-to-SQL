@@ -7,6 +7,7 @@ import com.texttosql.backend.dto.llm.LLMRequest;
 import com.texttosql.backend.dto.llm.LLMResponse;
 import com.texttosql.backend.entity.ChatEntity;
 import com.texttosql.backend.entity.MessageEntity;
+import com.texttosql.backend.entity.SchemaVersionEntity;
 import com.texttosql.backend.exception.ResourceNotFoundException;
 import com.texttosql.backend.mapper.MessageMapper;
 import com.texttosql.backend.repository.MessageRepository;
@@ -69,21 +70,24 @@ public class MessageService {
         return history;
     }
 
+    @Transactional
     public MessageDto createMessage(ChatEntity chatEntity, MessageDto messageDto) {
-
-        String schema = versionService.getSchemaStructure(messageDto.getDatabaseId());
+        SchemaVersionEntity schemaVersion = versionService.getSchemaVersion(messageDto.getDatabaseId());
         List<ConversationTurn> history = getHistoryForLlm(chatEntity);
         LLMRequest request = new LLMRequest(
                 messageDto.getContent(),
-                schema,
+                schemaVersion.getSchemaStructure(),
                 history
         );
 
         LLMResponse response = llmClient.generateSql(request);
         MessageEntity userMessage = messageMapper.toEntity(messageDto);
+        userMessage.setChat(chatEntity);
+        userMessage.setSchemaVersion(schemaVersion);
+
         MessageEntity llmMessage = MessageEntity.builder()
                 .chat(chatEntity)
-                .schemaVersion(versionService.getSchemaVersion(messageDto.getDatabaseId()))
+                .schemaVersion(schemaVersion)
                 .content(response.sql())
                 .confidence(response.confidence())
                 .senderType(SenderType.LLM)

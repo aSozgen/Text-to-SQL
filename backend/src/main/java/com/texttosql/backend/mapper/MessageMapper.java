@@ -15,9 +15,9 @@ public interface MessageMapper {
     MessageDto toDto(MessageEntity entity);
 
     @Mapping(target = "chat", ignore = true)
+    @Mapping(target = "schemaVersion", ignore = true)
     @Mapping(target = "active", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "schemaVersion", ignore = true)
     MessageEntity toEntity(MessageDto dto);
 
     List<MessageDto> toDtoList(List<MessageEntity> entities);
