@@ -1,6 +1,7 @@
 package com.texttosql.backend.controller;
 
 import com.texttosql.backend.dto.ChatDto;
+import com.texttosql.backend.dto.FeedbackRequest;
 import com.texttosql.backend.dto.MessageDto;
 import com.texttosql.backend.security.CustomUserDetails;
 import com.texttosql.backend.service.ChatBotService;
@@ -68,11 +69,19 @@ public class ChatBotController {
     }
 
     @PatchMapping("/chats/{chatID}/messages/{messageID}")
-    public ResponseEntity<MessageDto> updateMessage(@PathVariable UUID chatID,
-                                                    @PathVariable UUID messageID,
-                                                    @Valid @RequestBody MessageDto messageDto,
-                                                    @AuthenticationPrincipal CustomUserDetails userDetails) {
-        return ResponseEntity.ok(chatBotService.updateMessage(chatID, messageID, messageDto, userDetails));
+    public ResponseEntity<MessageDto> updateMessageContent(@PathVariable UUID chatID,
+                                                           @PathVariable UUID messageID,
+                                                           @Valid @RequestBody MessageDto messageDto,
+                                                           @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(chatBotService.updateMessageContent(chatID, messageID, messageDto, userDetails));
+    }
+
+    @PatchMapping("/chats/{chatID}/messages/{messageID}/feedback")
+    public ResponseEntity<MessageDto> updateMessageFeedback(@PathVariable UUID chatID,
+                                                            @PathVariable UUID messageID,
+                                                            @RequestBody FeedbackRequest request,
+                                                            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(chatBotService.updateMessageFeedback(chatID, messageID, request.feedback(), userDetails));
     }
 
     @DeleteMapping("/chats/{chatID}/messages/{messageID}")

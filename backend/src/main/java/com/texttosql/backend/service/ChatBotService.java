@@ -4,7 +4,7 @@ import com.texttosql.backend.dto.ChatDto;
 import com.texttosql.backend.dto.MessageDto;
 import com.texttosql.backend.entity.ChatEntity;
 import com.texttosql.backend.security.CustomUserDetails;
-import jakarta.validation.Valid;
+import com.texttosql.backend.util.Feedback;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
@@ -27,11 +27,11 @@ public class ChatBotService {
         return chatService.getChat(chatID, userDetails);
     }
 
-    public ChatDto createChat(@Valid ChatDto chatDto, CustomUserDetails userDetails) {
+    public ChatDto createChat(ChatDto chatDto, CustomUserDetails userDetails) {
         return chatService.createChat(chatDto, userDetails);
     }
 
-    public ChatDto updateChat(UUID chatID, @Valid ChatDto chatDto, CustomUserDetails userDetails) {
+    public ChatDto updateChat(UUID chatID, ChatDto chatDto, CustomUserDetails userDetails) {
         return chatService.updateChat(chatID, chatDto, userDetails);
     }
 
@@ -47,12 +47,16 @@ public class ChatBotService {
         return messageService.getMessages(getCurrentChatEntity(chatID, userDetails));
     }
 
-    public MessageDto createMessage(UUID chatID, @Valid MessageDto messageDto, CustomUserDetails userDetails) {
+    public MessageDto createMessage(UUID chatID, MessageDto messageDto, CustomUserDetails userDetails) {
         return messageService.createMessage(getCurrentChatEntity(chatID, userDetails), messageDto);
     }
 
-    public MessageDto updateMessage(UUID chatID, UUID messageID, @Valid MessageDto messageDto, CustomUserDetails userDetails) {
-        return messageService.updateMessage(getCurrentChatEntity(chatID, userDetails), messageID, messageDto);
+    public MessageDto updateMessageContent(UUID chatID, UUID messageID, MessageDto messageDto, CustomUserDetails userDetails) {
+        return messageService.updateMessageContent(getCurrentChatEntity(chatID, userDetails), messageID, messageDto);
+    }
+
+    public MessageDto updateMessageFeedback(UUID chatID, UUID messageID, Feedback feedback, CustomUserDetails userDetails) {
+        return messageService.updateMessageFeedback(getCurrentChatEntity(chatID, userDetails), messageID, feedback);
     }
 
     public void deleteMessage(UUID chatID, UUID messageID, CustomUserDetails userDetails) {

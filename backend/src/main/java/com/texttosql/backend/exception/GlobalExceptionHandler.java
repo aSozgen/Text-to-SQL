@@ -5,6 +5,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.SignatureException;
+import jakarta.servlet.ServletException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -139,7 +140,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException e) {
         log.warn("Access denied: {}", e.getMessage());
-        return buildErrorResponse(HttpStatus.FORBIDDEN, "Access denied: You do not have permission to perform this action.");
+        return buildErrorResponse(HttpStatus.FORBIDDEN, "Access denied: You do not have permission to perform this action. " + e.getMessage());
+    }
+
+    @ExceptionHandler(ServletException.class)
+    public ResponseEntity<ErrorResponse> handleServletException(ServletException e) {
+        log.warn("Error accessing Servlet: {}", e.getMessage());
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Error accessing Servlet: " + e.getMessage());
     }
 
     @ExceptionHandler(Exception.class)

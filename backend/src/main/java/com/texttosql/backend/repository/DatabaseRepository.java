@@ -13,8 +13,6 @@ import java.util.UUID;
 public interface DatabaseRepository extends JpaRepository<DatabaseEntity, UUID> {
     Optional<DatabaseEntity> findByUserAndDatabaseIdAndActiveTrue(UserEntity user, UUID databaseId);
     List<DatabaseEntity> findByUserAndActiveTrueOrderByCreatedAtDesc(UserEntity user);
-    List<DatabaseEntity> findByUserAndActiveTrueAndNameContainingIgnoreCaseOrderByCreatedAtDesc(UserEntity user, String name);
-    Optional<DatabaseEntity> findByUserAndActiveTrueAndNameIgnoreCase(UserEntity user, String name);
     boolean existsByNameIgnoreCaseAndUserAndActiveTrue(String username, UserEntity user);
     long countAllByUserAndActiveTrue(UserEntity user);
 }

@@ -11,11 +11,13 @@ import com.texttosql.backend.entity.SchemaVersionEntity;
 import com.texttosql.backend.exception.ResourceNotFoundException;
 import com.texttosql.backend.mapper.MessageMapper;
 import com.texttosql.backend.repository.MessageRepository;
+import com.texttosql.backend.util.Feedback;
 import com.texttosql.backend.util.SenderType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -71,9 +73,9 @@ public class MessageService {
     }
 
     @Transactional
-    public MessageDto createMessage(ChatEntity chatEntity, MessageDto messageDto) {
+    public MessageDto createMessage(ChatEntity chat, MessageDto messageDto) {
         SchemaVersionEntity schemaVersion = versionService.getSchemaVersion(messageDto.getDatabaseId());
-        List<ConversationTurn> history = getHistoryForLlm(chatEntity, schemaVersion);
+        List<ConversationTurn> history = getHistoryForLlm(chat, schemaVersion);
         LLMRequest request = new LLMRequest(
                 messageDto.getContent(),
                 schemaVersion.getSchemaStructure(),
@@ -82,13 +84,13 @@ public class MessageService {
 
         LLMResponse response = llmClient.generateSql(request);
         MessageEntity userMessage = MessageEntity.builder()
-                .chat(chatEntity)
+                .chat(chat)
                 .schemaVersion(schemaVersion)
                 .content(messageDto.getContent())
                 .build();
 
         MessageEntity llmMessage = MessageEntity.builder()
-                .chat(chatEntity)
+                .chat(chat)
                 .schemaVersion(schemaVersion)
                 .content(response.sql())
                 .confidence(response.confidence())
@@ -102,28 +104,61 @@ public class MessageService {
     }
 
     @Transactional
-    public MessageDto updateMessage(ChatEntity chatEntity, UUID messageId, MessageDto messageDto) {
-        MessageEntity entity = getCurrentMessageEntity(chatEntity, messageId);
+    public MessageDto updateMessageContent(ChatEntity chat, UUID messageId, MessageDto messageDto) {
+        MessageEntity oldUserMessage = getCurrentMessageEntity(chat, messageId);
 
-        if (entity.getSenderType() == SenderType.LLM) {
-            throw new IllegalStateException("LLM messages cannot be updated");
+        if (oldUserMessage.getSenderType() == SenderType.LLM) {
+            throw new AccessDeniedException("LLM messages cannot be updated");
         }
 
-        entity.setSchemaVersion(versionService.getSchemaVersion(messageDto.getDatabaseId()));
-        entity.setContent(messageDto.getContent());
-        entity.setFeedback(messageDto.getFeedback());
+        oldUserMessage.setActive(false);
+        messageRepository.save(oldUserMessage);
 
-        messageRepository.save(entity);
-        messageDto.setMessageId(messageId);
-        return messageDto;
+        findCorrespondingLlmMessage(chat, oldUserMessage).ifPresent(llmMsg -> {
+            llmMsg.setActive(false);
+            messageRepository.save(llmMsg);
+        });
+
+        return createMessage(chat, messageDto);
+    }
+
+    @Transactional
+    public MessageDto updateMessageFeedback(ChatEntity chat, UUID messageId, Feedback feedback) {
+        MessageEntity message = getCurrentMessageEntity(chat, messageId);
+
+        if (message.getSenderType() == SenderType.USER) {
+            throw new AccessDeniedException("Cannot give feedback for USER messages");
+        }
+
+        message.setFeedback(feedback);
+        MessageEntity savedMessage = messageRepository.save(message);
+
+        return messageMapper.toDto(savedMessage);
     }
 
     @Transactional
     public void deleteMessage(ChatEntity chat, UUID messageId) {
         MessageEntity entity = getCurrentMessageEntity(chat, messageId);
 
+        if (entity.getSenderType() == SenderType.LLM) {
+            throw new AccessDeniedException("LLM messages cannot be deleted");
+        }
+
         entity.setActive(false);
         messageRepository.save(entity);
+
+        findCorrespondingLlmMessage(chat, entity).ifPresent(llmMsg -> {
+            llmMsg.setActive(false);
+            messageRepository.save(llmMsg);
+        });
+    }
+
+    private Optional<MessageEntity> findCorrespondingLlmMessage(ChatEntity chat, MessageEntity userMessage) {
+        return messageRepository.findFirstByChatAndCreatedAtGreaterThanEqualAndSenderTypeAndActiveTrueOrderByCreatedAtAsc(
+                chat,
+                userMessage.getCreatedAt(),
+                SenderType.LLM
+        );
     }
 
     private MessageEntity getCurrentMessageEntity(ChatEntity chat, UUID messageId) {
