@@ -1,28 +1,12 @@
 # =========================================================
-# GLOBAL IGNORE (GENEL)
+# PYTHON & AI MODEL IGNORES
 # =========================================================
-.DS_Store
-Thumbs.db
-*.log
-*.tmp
-*.bak
-*.swp
-*.swo
-*.orig
-*.old
-*.lock
-
-# VSCode / IDE dosyaları
-.vscode/
-.idea/
-*.iml
-
-# Python cache
+# Python compilation
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Virtual environments
+# Virtual Environments
 .env
 .venv
 env/
@@ -31,88 +15,31 @@ ENV/
 env.bak/
 venv.bak/
 
-# Jupyter notebook checkpoints
+# Jupyter Notebook
 .ipynb_checkpoints/
 
-# =========================================================
-# PYTHON FASTAPI (llm-servers)
-# =========================================================
-llm-servers/**/__pycache__/
-llm-servers/**/.pytest_cache/
-llm-servers/**/cache/
-llm-servers/**/tmp/
-llm-servers/**/logs/
-llm-servers/**/outputs/
-llm-servers/**/runs/
-llm-servers/**/wandb/
-llm-servers/**/checkpoints/
-llm-servers/**/experiments/
-llm-servers/**/artifacts/
-llm-servers/**/model_cache/
-
-# Trained or fine-tuned model folders
-llm-servers/**/text2sql_model/
-llm-servers/**/models/
-llm-servers/**/saved_models/
-llm-servers/**/weights/
-llm-servers/**/hf_cache/
-llm-servers/**/spider/
-llm-servers/**/data/
-llm-servers/**/datasets/
-llm-servers/**/temp/
-
-# =========================================================
-# JAVA SPRING BOOT BACKEND
-# =========================================================
-target/
-*.class
-*.jar
-*.war
-*.ear
-*.db
+# Logs & Debug
 *.log
-*.out
-
-# Maven / Gradle
-.mvn/
-.gradle/
-build/
-!gradle/wrapper/gradle-wrapper.jar
+logs/
+tmp/
 
 # =========================================================
-# FRONTEND (React / HTML / JS)
+# ML / MODEL ARTIFACTS
 # =========================================================
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-package-lock.json
-dist/
-build/
-.cache/
-coverage/
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# HuggingFace & Torch Cache
+cache/
+model_cache/
+hf_cache/
 
-# =========================================================
-# OS-SPECIFIC
-# =========================================================
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
+# Training Outputs & Checkpoints
+outputs/
+runs/
+wandb/
+checkpoints/
+experiments/
+artifacts/
 
-# Windows
-ehthumbs.db
-Thumbs.db
-desktop.ini
-
-# =========================================================
-# PYTORCH / TENSORFLOW MODEL FILES
-# =========================================================
+# Model Weights
 *.pt
 *.pth
 *.ckpt
@@ -122,10 +49,12 @@ desktop.ini
 *.bin
 *.safetensors
 
-# =========================================================
-# GOOGLE COLAB / NOTEBOOK OUTPUTS
-# =========================================================
-*.ipynb
-*.ipynb_checkpoints
-/content/
-drive/MyDrive/
+# Specific Model Folders
+text2sql_model/
+models/
+saved_models/
+weights/
+spider/
+data/
+datasets/
+temp/
