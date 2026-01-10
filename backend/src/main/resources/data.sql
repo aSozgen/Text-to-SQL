@@ -90,3 +90,12 @@ VALUES (
            'employees: id (BIGINT) [PK], full_name (VARCHAR(100)), department (VARCHAR(50)), salary (DECIMAL(12,2))',
            CURRENT_TIMESTAMP
        );
+
+INSERT INTO chats (user_id, chat_id, name, active, created_at)
+VALUES (
+        '11111111-1111-1111-1111-111111111111',
+        '55555555-5555-5555-5555-555555555555',
+        'First Chat',
+        true,
+        CURRENT_TIMESTAMP
+       )

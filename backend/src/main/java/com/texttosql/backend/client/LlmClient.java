@@ -38,23 +38,19 @@ public class LlmClient {
     public LLMResponse generateSql(LLMRequest request) {
         log.info("Sending request to LLM Service: {}", request);
 
-        try {
-            return restClient.post()
-                    .uri(predictionEndpoint)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(request)
-                    .retrieve()
-                    .onStatus(HttpStatusCode::is4xxClientError, (req, resp) -> {
-                        throw new RuntimeException("LLM Client Error: " + resp.getStatusCode() + " " + resp.getStatusText());
-                    })
-                    .onStatus(HttpStatusCode::is5xxServerError, (req, resp) -> {
-                        throw new RuntimeException("LLM Server Error: " + resp.getStatusCode() + " " + resp.getStatusText());
-                    })
-                    .body(LLMResponse.class);
-
-        } catch (Exception e) {
-            log.error("Error communicating with LLM Service", e);
-            throw new RuntimeException("LLM Service unavailable: " + e.getMessage());
-        }
+        return restClient.post()
+                .uri(predictionEndpoint)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(request)
+                .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, (req, resp) -> {
+                    log.error("LLM Service Client Error: {} {}", resp.getStatusCode(), resp.getStatusText());
+                    throw new IllegalArgumentException("LLM Service Client Error: " + resp.getStatusCode());
+                })
+                .onStatus(HttpStatusCode::is5xxServerError, (req, resp) -> {
+                    log.error("LLM Service Server Error: {} {}", resp.getStatusCode(), resp.getStatusText());
+                    throw new RuntimeException("LLM Service External Server Error: " + resp.getStatusCode());
+                })
+                .body(LLMResponse.class);
     }
 }

@@ -3,7 +3,9 @@ package com.texttosql.backend.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 
+import java.sql.Types;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -30,6 +32,7 @@ public class SchemaVersionEntity {
     private int versionNumber = 0;
 
     @Lob
+    @JdbcTypeCode(Types.LONGVARCHAR)
     @Column(name = "schema_structure", nullable = false, columnDefinition = "TEXT")
     private String schemaStructure;
 

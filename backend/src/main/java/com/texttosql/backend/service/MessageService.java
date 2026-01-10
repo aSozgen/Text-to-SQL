@@ -81,9 +81,11 @@ public class MessageService {
         );
 
         LLMResponse response = llmClient.generateSql(request);
-        MessageEntity userMessage = messageMapper.toEntity(messageDto);
-        userMessage.setChat(chatEntity);
-        userMessage.setSchemaVersion(schemaVersion);
+        MessageEntity userMessage = MessageEntity.builder()
+                .chat(chatEntity)
+                .schemaVersion(schemaVersion)
+                .content(messageDto.getContent())
+                .build();
 
         MessageEntity llmMessage = MessageEntity.builder()
                 .chat(chatEntity)
