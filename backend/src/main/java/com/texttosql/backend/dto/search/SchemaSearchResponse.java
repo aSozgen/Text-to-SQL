@@ -1,8 +1,8 @@
 package com.texttosql.backend.dto.search;
 
-import com.texttosql.backend.dto.ColumnDto;
-import com.texttosql.backend.dto.DatabaseDto;
-import com.texttosql.backend.dto.TableDto;
+import com.texttosql.backend.dto.entity.ColumnDto;
+import com.texttosql.backend.dto.entity.DatabaseDto;
+import com.texttosql.backend.dto.entity.TableDto;
 import lombok.Builder;
 import lombok.Data;
 import java.util.List;

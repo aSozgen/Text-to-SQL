@@ -1,6 +1,6 @@
 package com.texttosql.backend.service;
 
-import com.texttosql.backend.dto.ChatDto;
+import com.texttosql.backend.dto.entity.ChatDto;
 import com.texttosql.backend.entity.ChatEntity;
 import com.texttosql.backend.exception.DuplicatedResourceException;
 import com.texttosql.backend.exception.ResourceNotFoundException;

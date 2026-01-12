@@ -1,6 +1,6 @@
 package com.texttosql.backend.mapper;
 
-import com.texttosql.backend.dto.TableDto;
+import com.texttosql.backend.dto.entity.TableDto;
 import com.texttosql.backend.entity.TableEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

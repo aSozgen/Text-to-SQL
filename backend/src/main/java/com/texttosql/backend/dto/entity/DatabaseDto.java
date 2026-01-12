@@ -1,4 +1,4 @@
-package com.texttosql.backend.dto;
+package com.texttosql.backend.dto.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
@@ -14,14 +14,17 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChatDto {
+public class DatabaseDto {
 
-    UUID chatId;
+    UUID databaseId;
 
-    @NotBlank(message = "Chat name is required")
-    @Size(min = 1, max = 50, message = "Chat name must be between 1 and 50 characters")
-    @Pattern(regexp = "^[a-zA-Z0-9_ -]*$", message = "Name contains invalid characters")
+    @NotBlank(message = "Database name cannot be empty")
+    @Size(min = 2, max = 64, message = "Database name must be between 2 and 64 characters")
+    @Pattern(regexp = "^[a-zA-Z0-9_-]*$", message = "Name contains invalid characters")
     String name;
+
+    @Size(max = 255, message = "Description cannot exceed 255 characters")
+    String description;
 
     @JsonFormat(pattern = "dd.MM.yyyy")
     private LocalDateTime createdAt;

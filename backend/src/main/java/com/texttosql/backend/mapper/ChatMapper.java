@@ -1,6 +1,6 @@
 package com.texttosql.backend.mapper;
 
-import com.texttosql.backend.dto.ChatDto;
+import com.texttosql.backend.dto.entity.ChatDto;
 import com.texttosql.backend.entity.ChatEntity;
 import org.mapstruct.*;
 

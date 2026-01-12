@@ -1,7 +1,7 @@
 package com.texttosql.backend.service;
 
-import com.texttosql.backend.dto.ChatDto;
-import com.texttosql.backend.dto.MessageDto;
+import com.texttosql.backend.dto.entity.ChatDto;
+import com.texttosql.backend.dto.entity.MessageDto;
 import com.texttosql.backend.entity.ChatEntity;
 import com.texttosql.backend.security.CustomUserDetails;
 import com.texttosql.backend.util.Feedback;

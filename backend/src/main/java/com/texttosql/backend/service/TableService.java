@@ -1,6 +1,6 @@
 package com.texttosql.backend.service;
 
-import com.texttosql.backend.dto.TableDto;
+import com.texttosql.backend.dto.entity.TableDto;
 import com.texttosql.backend.entity.DatabaseEntity;
 import com.texttosql.backend.entity.TableEntity;
 import com.texttosql.backend.exception.DuplicatedResourceException;

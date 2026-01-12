@@ -1,6 +1,6 @@
 package com.texttosql.backend.service;
 
-import com.texttosql.backend.dto.DatabaseDto;
+import com.texttosql.backend.dto.entity.DatabaseDto;
 import com.texttosql.backend.entity.DatabaseEntity;
 import com.texttosql.backend.entity.SchemaVersionEntity;
 import com.texttosql.backend.entity.UserEntity;

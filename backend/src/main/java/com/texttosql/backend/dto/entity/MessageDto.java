@@ -1,4 +1,4 @@
-package com.texttosql.backend.dto;
+package com.texttosql.backend.dto.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.texttosql.backend.util.Feedback;

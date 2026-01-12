@@ -1,8 +1,8 @@
 package com.texttosql.backend.controller;
 
-import com.texttosql.backend.dto.ChatDto;
+import com.texttosql.backend.dto.entity.ChatDto;
 import com.texttosql.backend.dto.FeedbackRequest;
-import com.texttosql.backend.dto.MessageDto;
+import com.texttosql.backend.dto.entity.MessageDto;
 import com.texttosql.backend.security.CustomUserDetails;
 import com.texttosql.backend.service.ChatBotService;
 import jakarta.validation.Valid;

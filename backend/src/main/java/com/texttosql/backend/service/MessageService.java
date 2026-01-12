@@ -1,7 +1,7 @@
 package com.texttosql.backend.service;
 
 import com.texttosql.backend.client.LlmClient;
-import com.texttosql.backend.dto.MessageDto;
+import com.texttosql.backend.dto.entity.MessageDto;
 import com.texttosql.backend.dto.llm.ConversationTurn;
 import com.texttosql.backend.dto.llm.LLMRequest;
 import com.texttosql.backend.dto.llm.LLMResponse;
