@@ -14,6 +14,8 @@ import java.util.UUID;
 public interface ChatRepository extends JpaRepository<ChatEntity, UUID> {
     Optional<ChatEntity> findByChatIdAndUserAndActiveTrue(UUID chatId, UserEntity user);
     Page<ChatEntity> findByUserAndActiveTrue(UserEntity entity, Pageable pageable);
+    Page<ChatEntity> findByUserAndActiveTrueAndNameContainingIgnoreCase(UserEntity user, String name, Pageable pageable);
     boolean existsByNameIgnoreCaseAndUserAndActiveTrue(String name, UserEntity user);
+
     long countAllByUserAndActiveTrue(UserEntity user);
 }

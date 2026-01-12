@@ -3,6 +3,7 @@ package com.texttosql.backend.repository;
 import com.texttosql.backend.entity.ChatEntity;
 import com.texttosql.backend.entity.MessageEntity;
 import com.texttosql.backend.entity.SchemaVersionEntity;
+import com.texttosql.backend.entity.UserEntity;
 import com.texttosql.backend.util.Feedback;
 import com.texttosql.backend.util.SenderType;
 import org.springframework.data.domain.Page;
@@ -32,12 +33,17 @@ public interface MessageRepository extends JpaRepository<MessageEntity, UUID> {
             SenderType senderType
     );
 
-    long countAllByChatAndActiveTrue(ChatEntity chat);
-    long countAllByFeedback(Feedback feedback);
+    @Query("SELECT m FROM MessageEntity m WHERE m.chat.user = :user AND m.active = true AND " +
+            "LOWER(m.content) LIKE LOWER(CONCAT('%', :query, '%'))")
+    Page<MessageEntity> searchMessages(UserEntity user, String query, Pageable pageable);
+
 
     @Query("SELECT COUNT(m) > 0 FROM MessageEntity m " +
             "WHERE m.schemaVersion.database.databaseId = :databaseId " +
             "AND m.schemaVersion.versionNumber = :currentVersion")
     boolean isVersionUsedInMessages(@Param("databaseId") UUID databaseId,
                                     @Param("currentVersion") int currentVersion);
+
+    long countAllByChatAndActiveTrue(ChatEntity chat);
+    long countAllByFeedback(Feedback feedback);
 }
