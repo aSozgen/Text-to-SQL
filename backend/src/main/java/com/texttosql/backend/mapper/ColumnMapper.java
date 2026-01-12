@@ -15,7 +15,6 @@ public interface ColumnMapper {
 
     @Mapping(target = "table", ignore = true)
     @Mapping(target = "active", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
     ColumnEntity toEntity(ColumnDto dto);
 
     List<ColumnDto> toDtoList(List<ColumnEntity> entities);

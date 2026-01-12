@@ -7,12 +7,12 @@ import com.texttosql.backend.security.CustomUserDetails;
 import com.texttosql.backend.service.SchemaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -23,8 +23,13 @@ public class SchemaController {
     private final SchemaService schemaService;
 
     @GetMapping("/databases")
-    public ResponseEntity<List<DatabaseDto>> getDatabases(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        return ResponseEntity.ok(schemaService.getDatabases(userDetails));
+    public ResponseEntity<Page<DatabaseDto>> getDatabases(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sort,
+            @RequestParam(defaultValue = "desc") String direction) {
+        return ResponseEntity.ok(schemaService.getDatabases(userDetails, page, size, sort, direction));
     }
 
     @GetMapping("/databases/{databaseId}")
@@ -55,9 +60,13 @@ public class SchemaController {
     }
 
     @GetMapping("/databases/{databaseId}/tables")
-    public ResponseEntity<List<TableDto>> getTables(@PathVariable UUID databaseId,
-                                                    @AuthenticationPrincipal CustomUserDetails userDetails) {
-        return ResponseEntity.ok(schemaService.getTables(databaseId, userDetails));
+    public ResponseEntity<Page<TableDto>> getTables(@PathVariable UUID databaseId,
+                                                    @AuthenticationPrincipal CustomUserDetails userDetails,
+                                                    @RequestParam(defaultValue = "0") int page,
+                                                    @RequestParam(defaultValue = "10") int size,
+                                                    @RequestParam(defaultValue = "createdAt") String sort,
+                                                    @RequestParam(defaultValue = "desc") String direction) {
+        return ResponseEntity.ok(schemaService.getTables(databaseId, userDetails, page, size, sort, direction));
     }
 
     @GetMapping("/databases/{databaseId}/tables/{tableId}")
@@ -92,10 +101,14 @@ public class SchemaController {
     }
 
     @GetMapping("/databases/{databaseId}/tables/{tableId}/columns")
-    public ResponseEntity<List<ColumnDto>> getColumns(@PathVariable UUID databaseId,
+    public ResponseEntity<Page<ColumnDto>> getColumns(@PathVariable UUID databaseId,
                                                       @PathVariable UUID tableId,
-                                                      @AuthenticationPrincipal CustomUserDetails userDetails) {
-        return ResponseEntity.ok(schemaService.getColumns(databaseId, tableId, userDetails));
+                                                      @AuthenticationPrincipal CustomUserDetails userDetails,
+                                                      @RequestParam(defaultValue = "0") int page,
+                                                      @RequestParam(defaultValue = "10") int size,
+                                                      @RequestParam(defaultValue = "createdAt") String sort,
+                                                      @RequestParam(defaultValue = "desc") String direction) {
+        return ResponseEntity.ok(schemaService.getColumns(databaseId, tableId, userDetails, page, size, sort, direction));
     }
 
     @GetMapping("/databases/{databaseId}/tables/{tableId}/columns/{columnId}")

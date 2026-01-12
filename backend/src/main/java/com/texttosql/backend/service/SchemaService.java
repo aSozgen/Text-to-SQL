@@ -7,11 +7,10 @@ import com.texttosql.backend.entity.DatabaseEntity;
 import com.texttosql.backend.entity.TableEntity;
 import com.texttosql.backend.mapper.UserMapper;
 import com.texttosql.backend.security.CustomUserDetails;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -28,8 +27,8 @@ public class SchemaService {
         return messageService.isVersionUsedInMessages(databaseId, getCurrentDatabaseEntity(databaseId, userDetails).getCurrentVersion());
     }
 
-    public List<DatabaseDto> getDatabases(CustomUserDetails userDetails) {
-        return databaseService.getDatabases(userDetails);
+    public Page<DatabaseDto> getDatabases(CustomUserDetails userDetails, int page, int size, String sort, String direction) {
+        return databaseService.getDatabases(userDetails, page, size, sort, direction);
     }
 
     public DatabaseDto createDatabase(DatabaseDto databaseDTO, CustomUserDetails userDetails) {
@@ -52,8 +51,8 @@ public class SchemaService {
         return databaseService.getCurrentDatabaseEntity(databaseId, userMapper.toEntity(userDetails));
     }
 
-    public List<TableDto> getTables(UUID databaseId, CustomUserDetails userDetails) {
-        return tableService.getTables(getCurrentDatabaseEntity(databaseId, userDetails));
+    public Page<TableDto> getTables(UUID databaseId, CustomUserDetails userDetails, int page, int size, String sort, String direction) {
+        return tableService.getTables(getCurrentDatabaseEntity(databaseId, userDetails), page, size, sort, direction);
     }
 
     public TableDto getTable(UUID databaseId, UUID tableId, CustomUserDetails userDetails) {
@@ -76,8 +75,8 @@ public class SchemaService {
         return tableService.getCurrentTableEntity(getCurrentDatabaseEntity(databaseId, userDetails), tableId);
     }
 
-    public List<ColumnDto> getColumns(UUID databaseId, UUID tableId, CustomUserDetails userDetails) {
-        return columnService.getColumns(getCurrentTableEntity(databaseId, tableId, userDetails));
+    public Page<ColumnDto> getColumns(UUID databaseId, UUID tableId, CustomUserDetails userDetails, int page, int size, String sort, String direction) {
+        return columnService.getColumns(getCurrentTableEntity(databaseId, tableId, userDetails), page, size, sort, direction);
     }
 
     public ColumnDto getColumn(UUID databaseId, UUID tableId, UUID columnId, CustomUserDetails userDetails) {

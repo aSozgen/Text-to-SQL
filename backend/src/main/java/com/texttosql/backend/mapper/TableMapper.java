@@ -15,7 +15,6 @@ public interface TableMapper {
 
     @Mapping(target = "database", ignore = true)
     @Mapping(target = "active", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
     TableEntity toEntity(TableDto dto);
 
     List<TableDto> toDtoList(List<TableEntity> entities);

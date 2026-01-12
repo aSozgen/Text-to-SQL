@@ -1,5 +1,6 @@
 package com.texttosql.backend.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -7,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
@@ -23,4 +25,7 @@ public class DatabaseDto {
 
     @Size(max = 255, message = "Description cannot exceed 255 characters")
     String description;
+
+    @JsonFormat(pattern = "dd.MM.yyyy")
+    private LocalDateTime createdAt;
 }

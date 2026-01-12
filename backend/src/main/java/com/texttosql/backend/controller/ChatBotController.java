@@ -7,12 +7,12 @@ import com.texttosql.backend.security.CustomUserDetails;
 import com.texttosql.backend.service.ChatBotService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -23,8 +23,12 @@ public class ChatBotController {
     private final ChatBotService chatBotService;
 
     @GetMapping("/chats")
-    public ResponseEntity<List<ChatDto>> getChats(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        return ResponseEntity.ok(chatBotService.getChats(userDetails));
+    public ResponseEntity<Page<ChatDto>> getChats(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                                  @RequestParam(defaultValue = "0") int page,
+                                                  @RequestParam(defaultValue = "10") int size,
+                                                  @RequestParam(defaultValue = "createdAt") String sort,
+                                                  @RequestParam(defaultValue = "desc") String direction) {
+        return ResponseEntity.ok(chatBotService.getChats(userDetails, page, size, sort, direction));
     }
 
     @GetMapping("/chats/{chatID}")
@@ -55,9 +59,11 @@ public class ChatBotController {
     }
 
     @GetMapping("/chats/{chatID}/messages")
-    public ResponseEntity<List<MessageDto>> getMessages(@PathVariable UUID chatID,
-                                                        @AuthenticationPrincipal CustomUserDetails userDetails) {
-        return ResponseEntity.ok(chatBotService.getMessages(chatID, userDetails));
+    public ResponseEntity<Page<MessageDto>> getMessages(@PathVariable UUID chatID,
+                                                        @AuthenticationPrincipal CustomUserDetails userDetails,
+                                                        @RequestParam(defaultValue = "0") int page,
+                                                        @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(chatBotService.getMessages(chatID, userDetails, page, size));
     }
 
     @PostMapping("/chats/{chatID}/messages")

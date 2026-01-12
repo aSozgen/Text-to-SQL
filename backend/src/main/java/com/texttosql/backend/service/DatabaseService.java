@@ -11,11 +11,14 @@ import com.texttosql.backend.mapper.UserMapper;
 import com.texttosql.backend.repository.DatabaseRepository;
 import com.texttosql.backend.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -28,9 +31,11 @@ public class DatabaseService {
     private final SchemaVersionService versionService;
 
     @Transactional(readOnly = true)
-    public List<DatabaseDto> getDatabases(CustomUserDetails userDetails) {
-        List<DatabaseEntity> entities = databaseRepository.findByUserAndActiveTrueOrderByCreatedAtDesc(userMapper.toEntity(userDetails));
-        return databaseMapper.toDtoList(entities);
+    public Page<DatabaseDto> getDatabases(CustomUserDetails userDetails, int page, int size, String sort, String direction) {
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
+        Page<DatabaseEntity> entities = databaseRepository.findByUserAndActiveTrue(userMapper.toEntity(userDetails), pageable);
+        return entities.map(databaseMapper::toDto);
     }
 
     @Transactional(readOnly = true)

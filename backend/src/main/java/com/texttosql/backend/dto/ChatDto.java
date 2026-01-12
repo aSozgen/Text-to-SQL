@@ -1,5 +1,6 @@
 package com.texttosql.backend.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -7,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
@@ -21,4 +23,6 @@ public class ChatDto {
     @Pattern(regexp = "^[a-zA-Z0-9_ ]*$", message = "Name contains invalid characters")
     String name;
 
+    @JsonFormat(pattern = "dd.MM.yyyy")
+    private LocalDateTime createdAt;
 }

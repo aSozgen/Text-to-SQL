@@ -8,11 +8,14 @@ import com.texttosql.backend.exception.ResourceNotFoundException;
 import com.texttosql.backend.mapper.TableMapper;
 import com.texttosql.backend.repository.TableRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -24,9 +27,11 @@ public class TableService {
     private final SchemaVersionService versionService;
 
     @Transactional(readOnly = true)
-    public List<TableDto> getTables(DatabaseEntity databaseEntity) {
-        List<TableEntity> entities = tableRepository.findByDatabaseAndActiveTrueOrderByCreatedAtDesc(databaseEntity);
-        return tableMapper.toDtoList(entities);
+    public Page<TableDto> getTables(DatabaseEntity databaseEntity, int page, int size, String sort, String direction) {
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
+        Page<TableEntity> entities = tableRepository.findByDatabaseAndActiveTrue(databaseEntity, pageable);
+        return entities.map(tableMapper::toDto);
     }
 
     @Transactional(readOnly = true)

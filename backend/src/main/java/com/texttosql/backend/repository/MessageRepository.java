@@ -5,6 +5,7 @@ import com.texttosql.backend.entity.MessageEntity;
 import com.texttosql.backend.entity.SchemaVersionEntity;
 import com.texttosql.backend.util.Feedback;
 import com.texttosql.backend.util.SenderType;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -19,7 +20,7 @@ import java.util.UUID;
 @Repository
 public interface MessageRepository extends JpaRepository<MessageEntity, UUID> {
     Optional<MessageEntity> findByChatAndMessageIdAndActiveTrue(ChatEntity chat, UUID messageId);
-    List<MessageEntity> findByChatAndActiveTrueOrderByCreatedAtAsc(ChatEntity chat);
+    Page<MessageEntity> findByChatAndActiveTrueOrderByCreatedAtAsc(ChatEntity chat, Pageable pageable);
     List<MessageEntity> findByChatAndSchemaVersionAndActiveTrueOrderByCreatedAtDesc(
             ChatEntity chat,
             SchemaVersionEntity schemaVersion,

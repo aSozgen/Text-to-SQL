@@ -2,6 +2,8 @@ package com.texttosql.backend.repository;
 
 import com.texttosql.backend.entity.ColumnEntity;
 import com.texttosql.backend.entity.TableEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -13,6 +15,7 @@ import java.util.UUID;
 public interface ColumnRepository extends JpaRepository<ColumnEntity, UUID> {
     Optional<ColumnEntity> findByTableAndColumnIdAndActiveTrue(TableEntity table, UUID columnId);
     List<ColumnEntity> findByTableAndActiveTrueOrderByCreatedAtDesc(TableEntity table);
+    Page<ColumnEntity> findByTableAndActiveTrue(TableEntity tableEntity, Pageable pageable);
     boolean existsByNameIgnoreCaseAndTableAndActiveTrue(String name, TableEntity table);
     long countAllByTableAndActiveTrue(TableEntity table);
 }

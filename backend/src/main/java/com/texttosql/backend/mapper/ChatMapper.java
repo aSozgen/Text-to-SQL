@@ -13,7 +13,6 @@ public interface ChatMapper {
 
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "active", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
     ChatEntity toEntity(ChatDto dto);
 
      List<ChatDto> toDtoList(List<ChatEntity> entities);

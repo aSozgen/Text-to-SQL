@@ -15,6 +15,7 @@ import com.texttosql.backend.util.Feedback;
 import com.texttosql.backend.util.SenderType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -38,10 +39,10 @@ public class MessageService {
     private int conversationTurns;
 
     @Transactional(readOnly = true)
-    public List<MessageDto> getMessages(ChatEntity chat) {
-
-        List<MessageEntity> entities = messageRepository.findByChatAndActiveTrueOrderByCreatedAtAsc(chat);
-        return messageMapper.toDtoList(entities);
+    public Page<MessageDto> getMessages(ChatEntity chat, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<MessageEntity> entities = messageRepository.findByChatAndActiveTrueOrderByCreatedAtAsc(chat, pageable);
+        return entities.map(messageMapper::toDto);
     }
 
     @Transactional(readOnly = true)

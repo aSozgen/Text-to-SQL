@@ -6,10 +6,10 @@ import com.texttosql.backend.entity.ChatEntity;
 import com.texttosql.backend.security.CustomUserDetails;
 import com.texttosql.backend.util.Feedback;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -19,8 +19,8 @@ public class ChatBotService {
     private final ChatService chatService;
     private final MessageService messageService;
 
-    public List<ChatDto> getChats(CustomUserDetails userDetails) {
-        return chatService.getChats(userDetails);
+    public Page<ChatDto> getChats(CustomUserDetails userDetails, int page, int size, String sort, String direction) {
+        return chatService.getChats(userDetails, page, size, sort, direction);
     }
 
     public ChatDto getChat(UUID chatID, CustomUserDetails userDetails) {
@@ -43,8 +43,8 @@ public class ChatBotService {
         return chatService.getCurrentChatEntity(chatId, userDetails);
     }
 
-    public List<MessageDto> getMessages(UUID chatID, CustomUserDetails userDetails) {
-        return messageService.getMessages(getCurrentChatEntity(chatID, userDetails));
+    public Page<MessageDto> getMessages(UUID chatID, CustomUserDetails userDetails, int page, int size) {
+        return messageService.getMessages(getCurrentChatEntity(chatID, userDetails), page, size);
     }
 
     public MessageDto createMessage(UUID chatID, MessageDto messageDto, CustomUserDetails userDetails) {

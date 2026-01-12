@@ -15,7 +15,6 @@ public interface DatabaseMapper {
 
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "active", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "currentVersion", ignore = true)
     DatabaseEntity toEntity(DatabaseDto dto);
 
