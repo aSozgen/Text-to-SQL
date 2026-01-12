@@ -20,7 +20,7 @@ public class TableDto {
 
     @NotBlank(message = "Table name cannot be empty")
     @Size(min = 2, max = 64, message = "Table name must be between 2 and 64 characters")
-    @Pattern(regexp = "^[a-zA-Z0-9_]*$", message = "Name contains invalid characters")
+    @Pattern(regexp = "^[a-zA-Z0-9_-]*$", message = "Name contains invalid characters")
     String name;
 
     @Size(max = 255, message = "Description cannot exceed 255 characters")

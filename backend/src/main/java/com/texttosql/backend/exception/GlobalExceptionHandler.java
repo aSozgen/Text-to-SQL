@@ -149,6 +149,13 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, "Error accessing Servlet: " + e.getMessage());
     }
 
+    @ExceptionHandler(SchemaImportException.class)
+    public ResponseEntity<ErrorResponse> handleSchemaImportException(SchemaImportException e) {
+
+        log.error("Schema import failed: {}", e.getMessage());
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Schema import failed: " + e.getMessage());
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception e) {
         log.error("Unexpected error: {}", e.getMessage(), e);

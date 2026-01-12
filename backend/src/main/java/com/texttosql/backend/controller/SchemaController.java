@@ -2,6 +2,7 @@ package com.texttosql.backend.controller;
 
 import com.texttosql.backend.dto.ColumnDto;
 import com.texttosql.backend.dto.DatabaseDto;
+import com.texttosql.backend.dto.SchemaImportRequest;
 import com.texttosql.backend.dto.TableDto;
 import com.texttosql.backend.security.CustomUserDetails;
 import com.texttosql.backend.service.SchemaService;
@@ -21,6 +22,13 @@ import java.util.UUID;
 public class SchemaController {
 
     private final SchemaService schemaService;
+
+    @PostMapping("/import")
+    public ResponseEntity<DatabaseDto> importDatabase(@Valid @RequestBody SchemaImportRequest request,
+                                                      @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(schemaService.importDatabase(request, userDetails));
+    }
 
     @GetMapping("/databases")
     public ResponseEntity<Page<DatabaseDto>> getDatabases(
