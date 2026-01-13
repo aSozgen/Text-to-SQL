@@ -52,7 +52,8 @@ public class SchemaVersionService {
         List<TableEntity> tables = tableRepository.findByDatabaseAndActiveTrueOrderByCreatedAtDesc(entity);
         StringBuilder schemaBuilder = new StringBuilder();
 
-        for (TableEntity table : tables) {
+        for (int i = 0; i < tables.size(); i++) {
+            TableEntity table = tables.get(i);
             schemaBuilder.append(table.getName()).append(": ");
             List<ColumnEntity> columns = columnRepository.findByTableAndActiveTrueOrderByCreatedAtDesc(table);
 
@@ -61,7 +62,9 @@ public class SchemaVersionService {
                     .collect(Collectors.joining(", "));
 
             schemaBuilder.append(columnsString);
-            schemaBuilder.append("\n");
+            if (i != tables.size() - 1){
+                schemaBuilder.append(" | ");
+            }
         }
 
         return schemaBuilder.toString().trim();
@@ -69,16 +72,16 @@ public class SchemaVersionService {
 
     private String formatColumnString(ColumnEntity column) {
         String dataType = column.getDataType();
-        String columnName = column.getName();
+        String columnName = column.getName().toLowerCase();
 
         if (dataType == null) {
             dataType = "unknown";
         }
 
         if (column.isPrimaryKey()) {
-            return String.format("%s (%s) [PK]", columnName, dataType);
+            return String.format("%s (%s) [PK]", columnName, dataType.toUpperCase());
         } else {
-            return String.format("%s (%s)", columnName, dataType);
+            return String.format("%s (%s)", columnName, dataType.toLowerCase());
         }
     }
 
