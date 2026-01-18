@@ -4,6 +4,7 @@ import com.texttosql.backend.dto.search.ChatSearchResponse;
 import com.texttosql.backend.dto.search.SchemaSearchResponse;
 import com.texttosql.backend.security.CustomUserDetails;
 import com.texttosql.backend.service.SearchService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/search")
 @RequiredArgsConstructor
+@Tag(name = "4. Search", description = "Search functionality for schemas and chat history")
 public class SearchController {
 
     private final SearchService searchService;

@@ -5,6 +5,7 @@ import com.texttosql.backend.dto.FeedbackRequest;
 import com.texttosql.backend.dto.entity.MessageDto;
 import com.texttosql.backend.security.CustomUserDetails;
 import com.texttosql.backend.service.ChatBotService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -18,6 +19,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/chatbot")
 @RequiredArgsConstructor
+@Tag(name = "3. Chat Bot", description = "Chat interaction and message history management")
 public class ChatBotController {
 
     private final ChatBotService chatBotService;

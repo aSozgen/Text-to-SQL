@@ -18,6 +18,10 @@ api-gateway:
   service:
     url: http://localhost:5173
 
+springdoc:
+  swagger-ui:
+    tags-sorter: alpha
+
 spring:
   application:
     name: backend

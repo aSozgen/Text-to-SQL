@@ -52,7 +52,10 @@ public class SecurityConfig {
                                         "/api/v1/auth/**",
                                         "/actuator/**",
                                         "/actuator/health/**",
-                                        "/error").permitAll()
+                                        "/error",
+                                        "/v3/api-docs/**",
+                                        "/swagger-ui/**",
+                                        "/swagger-ui.html").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->

@@ -6,6 +6,7 @@ import com.texttosql.backend.dto.SchemaImportRequest;
 import com.texttosql.backend.dto.entity.TableDto;
 import com.texttosql.backend.security.CustomUserDetails;
 import com.texttosql.backend.service.SchemaService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -19,6 +20,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/schemas")
 @RequiredArgsConstructor
+@Tag(name = "2. Schema Management", description = "Database schema, table, and column operations")
 public class SchemaController {
 
     private final SchemaService schemaService;

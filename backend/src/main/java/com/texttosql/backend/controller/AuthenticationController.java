@@ -4,6 +4,7 @@ import com.texttosql.backend.dto.auth.AuthenticationResponse;
 import com.texttosql.backend.dto.auth.LoginRequest;
 import com.texttosql.backend.dto.auth.RegisterRequest;
 import com.texttosql.backend.service.AuthenticationService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -13,7 +14,8 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
-class AuthenticationController {
+@Tag(name = "1. Authentication", description = "User registration and authentication operations")
+public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
 
