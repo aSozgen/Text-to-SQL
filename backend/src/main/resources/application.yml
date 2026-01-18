@@ -14,9 +14,10 @@ llm:
     connection-timeout: 50000
     conversation-turn: 2
 
-api-gateway:
-  service:
-    url: http://localhost:5173
+rate-limit:
+  enabled: true
+  limit-for-period: 20
+  period-in-seconds: 60
 
 springdoc:
   swagger-ui:

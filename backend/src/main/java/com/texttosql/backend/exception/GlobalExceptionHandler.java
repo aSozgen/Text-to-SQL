@@ -156,6 +156,12 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, "Schema import failed: " + e.getMessage());
     }
 
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<ErrorResponse> handleRateLimitExceededException(RateLimitExceededException e) {
+        log.warn("Rate limit exceeded: {}", e.getMessage());
+        return buildErrorResponse(HttpStatus.TOO_MANY_REQUESTS, e.getMessage());
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception e) {
         log.error("Unexpected error: {}", e.getMessage(), e);
