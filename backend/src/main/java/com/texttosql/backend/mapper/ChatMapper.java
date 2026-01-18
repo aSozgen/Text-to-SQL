@@ -2,7 +2,9 @@ package com.texttosql.backend.mapper;
 
 import com.texttosql.backend.dto.entity.ChatDto;
 import com.texttosql.backend.entity.ChatEntity;
-import org.mapstruct.*;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import java.util.List;
 
@@ -15,5 +17,5 @@ public interface ChatMapper {
     @Mapping(target = "active", ignore = true)
     ChatEntity toEntity(ChatDto dto);
 
-     List<ChatDto> toDtoList(List<ChatEntity> entities);
+    List<ChatDto> toDtoList(List<ChatEntity> entities);
 }

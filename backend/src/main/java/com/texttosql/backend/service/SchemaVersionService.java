@@ -62,7 +62,7 @@ public class SchemaVersionService {
                     .collect(Collectors.joining(", "));
 
             schemaBuilder.append(columnsString);
-            if (i != tables.size() - 1){
+            if (i != tables.size() - 1) {
                 schemaBuilder.append(" | ");
             }
         }

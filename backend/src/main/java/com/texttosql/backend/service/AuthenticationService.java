@@ -34,12 +34,12 @@ public class AuthenticationService {
     public AuthenticationResponse register(RegisterRequest registerRequest) {
 
         String username = registerRequest.username();
-        if(userRepository.existsByUsername(username)) {
+        if (userRepository.existsByUsername(username)) {
             throw new DuplicatedResourceException("A user with the username '" + username + "' already exists");
         }
 
         String email = registerRequest.email();
-        if(userRepository.existsByEmail(email)) {
+        if (userRepository.existsByEmail(email)) {
             throw new DuplicatedResourceException("A user with the email '" + email + "' already exists");
         }
 

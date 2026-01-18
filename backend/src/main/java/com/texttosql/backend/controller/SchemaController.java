@@ -1,8 +1,8 @@
 package com.texttosql.backend.controller;
 
+import com.texttosql.backend.dto.SchemaImportRequest;
 import com.texttosql.backend.dto.entity.ColumnDto;
 import com.texttosql.backend.dto.entity.DatabaseDto;
-import com.texttosql.backend.dto.SchemaImportRequest;
 import com.texttosql.backend.dto.entity.TableDto;
 import com.texttosql.backend.security.CustomUserDetails;
 import com.texttosql.backend.service.SchemaService;

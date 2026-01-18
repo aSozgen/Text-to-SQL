@@ -1,8 +1,8 @@
 package com.texttosql.backend.service;
 
+import com.texttosql.backend.dto.SchemaImportRequest;
 import com.texttosql.backend.dto.entity.ColumnDto;
 import com.texttosql.backend.dto.entity.DatabaseDto;
-import com.texttosql.backend.dto.SchemaImportRequest;
 import com.texttosql.backend.dto.entity.TableDto;
 import com.texttosql.backend.entity.DatabaseEntity;
 import com.texttosql.backend.entity.TableEntity;
@@ -91,7 +91,7 @@ public class SchemaService {
     }
 
     public void deleteDatabase(UUID databaseId, CustomUserDetails userDetails) {
-        databaseService.deleteDatabase(databaseId ,userDetails);
+        databaseService.deleteDatabase(databaseId, userDetails);
     }
 
     private DatabaseEntity getCurrentDatabaseEntity(UUID databaseId, CustomUserDetails userDetails) {
@@ -127,7 +127,7 @@ public class SchemaService {
     }
 
     public ColumnDto getColumn(UUID databaseId, UUID tableId, UUID columnId, CustomUserDetails userDetails) {
-        return columnService.getColumn(getCurrentTableEntity(databaseId, tableId, userDetails) ,columnId);
+        return columnService.getColumn(getCurrentTableEntity(databaseId, tableId, userDetails), columnId);
     }
 
     public ColumnDto createColumn(UUID databaseId, UUID tableId, ColumnDto columnDto, CustomUserDetails userDetails) {

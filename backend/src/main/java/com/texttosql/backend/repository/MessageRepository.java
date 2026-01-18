@@ -21,7 +21,9 @@ import java.util.UUID;
 @Repository
 public interface MessageRepository extends JpaRepository<MessageEntity, UUID> {
     Optional<MessageEntity> findByChatAndMessageIdAndActiveTrue(ChatEntity chat, UUID messageId);
+
     Page<MessageEntity> findByChatAndActiveTrueOrderByCreatedAtAsc(ChatEntity chat, Pageable pageable);
+
     List<MessageEntity> findByChatAndSchemaVersionAndActiveTrueOrderByCreatedAtDesc(
             ChatEntity chat,
             SchemaVersionEntity schemaVersion,
@@ -45,5 +47,6 @@ public interface MessageRepository extends JpaRepository<MessageEntity, UUID> {
                                     @Param("currentVersion") int currentVersion);
 
     long countAllByChatAndActiveTrue(ChatEntity chat);
+
     long countAllByFeedback(Feedback feedback);
 }

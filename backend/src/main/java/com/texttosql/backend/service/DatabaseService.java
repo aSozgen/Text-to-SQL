@@ -27,7 +27,7 @@ import java.util.UUID;
 public class DatabaseService {
     private final DatabaseRepository databaseRepository;
     private final DatabaseMapper databaseMapper;
-    private final UserMapper  userMapper;
+    private final UserMapper userMapper;
     private final SchemaVersionService versionService;
 
     @Transactional(readOnly = true)

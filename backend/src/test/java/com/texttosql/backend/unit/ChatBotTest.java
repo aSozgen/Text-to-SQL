@@ -92,7 +92,7 @@ public class ChatBotTest {
         UUID newChatId = UUID.randomUUID();
         LocalDateTime now = LocalDateTime.now();
 
-        ChatDto requestDto = new ChatDto(null,"New Chat", null);
+        ChatDto requestDto = new ChatDto(null, "New Chat", null);
         ChatDto responseDto = new ChatDto(newChatId, "New Chat", now);
 
         when(chatBotService.createChat(any(ChatDto.class), any(CustomUserDetails.class)))
@@ -165,7 +165,7 @@ public class ChatBotTest {
         LocalDateTime now = LocalDateTime.now();
 
         ChatDto updateDto = new ChatDto(chatId, "Updated Name", null);
-        ChatDto responseDto = new ChatDto(chatId, "Updated Name",  now);
+        ChatDto responseDto = new ChatDto(chatId, "Updated Name", now);
 
         when(chatBotService.updateChat(eq(chatId), any(ChatDto.class), any(CustomUserDetails.class)))
                 .thenReturn(responseDto);
@@ -224,7 +224,7 @@ public class ChatBotTest {
         LocalDateTime now = LocalDateTime.now();
 
 
-        MessageDto requestDto = new MessageDto(null, databaseId, "Hello Bot",null, SenderType.USER, Feedback.NONE,null);
+        MessageDto requestDto = new MessageDto(null, databaseId, "Hello Bot", null, SenderType.USER, Feedback.NONE, null);
         MessageDto responseDto = new MessageDto(messageId, databaseId, "Hello User", 95.0, SenderType.LLM, Feedback.NONE, now);
 
         when(chatBotService.createMessage(eq(chatId), any(MessageDto.class), any(CustomUserDetails.class)))
@@ -250,7 +250,7 @@ public class ChatBotTest {
         UUID databaseId = UUID.randomUUID();
         LocalDateTime now = LocalDateTime.now();
 
-        MessageDto messageDto = new MessageDto(messageId, databaseId, "Hello Bot",-1.0, SenderType.USER, Feedback.NONE, LocalDateTime.now());
+        MessageDto messageDto = new MessageDto(messageId, databaseId, "Hello Bot", -1.0, SenderType.USER, Feedback.NONE, LocalDateTime.now());
 
         Page<MessageDto> messagePage = new PageImpl<>(Collections.singletonList(messageDto), PageRequest.of(0, 10), 1);
 
@@ -317,7 +317,7 @@ public class ChatBotTest {
         FeedbackRequest feedbackRequest = new FeedbackRequest(Feedback.GOOD);
         LocalDateTime now = LocalDateTime.now();
 
-        MessageDto responseDto = new MessageDto(messageId, null, "Content", 95.0, SenderType.LLM,  Feedback.GOOD, now);
+        MessageDto responseDto = new MessageDto(messageId, null, "Content", 95.0, SenderType.LLM, Feedback.GOOD, now);
 
 
         when(chatBotService.updateMessageFeedback(eq(chatId), eq(messageId), eq(Feedback.GOOD), any(CustomUserDetails.class)))

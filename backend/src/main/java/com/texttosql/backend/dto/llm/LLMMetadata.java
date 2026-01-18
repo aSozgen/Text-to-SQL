@@ -9,5 +9,6 @@ public record LLMMetadata(
         @JsonProperty("num_beams") Integer numBeams,
         @JsonProperty("input_length") Integer inputLength,
         @JsonProperty("max_context_turns") Integer maxContextTurns
-) {}
+) {
+}
 

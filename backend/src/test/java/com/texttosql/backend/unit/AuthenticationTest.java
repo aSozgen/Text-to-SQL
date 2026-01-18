@@ -49,7 +49,7 @@ public class AuthenticationTest {
 
     @Test
     void register_ShouldReturnToken_WhenRequestIsValid() {
-        RegisterRequest request = new RegisterRequest("testuser",  "test@example.com", "password");
+        RegisterRequest request = new RegisterRequest("testuser", "test@example.com", "password");
         UserEntity savedUser = UserEntity.builder()
                 .userId(UUID.randomUUID())
                 .username("testuser")
@@ -148,7 +148,7 @@ public class AuthenticationTest {
 
         assertThatThrownBy(() -> authenticationService.login(loginRequest))
                 .isInstanceOf(BadCredentialsException.class);
-        
+
         verify(userRepository, never()).findByUsernameAndActiveTrue(any());
     }
 

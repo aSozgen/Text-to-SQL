@@ -1,9 +1,9 @@
 package com.texttosql.backend.service;
 
 import com.texttosql.backend.dto.entity.ColumnDto;
+import com.texttosql.backend.entity.ColumnEntity;
 import com.texttosql.backend.entity.DatabaseEntity;
 import com.texttosql.backend.entity.TableEntity;
-import com.texttosql.backend.entity.ColumnEntity;
 import com.texttosql.backend.exception.DuplicatedResourceException;
 import com.texttosql.backend.exception.ResourceNotFoundException;
 import com.texttosql.backend.mapper.ColumnMapper;

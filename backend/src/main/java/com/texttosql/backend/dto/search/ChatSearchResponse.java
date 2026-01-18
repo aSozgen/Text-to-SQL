@@ -4,6 +4,7 @@ import com.texttosql.backend.dto.entity.ChatDto;
 import com.texttosql.backend.dto.entity.MessageDto;
 import lombok.Builder;
 import lombok.Data;
+
 import java.util.List;
 
 @Data

@@ -39,7 +39,7 @@ public class ChatBotService {
         chatService.deleteChat(chatID, userDetails);
     }
 
-    private ChatEntity getCurrentChatEntity(UUID chatId ,CustomUserDetails userDetails) {
+    private ChatEntity getCurrentChatEntity(UUID chatId, CustomUserDetails userDetails) {
         return chatService.getCurrentChatEntity(chatId, userDetails);
     }
 
