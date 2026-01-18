@@ -26,7 +26,7 @@ public class SchemaController {
     private final SchemaService schemaService;
 
     @PostMapping("/import")
-    public ResponseEntity<DatabaseDto> importDatabase(@Valid @RequestBody SchemaImportRequest request,
+    public ResponseEntity<DatabaseDto> importSchema(@Valid @RequestBody SchemaImportRequest request,
                                                       @AuthenticationPrincipal CustomUserDetails userDetails) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(schemaService.importSchema(request, userDetails));

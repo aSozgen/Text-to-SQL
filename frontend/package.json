@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "bootstrap": "^5.3.8",
+    "ng-openapi-gen": "^1.0.5"
+  }
+}
