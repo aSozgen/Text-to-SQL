@@ -29,7 +29,7 @@ public class SchemaController {
     public ResponseEntity<DatabaseDto> importDatabase(@Valid @RequestBody SchemaImportRequest request,
                                                       @AuthenticationPrincipal CustomUserDetails userDetails) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(schemaService.importDatabase(request, userDetails));
+                .body(schemaService.importSchema(request, userDetails));
     }
 
     @GetMapping("/databases")

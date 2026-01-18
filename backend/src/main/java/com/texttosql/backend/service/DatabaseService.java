@@ -80,8 +80,8 @@ public class DatabaseService {
         entity.setName(databaseDTO.getName());
         entity.setDescription(databaseDTO.getDescription());
 
-        // If the current SchemaVersion is not used in any message don't create a new SchemaVersion just update existing one
-        // Else create a new SchemaVersion iff Database name has changed (Database description don't matter)
+        // If the current SchemaVersion is not used in any message, don't create a new SchemaVersion just update the existing one
+        // Else create a new SchemaVersion iff Database name has changed (Database description doesn't matter)
         if (!oldName.equalsIgnoreCase(databaseDTO.getName())) {
             versionService.createOrUpdateSchemaSnapshot(entity, versionUsedInMessages);
         } else {

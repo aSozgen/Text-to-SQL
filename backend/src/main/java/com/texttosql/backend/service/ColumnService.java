@@ -55,7 +55,7 @@ public class ColumnService {
         ColumnEntity savedColumnEntity = columnRepository.save(columnEntity);
         columnDto.setColumnId(savedColumnEntity.getColumnId());
 
-        // If the current SchemaVersion is not used in any message don't create a new SchemaVersion just update existing one
+        // If the current SchemaVersion is not used in any message, don't create a new SchemaVersion just update existing one
         // Else create a new SchemaVersion
         versionService.createOrUpdateSchemaSnapshot(databaseEntity, versionUsedInMessages);
 
@@ -79,8 +79,8 @@ public class ColumnService {
         columnRepository.save(oldEntity);
         columnDto.setColumnId(oldEntity.getColumnId());
 
-        // If the current SchemaVersion is not used in any message don't create a new SchemaVersion just update existing one
-        // Else create a new SchemaVersion iff Column name/datatype has changed (Column description don't matter)
+        // If the current SchemaVersion is not used in any message, don't create a new SchemaVersion just update the existing one
+        // Else create a new SchemaVersion iff Column name/datatype has changed (Column description doesn't matter)
         if (!oldName.equalsIgnoreCase(columnDto.getName()) || !oldDataType.equalsIgnoreCase(columnDto.getDataType())) {
             versionService.createOrUpdateSchemaSnapshot(databaseEntity, versionUsedInMessages);
         }
@@ -95,7 +95,7 @@ public class ColumnService {
         columnEntity.setActive(false);
         columnRepository.save(columnEntity);
 
-        // If the current SchemaVersion is not used in any message don't create a new SchemaVersion just update existing one
+        // If the current SchemaVersion is not used in any message, don't create a new SchemaVersion just update the existing one
         // Else create a new SchemaVersion
         versionService.createOrUpdateSchemaSnapshot(databaseEntity, versionUsedInMessages);
     }

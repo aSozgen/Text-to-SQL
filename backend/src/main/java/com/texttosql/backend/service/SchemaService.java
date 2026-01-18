@@ -30,7 +30,7 @@ public class SchemaService {
     private final UserMapper userMapper;
 
     @Transactional
-    public DatabaseDto importDatabase(SchemaImportRequest request, CustomUserDetails userDetails) {
+    public DatabaseDto importSchema(SchemaImportRequest request, CustomUserDetails userDetails) {
         try {
             DatabaseDto databaseDto = new DatabaseDto();
             databaseDto.setName(request.getName());
