@@ -1,4 +1,4 @@
-package com.texttosql.backend.controller;
+package com.texttosql.backend.unit;
 
 import com.texttosql.backend.dto.auth.AuthenticationResponse;
 import com.texttosql.backend.dto.auth.LoginRequest;
@@ -31,7 +31,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class AuthenticationTest {
+public class AuthenticationTest {
 
     @Mock
     private UserRepository userRepository;

@@ -1,7 +1,8 @@
-package com.texttosql.backend.controller;
+package com.texttosql.backend.unit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.texttosql.backend.controller.SearchController;
 import com.texttosql.backend.dto.entity.*;
 import com.texttosql.backend.dto.search.ChatSearchResponse;
 import com.texttosql.backend.dto.search.SchemaSearchResponse;
@@ -29,7 +30,6 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.UUID;
 
@@ -40,7 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
-class SearchTest {
+public class SearchTest {
 
     private MockMvc mockMvc;
 

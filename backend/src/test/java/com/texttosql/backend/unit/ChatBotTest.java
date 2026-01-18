@@ -1,7 +1,8 @@
-package com.texttosql.backend.controller;
+package com.texttosql.backend.unit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.texttosql.backend.controller.ChatBotController;
 import com.texttosql.backend.dto.FeedbackRequest;
 import com.texttosql.backend.dto.entity.ChatDto;
 import com.texttosql.backend.dto.entity.MessageDto;
@@ -47,7 +48,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
-class ChatBotTest {
+public class ChatBotTest {
 
     private MockMvc mockMvc;
 
