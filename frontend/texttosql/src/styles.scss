@@ -1,1 +1,36 @@
-/* You can add global styles to this file, and also import other style files */
+@use '@fortawesome/fontawesome-free/scss/fontawesome.scss';
+@use '@fortawesome/fontawesome-free/scss/solid.scss';
+@use '@fortawesome/fontawesome-free/scss/regular.scss';
+@use '@fortawesome/fontawesome-free/scss/brands.scss';
+
+@use 'bootstrap/scss/bootstrap';
+
+:root {
+  --bg-color: #0d1117;
+  --card-bg: #161b22;
+  --text-color: #c9d1d9;
+  --accent-color: #238636;
+  --accent-hover: #2ea043;
+  --border-color: #30363d;
+  --link-color: #58a6ff;
+  --placeholder-color: #8b949e;
+  --input-bg: #0d1117;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.form-control:focus {
+  box-shadow: none;
+  border-color: var(--link-color);
+}
