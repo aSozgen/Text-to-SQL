@@ -14,9 +14,6 @@ llm:
     connection-timeout: 50000
     conversation-turn: 2
 
-angular-frontend:
-  url: http://localhost:4200
-
 rate-limit:
   enabled: true
   limit-for-period: 20
