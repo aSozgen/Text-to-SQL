@@ -1,0 +1,126 @@
+/* register.component.scss */
+
+// Sayfa Ortalaması
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  // Navbar ve Footer yüksekliğini hesaba katarak min-height
+  min-height: calc(100vh - 160px); 
+  padding: 40px 20px;
+}
+
+// Kart Tasarımı (Home ve Navbar ile Tutarlı)
+.auth-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  padding: 40px 50px; // Geniş padding
+  border-radius: 12px;
+  width: 100%;
+  max-width: 500px;
+  // Home step-card hover gölgesiyle uyumlu hafif gölge
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+
+  h2 {
+    font-size: 1.75rem;
+    letter-spacing: -0.5px;
+    color: white; // Başlık parlak beyaz
+  }
+}
+
+// Form Etiketleri
+.form-label {
+  color: var(--text-main);
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+// Input Alanları
+.form-control {
+  background-color: var(--bg-color); // Sayfa zeminiyle aynı koyulukta
+  border: 1px solid var(--border-color);
+  color: white;
+  padding: 12px 15px; // Biraz daha geniş
+  font-size: 0.95rem;
+  border-radius: 6px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &::placeholder {
+    color: var(--text-muted);
+    opacity: 0.6;
+  }
+
+  // Focus olunca Navbar active link rengi (Mavi)
+  &:focus {
+    background-color: var(--bg-color);
+    border-color: var(--accent-blue);
+    color: white;
+    box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.15); // --accent-blue'nun şeffaf hali
+  }
+
+  &.is-invalid {
+    border-color: var(--error-color);
+    
+    &:focus {
+      box-shadow: 0 0 0 3px rgba(248, 81, 73, 0.15); // --error-color şeffaf
+    }
+  }
+}
+
+// Hata Mesajları
+.invalid-feedback {
+  color: var(--error-color);
+  font-size: 0.85rem;
+  margin-top: 5px;
+}
+
+// Submit Butonu (Navbar .btn-register ve Home .btn-success ile BİREBİR AYNI)
+.btn-submit {
+  background-color: var(--accent-green);
+  border: 1px solid var(--accent-green);
+  color: white;
+  padding: 12px;
+  font-weight: 600;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  width: 100%;
+  margin-top: 10px;
+
+  &:hover:not(:disabled) {
+    background-color: #2ea043;
+    border-color: #2ea043;
+    // Home butonundaki glow efekti
+    box-shadow: 0 0 15px rgba(46, 160, 67, 0.5); 
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+  
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    background-color: var(--border-color);
+    border-color: var(--border-color);
+  }
+}
+
+.auth-footer {
+  font-size: 0.95rem;
+  
+  span {
+    color: var(--text-main);
+  }
+  
+  a {
+    color: var(--accent-blue);
+    transition: color 0.2s;
+    
+    &:hover {
+      text-decoration: underline !important;
+      color: #58a6ff; 
+    }
+  }
+}

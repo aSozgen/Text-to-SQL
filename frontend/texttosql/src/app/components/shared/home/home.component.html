@@ -1,0 +1,55 @@
+<section class="hero-section d-flex align-items-center justify-content-center text-center">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <h1 class="display-4 fw-bold text-white mb-3">
+          Natural Language to SQL
+        </h1>
+        <p class="lead mb-4" style="color: var(--text-muted);">
+          Harness the power of LLMs to query your database using plain English.
+        </p>
+        <a routerLink="/chat" class="btn btn-success btn-lg px-4 fw-bold">
+          Start Querying <i class="fas fa-arrow-right ms-2"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="steps-section py-5">
+  <div class="container">
+    <h2 class="text-center text-white mb-5 fw-bold">How it Works</h2>
+    
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="step-card h-100 p-4 text-center">
+          <div class="icon-wrapper mb-3" style="color: var(--accent-blue);">
+            <i class="fas fa-keyboard fa-3x"></i>
+          </div>
+          <h3 class="h5 text-white fw-bold">1. Input</h3>
+          <p class="mb-0" style="color: var(--text-main);">Type your query in natural text format.</p>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="step-card h-100 p-4 text-center">
+          <div class="icon-wrapper mb-3 text-warning">
+            <i class="fas fa-microchip fa-3x"></i>
+          </div>
+          <h3 class="h5 text-white fw-bold">2. LLM Processing</h3>
+          <p class="mb-0" style="color: var(--text-main);">FastAPI & T5 model converts it to SQL code.</p>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="step-card h-100 p-4 text-center">
+          <div class="icon-wrapper mb-3" style="color: var(--accent-green);">
+            <i class="fas fa-check-circle fa-3x"></i>
+          </div>
+          <h3 class="h5 text-white fw-bold">3. Result</h3>
+          <p class="mb-0" style="color: var(--text-main);">Get validated SQL instantly ready to run.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
