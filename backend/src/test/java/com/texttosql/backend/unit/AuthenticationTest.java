@@ -3,6 +3,7 @@ package com.texttosql.backend.unit;
 import com.texttosql.backend.dto.auth.AuthenticationResponse;
 import com.texttosql.backend.dto.auth.LoginRequest;
 import com.texttosql.backend.dto.auth.RegisterRequest;
+import com.texttosql.backend.dto.entity.UserDto;
 import com.texttosql.backend.entity.UserEntity;
 import com.texttosql.backend.exception.DuplicatedResourceException;
 import com.texttosql.backend.mapper.UserMapper;
@@ -48,34 +49,18 @@ public class AuthenticationTest {
     private AuthenticationService authenticationService;
 
     @Test
-    void register_ShouldReturnToken_WhenRequestIsValid() {
+    void register_ShouldReturnVoid_WhenRequestIsValid() {
+        // Arrange
         RegisterRequest request = new RegisterRequest("testuser", "test@example.com", "password");
-        UserEntity savedUser = UserEntity.builder()
-                .userId(UUID.randomUUID())
-                .username("testuser")
-                .email("test@example.com")
-                .role(Role.USER)
-                .build();
-
-        CustomUserDetails userDto = new CustomUserDetails();
-        userDto.setUserId(savedUser.getUserId());
-        userDto.setUsername("testuser");
-        userDto.setEmail("test@example.com");
-        userDto.setRole(Role.USER);
-        userDto.setActive(true);
 
         when(userRepository.existsByUsername(request.username())).thenReturn(false);
         when(userRepository.existsByEmail(request.email())).thenReturn(false);
         when(passwordEncoder.encode(request.password())).thenReturn("encodedPass");
-        when(userRepository.save(any(UserEntity.class))).thenReturn(savedUser);
-        when(userMapper.toDto(savedUser)).thenReturn(userDto);
-        when(jwtUtil.generateToken(userDto)).thenReturn("jwt-token");
 
-        AuthenticationResponse response = authenticationService.register(request);
+        authenticationService.register(request);
 
-        assertThat(response).isNotNull();
-        assertThat(response.getToken()).isEqualTo("jwt-token");
         verify(userRepository).save(any(UserEntity.class));
+        verify(passwordEncoder).encode("password");
     }
 
     @Test
@@ -106,26 +91,31 @@ public class AuthenticationTest {
     @Test
     void login_ShouldReturnToken_WhenCredentialsAreCorrect() {
         LoginRequest loginRequest = new LoginRequest("testuser", "password");
+
         UserEntity userEntity = UserEntity.builder()
                 .userId(UUID.randomUUID())
                 .username("testuser")
+                .email("test@example.com")
+                .active(true)
                 .build();
 
-        CustomUserDetails userDto = new CustomUserDetails();
-        userDto.setUserId(userEntity.getUserId());
-        userDto.setUsername("testuser");
-        userDto.setEmail("email");
-        userDto.setRole(Role.USER);
-        userDto.setActive(true);
+        CustomUserDetails userDetailsDto = new CustomUserDetails();
+        userDetailsDto.setUserId(userEntity.getUserId());
+        userDetailsDto.setUsername("testuser");
+        userDetailsDto.setEmail("test@example.com");
+        userDetailsDto.setRole(Role.USER);
+        userDetailsDto.setActive(true);
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(null);
         when(userRepository.findByUsernameAndActiveTrue(loginRequest.username())).thenReturn(Optional.of(userEntity));
-        when(userMapper.toDto(userEntity)).thenReturn(userDto);
-        when(jwtUtil.generateToken(userDto)).thenReturn("jwt-token");
+        when(userMapper.toDto(userEntity)).thenReturn(userDetailsDto);
+        when(jwtUtil.generateToken(userDetailsDto)).thenReturn("jwt-token");
 
-        AuthenticationResponse response = authenticationService.login(loginRequest);
+        UserDto response = authenticationService.login(loginRequest);
 
-        assertThat(response.getToken()).isEqualTo("jwt-token");
+        assertThat(response.token()).isEqualTo("jwt-token");
+        assertThat(response.username()).isEqualTo("testuser");
+        assertThat(response.email()).isEqualTo("test@example.com");
     }
 
     @Test

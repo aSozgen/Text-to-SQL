@@ -3,6 +3,7 @@ package com.texttosql.backend.controller;
 import com.texttosql.backend.dto.auth.AuthenticationResponse;
 import com.texttosql.backend.dto.auth.LoginRequest;
 import com.texttosql.backend.dto.auth.RegisterRequest;
+import com.texttosql.backend.dto.entity.UserDto;
 import com.texttosql.backend.service.AuthenticationService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -20,15 +21,16 @@ public class AuthenticationController {
     private final AuthenticationService authenticationService;
 
     @PostMapping("/register")
-    public ResponseEntity<AuthenticationResponse> register(
+    public ResponseEntity<Void> register(
             @Valid
             @RequestBody RegisterRequest registerRequest
     ) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(authenticationService.register(registerRequest));
+        authenticationService.register(registerRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthenticationResponse> login(
+    public ResponseEntity<UserDto> login(
             @Valid
             @RequestBody LoginRequest loginRequest
     ) {

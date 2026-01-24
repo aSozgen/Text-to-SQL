@@ -3,6 +3,7 @@ package com.texttosql.backend.service;
 import com.texttosql.backend.dto.auth.AuthenticationResponse;
 import com.texttosql.backend.dto.auth.LoginRequest;
 import com.texttosql.backend.dto.auth.RegisterRequest;
+import com.texttosql.backend.dto.entity.UserDto;
 import com.texttosql.backend.entity.UserEntity;
 import com.texttosql.backend.exception.DuplicatedResourceException;
 import com.texttosql.backend.mapper.UserMapper;
@@ -31,7 +32,7 @@ public class AuthenticationService {
     private final UserMapper userMapper;
 
     @Transactional
-    public AuthenticationResponse register(RegisterRequest registerRequest) {
+    public void register(RegisterRequest registerRequest) {
 
         String username = registerRequest.username();
         if (userRepository.existsByUsername(username)) {
@@ -51,14 +52,11 @@ public class AuthenticationService {
                 .active(true)
                 .build();
 
-        UserEntity savedUser = userRepository.save(newUser);
-        String jwtToken = jwtUtil.generateToken(userMapper.toDto(savedUser));
-
-        return new AuthenticationResponse(jwtToken);
+        userRepository.save(newUser);
     }
 
     @Transactional(readOnly = true)
-    public AuthenticationResponse login(LoginRequest loginRequest) {
+    public UserDto login(LoginRequest loginRequest) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.username(),
@@ -70,7 +68,7 @@ public class AuthenticationService {
                 orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + loginRequest.username()));
         String jwtToken = jwtUtil.generateToken(userMapper.toDto(user));
 
-        return new AuthenticationResponse(jwtToken);
+        return new UserDto(user.getUsername(), user.getEmail(), jwtToken);
     }
 
     @Transactional(readOnly = true)
