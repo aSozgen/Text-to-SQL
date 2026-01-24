@@ -47,7 +47,7 @@ public class DatabaseService {
     @Transactional
     public DatabaseDto createDatabase(DatabaseDto databaseDTO, CustomUserDetails userDetails) {
         if (databaseRepository.existsByNameIgnoreCaseAndUserAndActiveTrue(databaseDTO.getName(), userMapper.toEntity(userDetails))) {
-            throw new DuplicatedResourceException("There is already a Database with the name '" + databaseDTO.getName() + "'");
+            throw new DuplicatedResourceException("There is already a Database with the same name.");
         }
 
         DatabaseEntity databaseEntity = new DatabaseEntity();
@@ -73,7 +73,7 @@ public class DatabaseService {
 
         if (databaseRepository.existsByNameIgnoreCaseAndUserAndActiveTrue(databaseDTO.getName(), userMapper.toEntity(userDetails))
                 && !entity.getName().equalsIgnoreCase(databaseDTO.getName())) {
-            throw new DuplicatedResourceException("There is already a Database with the name '" + databaseDTO.getName() + "'");
+            throw new DuplicatedResourceException("There is already a Database with the same name.");
         }
 
         String oldName = entity.getName();
@@ -102,7 +102,7 @@ public class DatabaseService {
     @Transactional(readOnly = true)
     public DatabaseEntity getCurrentDatabaseEntity(UUID databaseId, UserEntity user) {
         return databaseRepository.findByUserAndDatabaseIdAndActiveTrue(user, databaseId)
-                .orElseThrow(() -> new ResourceNotFoundException("Database not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Database not found."));
     }
 
 }

@@ -44,7 +44,7 @@ public class ChatService {
     public ChatDto createChat(ChatDto chatDto, CustomUserDetails userDetails) {
 
         if (chatRepository.existsByNameIgnoreCaseAndUserAndActiveTrue(chatDto.getName(), userMapper.toEntity(userDetails))) {
-            throw new DuplicatedResourceException("There is already a Chat with the name '" + chatDto.getName() + "'");
+            throw new DuplicatedResourceException("There is already a Chat with the same name.");
         }
 
         ChatEntity chatEntity = new ChatEntity();
@@ -61,7 +61,7 @@ public class ChatService {
 
         if (chatRepository.existsByNameIgnoreCaseAndUserAndActiveTrue(chatDto.getName(), userMapper.toEntity(userDetails))
                 && !chatEntity.getName().equalsIgnoreCase(chatDto.getName())) {
-            throw new DuplicatedResourceException("There is already a Chat with the name '" + chatDto.getName() + "'");
+            throw new DuplicatedResourceException("There is already a Chat with the same name.");
         }
 
         chatEntity.setName(chatDto.getName());
@@ -81,6 +81,6 @@ public class ChatService {
 
     public ChatEntity getCurrentChatEntity(UUID chatId, CustomUserDetails userDetails) {
         return chatRepository.findByChatIdAndUserAndActiveTrue(chatId, userMapper.toEntity(userDetails))
-                .orElseThrow(() -> new ResourceNotFoundException("Chat not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Chat not found."));
     }
 }

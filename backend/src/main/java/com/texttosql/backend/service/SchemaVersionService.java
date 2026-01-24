@@ -28,9 +28,9 @@ public class SchemaVersionService {
 
     @Transactional(readOnly = true)
     public SchemaVersionEntity getSchemaVersion(UUID databaseId) throws ResourceNotFoundException {
-        DatabaseEntity entity = databaseRepository.findById(databaseId).orElseThrow(() -> new ResourceNotFoundException("Database not found"));
+        DatabaseEntity entity = databaseRepository.findById(databaseId).orElseThrow(() -> new ResourceNotFoundException("Database not found."));
         return versionRepository.findByDatabaseAndVersionNumber(entity, entity.getCurrentVersion())
-                .orElseThrow(() -> new ResourceNotFoundException("Schema not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Schema not found."));
     }
 
     @Transactional
@@ -48,7 +48,7 @@ public class SchemaVersionService {
     }
 
     public String getSchemaStructure(UUID databaseId) {
-        DatabaseEntity entity = databaseRepository.findById(databaseId).orElseThrow(() -> new ResourceNotFoundException("Database not found"));
+        DatabaseEntity entity = databaseRepository.findById(databaseId).orElseThrow(() -> new ResourceNotFoundException("Database not found."));
         List<TableEntity> tables = tableRepository.findByDatabaseAndActiveTrueOrderByCreatedAtDesc(entity);
         StringBuilder schemaBuilder = new StringBuilder();
 

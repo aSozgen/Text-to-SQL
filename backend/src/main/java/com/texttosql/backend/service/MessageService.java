@@ -109,7 +109,7 @@ public class MessageService {
         MessageEntity oldUserMessage = getCurrentMessageEntity(chat, messageId);
 
         if (oldUserMessage.getSenderType() == SenderType.LLM) {
-            throw new AccessDeniedException("LLM messages cannot be updated");
+            throw new AccessDeniedException("LLM messages cannot be updated.");
         }
 
         oldUserMessage.setActive(false);
@@ -128,7 +128,7 @@ public class MessageService {
         MessageEntity message = getCurrentMessageEntity(chat, messageId);
 
         if (message.getSenderType() == SenderType.USER) {
-            throw new AccessDeniedException("Cannot give feedback for USER messages");
+            throw new AccessDeniedException("Cannot give feedback for USER messages.");
         }
 
         message.setFeedback(feedback);
@@ -142,7 +142,7 @@ public class MessageService {
         MessageEntity entity = getCurrentMessageEntity(chat, messageId);
 
         if (entity.getSenderType() == SenderType.LLM) {
-            throw new AccessDeniedException("LLM messages cannot be deleted");
+            throw new AccessDeniedException("LLM messages cannot be deleted.");
         }
 
         entity.setActive(false);
@@ -164,7 +164,7 @@ public class MessageService {
 
     private MessageEntity getCurrentMessageEntity(ChatEntity chat, UUID messageId) {
         return messageRepository.findByChatAndMessageIdAndActiveTrue(chat, messageId)
-                .orElseThrow(() -> new ResourceNotFoundException("Message not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Message not found."));
     }
 
     public boolean isVersionUsedInMessages(UUID databaseId, int currentVersion) {

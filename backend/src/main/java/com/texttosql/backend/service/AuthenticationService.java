@@ -36,12 +36,12 @@ public class AuthenticationService {
 
         String username = registerRequest.username();
         if (userRepository.existsByUsername(username)) {
-            throw new DuplicatedResourceException("A user with the username '" + username + "' already exists");
+            throw new DuplicatedResourceException("Username already exists.");
         }
 
         String email = registerRequest.email();
         if (userRepository.existsByEmail(email)) {
-            throw new DuplicatedResourceException("A user with the email '" + email + "' already exists");
+            throw new DuplicatedResourceException("Email already exists.");
         }
 
         UserEntity newUser = UserEntity.builder()
@@ -65,7 +65,7 @@ public class AuthenticationService {
         );
 
         UserEntity user = userRepository.findByUsernameAndActiveTrue(loginRequest.username()).
-                orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + loginRequest.username()));
+                orElseThrow(() -> new UsernameNotFoundException("User not found."));
         String jwtToken = jwtUtil.generateToken(userMapper.toDto(user));
 
         return new UserDto(user.getUsername(), user.getEmail(), jwtToken);
@@ -75,7 +75,7 @@ public class AuthenticationService {
     public AuthenticationResponse validateToken(String token) {
 
         if (!jwtUtil.validateToken(token)) {
-            throw new BadCredentialsException("Invalid or expired token");
+            throw new BadCredentialsException("Invalid or expired token.");
         }
 
         return new AuthenticationResponse(token);

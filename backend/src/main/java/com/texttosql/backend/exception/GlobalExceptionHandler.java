@@ -51,31 +51,31 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorResponse> handleBadCredentialsException(BadCredentialsException e) {
         log.error("BadCredentialsException: {}", e.getMessage());
-        return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Invalid credentials");
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Invalid credentials.");
     }
 
     @ExceptionHandler(ExpiredJwtException.class)
     public ResponseEntity<ErrorResponse> handleExpiredJwtException(ExpiredJwtException e) {
         log.error("ExpiredJwtException: {}", e.getMessage());
-        return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Token has expired");
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Token has expired.");
     }
 
     @ExceptionHandler(SignatureException.class)
     public ResponseEntity<ErrorResponse> handleSignatureException(SignatureException e) {
         log.error("SignatureException: {}", e.getMessage());
-        return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Invalid token signature");
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Invalid token signature.");
     }
 
     @ExceptionHandler(MalformedJwtException.class)
     public ResponseEntity<ErrorResponse> handleMalformedJwtException(MalformedJwtException e) {
         log.error("MalformedJwtException: {}", e.getMessage());
-        return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Malformed token");
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Malformed token.");
     }
 
     @ExceptionHandler(JwtException.class)
     public ResponseEntity<ErrorResponse> handleJwtException(JwtException e) {
         log.error("JwtException: {}", e.getMessage());
-        return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Invalid token");
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Invalid token.");
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
@@ -90,7 +90,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleMalformedJson(HttpMessageNotReadableException ex) {
         log.error("Malformed JSON request: {}", ex.getMessage());
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Malformed JSON request or missing request body");
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Malformed JSON request or missing request body.");
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
@@ -165,7 +165,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception e) {
         log.error("Unexpected error: {}", e.getMessage(), e);
-        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred.");
     }
 
     private ResponseEntity<ErrorResponse> buildErrorResponse(HttpStatus status, String message) {

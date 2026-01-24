@@ -44,7 +44,7 @@ public class ColumnService {
     @Transactional
     public ColumnDto createColumn(DatabaseEntity databaseEntity, TableEntity tableEntity, ColumnDto columnDto, boolean versionUsedInMessages) {
         if (columnRepository.existsByNameIgnoreCaseAndTableAndActiveTrue(columnDto.getName(), tableEntity)) {
-            throw new DuplicatedResourceException("There is already a Column with the name '" + columnDto.getName() + "'");
+            throw new DuplicatedResourceException("There is already a Column with the same name.");
         }
 
         ColumnEntity columnEntity = new ColumnEntity();
@@ -68,7 +68,7 @@ public class ColumnService {
 
         if (columnRepository.existsByNameIgnoreCaseAndTableAndActiveTrue(columnDto.getName(), tableEntity)
                 && !oldEntity.getName().equalsIgnoreCase(columnDto.getName())) {
-            throw new DuplicatedResourceException("There is already a Column with the name '" + columnDto.getName() + "'");
+            throw new DuplicatedResourceException("There is already a Column with the same name.");
         }
 
         String oldName = oldEntity.getName();
@@ -102,6 +102,6 @@ public class ColumnService {
 
     private ColumnEntity getCurrentColumnEntity(TableEntity tableEntity, UUID columnId) {
         return columnRepository.findByTableAndColumnIdAndActiveTrue(tableEntity, columnId)
-                .orElseThrow(() -> new ResourceNotFoundException("Column not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Column not found."));
     }
 }

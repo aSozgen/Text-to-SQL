@@ -43,7 +43,7 @@ public class TableService {
     @Transactional
     public TableDto createTable(DatabaseEntity databaseEntity, TableDto tableDTO, boolean versionUsedInMessages) {
         if (tableRepository.existsByNameIgnoreCaseAndDatabaseAndActiveTrue(tableDTO.getName(), databaseEntity)) {
-            throw new DuplicatedResourceException("There is already a Table with the name '" + tableDTO.getName() + "'");
+            throw new DuplicatedResourceException("There is already a Table with the same name.");
         }
 
         TableEntity tableEntity = new TableEntity();
@@ -54,7 +54,7 @@ public class TableService {
         TableEntity savedTableEntity = tableRepository.save(tableEntity);
         tableDTO.setTableId(savedTableEntity.getTableId());
 
-        // If the current SchemaVersion is not used in any message don't create a new SchemaVersion just update existing one
+        // If the current SchemaVersion is not used in any message, don't create a new SchemaVersion just update the existing one
         // Else create a new SchemaVersion
         versionService.createOrUpdateSchemaSnapshot(databaseEntity, versionUsedInMessages);
 
@@ -67,7 +67,7 @@ public class TableService {
 
         if (tableRepository.existsByNameIgnoreCaseAndDatabaseAndActiveTrue(tableDTO.getName(), databaseEntity)
                 && !oldEntity.getName().equalsIgnoreCase(tableDTO.getName())) {
-            throw new DuplicatedResourceException("There is already a Table with the name '" + tableDTO.getName() + "'");
+            throw new DuplicatedResourceException("There is already a Table with the same name.");
         }
 
         String oldName = oldEntity.getName();
@@ -77,8 +77,8 @@ public class TableService {
         tableRepository.save(oldEntity);
         tableDTO.setTableId(oldEntity.getTableId());
 
-        // If the current SchemaVersion is not used in any message don't create a new SchemaVersion just update existing one
-        // Else create a new SchemaVersion iff Table name has changed (Table description don't matter)
+        // If the current SchemaVersion is not used in any message, don't create a new SchemaVersion just update the existing one
+        // Else create a new SchemaVersion iff Table name has changed (Table description doesn't matter)
         if (!oldName.equalsIgnoreCase(tableDTO.getName())) {
             versionService.createOrUpdateSchemaSnapshot(databaseEntity, versionUsedInMessages);
         }
@@ -93,13 +93,13 @@ public class TableService {
         oldEntity.setActive(false);
         tableRepository.save(oldEntity);
 
-        // If the current SchemaVersion is not used in any message don't create a new SchemaVersion just update existing one
+        // If the current SchemaVersion is not used in any message, don't create a new SchemaVersion just update the existing one
         // Else create a new SchemaVersion
         versionService.createOrUpdateSchemaSnapshot(databaseEntity, versionUsedInMessages);
     }
 
     public TableEntity getCurrentTableEntity(DatabaseEntity database, UUID tableId) {
         return tableRepository.findByDatabaseAndTableIdAndActiveTrue(database, tableId)
-                .orElseThrow(() -> new ResourceNotFoundException("Table not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Table not found."));
     }
 }
