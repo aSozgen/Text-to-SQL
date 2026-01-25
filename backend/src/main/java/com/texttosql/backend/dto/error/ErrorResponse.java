@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ErrorResponse {
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "dd.MM.yyyy")
     private LocalDateTime timestamp;
 
     private int status;
