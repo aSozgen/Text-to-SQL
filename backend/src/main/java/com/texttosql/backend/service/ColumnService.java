@@ -51,11 +51,12 @@ public class ColumnService {
         columnEntity.setTable(tableEntity);
         columnEntity.setName(columnDto.getName());
         columnEntity.setDataType(columnDto.getDataType());
+        columnEntity.setPrimaryKey(columnDto.isPrimaryKey());
 
         ColumnEntity savedColumnEntity = columnRepository.save(columnEntity);
         columnDto.setColumnId(savedColumnEntity.getColumnId());
 
-        // If the current SchemaVersion is not used in any message, don't create a new SchemaVersion just update existing one
+        // If the current SchemaVersion is not used in any message, don't create a new SchemaVersion just update the existing one
         // Else create a new SchemaVersion
         versionService.createOrUpdateSchemaSnapshot(databaseEntity, versionUsedInMessages);
 
@@ -73,15 +74,17 @@ public class ColumnService {
 
         String oldName = oldEntity.getName();
         String oldDataType = oldEntity.getDataType();
+        boolean oldPrimaryKey = oldEntity.isPrimaryKey();
         oldEntity.setName(columnDto.getName());
         oldEntity.setDataType(columnDto.getDataType());
+        oldEntity.setPrimaryKey(columnDto.isPrimaryKey());
 
         columnRepository.save(oldEntity);
         columnDto.setColumnId(oldEntity.getColumnId());
 
         // If the current SchemaVersion is not used in any message, don't create a new SchemaVersion just update the existing one
-        // Else create a new SchemaVersion iff Column name/datatype has changed (Column description doesn't matter)
-        if (!oldName.equalsIgnoreCase(columnDto.getName()) || !oldDataType.equalsIgnoreCase(columnDto.getDataType())) {
+        // Else create a new SchemaVersion iff Column name/datatype/primaryKey has changed (Column description doesn't matter)
+        if (!oldName.equalsIgnoreCase(columnDto.getName()) || !oldDataType.equalsIgnoreCase(columnDto.getDataType()) || oldPrimaryKey != columnDto.isPrimaryKey()) {
             versionService.createOrUpdateSchemaSnapshot(databaseEntity, versionUsedInMessages);
         }
 
