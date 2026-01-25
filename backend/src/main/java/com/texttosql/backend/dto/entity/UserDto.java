@@ -1,5 +1,6 @@
 package com.texttosql.backend.dto.entity;
 
+import com.texttosql.backend.util.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -13,5 +14,5 @@ public record UserDto(
         @Email(message = "Email must be valid")
         String email,
 
-        String token
+        Role role
 ) {}

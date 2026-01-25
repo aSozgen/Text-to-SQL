@@ -157,11 +157,11 @@ public class SchemaTest {
         UUID databaseId = UUID.randomUUID();
 
         when(schemaService.getDatabase(eq(databaseId), any(CustomUserDetails.class)))
-                .thenThrow(new ResourceNotFoundException("Database not found"));
+                .thenThrow(new ResourceNotFoundException("Database not found."));
 
         mockMvc.perform(get("/api/v1/schemas/databases/{id}", databaseId))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Database not found"));
+                .andExpect(jsonPath("$.message").value("Database not found."));
     }
 
     @Test
@@ -190,13 +190,13 @@ public class SchemaTest {
         DatabaseDto requestDto = new DatabaseDto(null, "Existing_DB", "Desc", null);
 
         when(schemaService.createDatabase(any(DatabaseDto.class), any(CustomUserDetails.class)))
-                .thenThrow(new DuplicatedResourceException("There is already a Database with the name 'Existing_DB'"));
+                .thenThrow(new DuplicatedResourceException("There is already a Database with the same name."));
 
         mockMvc.perform(post("/api/v1/schemas/databases")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message").value("There is already a Database with the name 'Existing_DB'"));
+                .andExpect(jsonPath("$.message").value("There is already a Database with the same name."));
     }
 
     @Test
@@ -227,13 +227,13 @@ public class SchemaTest {
         DatabaseDto updateDto = new DatabaseDto(databaseId, "Existing_Name", "Desc", null);
 
         when(schemaService.updateDatabase(eq(databaseId), any(DatabaseDto.class), any(CustomUserDetails.class)))
-                .thenThrow(new DuplicatedResourceException("There is already a Database with the name 'Existing_Name'"));
+                .thenThrow(new DuplicatedResourceException("There is already a Database with the same name."));
 
         mockMvc.perform(patch("/api/v1/schemas/databases/{id}", databaseId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateDto)))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message").value("There is already a Database with the name 'Existing_Name'"));
+                .andExpect(jsonPath("$.message").value("There is already a Database with the same name."));
     }
 
     @Test
@@ -249,12 +249,12 @@ public class SchemaTest {
     void deleteDatabase_ShouldReturnNotFound_WhenNotExists() throws Exception {
         UUID databaseId = UUID.randomUUID();
 
-        doThrow(new ResourceNotFoundException("Database not found"))
+        doThrow(new ResourceNotFoundException("Database not found."))
                 .when(schemaService).deleteDatabase(eq(databaseId), any(CustomUserDetails.class));
 
         mockMvc.perform(delete("/api/v1/schemas/databases/{id}", databaseId))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Database not found"));
+                .andExpect(jsonPath("$.message").value("Database not found."));
     }
 
     @Test
@@ -324,13 +324,13 @@ public class SchemaTest {
         TableDto requestDto = new TableDto(null, "Existing_Table", "Desc", null);
 
         when(schemaService.createTable(eq(databaseId), any(TableDto.class), any(CustomUserDetails.class)))
-                .thenThrow(new DuplicatedResourceException("There is already a Table with the name 'Existing_Table'"));
+                .thenThrow(new DuplicatedResourceException("There is already a Table with the same name."));
 
         mockMvc.perform(post("/api/v1/schemas/databases/{databaseId}/tables", databaseId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message").value("There is already a Table with the name 'Existing_Table'"));
+                .andExpect(jsonPath("$.message").value("There is already a Table with the same name."));
     }
 
     @Test
@@ -443,13 +443,13 @@ public class SchemaTest {
         ColumnDto requestDto = new ColumnDto(null, "existing_col", "VARCHAR", false, null);
 
         when(schemaService.createColumn(eq(databaseId), eq(tableId), any(ColumnDto.class), any(CustomUserDetails.class)))
-                .thenThrow(new DuplicatedResourceException("There is already a Column with the name 'existing_col'"));
+                .thenThrow(new DuplicatedResourceException("There is already a Column with the same name."));
 
         mockMvc.perform(post("/api/v1/schemas/databases/{databaseId}/tables/{tableId}/columns", databaseId, tableId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message").value("There is already a Column with the name 'existing_col'"));
+                .andExpect(jsonPath("$.message").value("There is already a Column with the same name."));
     }
 
     @Test
@@ -482,11 +482,11 @@ public class SchemaTest {
         UUID tableId = UUID.randomUUID();
         UUID columnId = UUID.randomUUID();
 
-        doThrow(new ResourceNotFoundException("Column not found"))
+        doThrow(new ResourceNotFoundException("Column not found."))
                 .when(schemaService).deleteColumn(eq(databaseId), eq(tableId), eq(columnId), any(CustomUserDetails.class));
 
         mockMvc.perform(delete("/api/v1/schemas/databases/{databaseId}/tables/{tableId}/columns/{columnId}", databaseId, tableId, columnId))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Column not found"));
+                .andExpect(jsonPath("$.message").value("Column not found."));
     }
 }

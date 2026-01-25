@@ -20,7 +20,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/schemas")
 @RequiredArgsConstructor
-@Tag(name = "2. Schema Management", description = "Database schema, table, and column operations")
+@Tag(name = "2. Schema Management", description = "Database schema, table, and column operations.")
 public class SchemaController {
 
     private final SchemaService schemaService;

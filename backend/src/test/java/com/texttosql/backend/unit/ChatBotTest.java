@@ -112,13 +112,13 @@ public class ChatBotTest {
         ChatDto requestDto = new ChatDto(null, "Existing Chat", null);
 
         when(chatBotService.createChat(any(ChatDto.class), any(CustomUserDetails.class)))
-                .thenThrow(new DuplicatedResourceException("There is already a Chat with the name 'Existing Chat'"));
+                .thenThrow(new DuplicatedResourceException("There is already a Chat with the same name."));
 
         mockMvc.perform(post("/api/v1/chatbot/chats")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message").value("There is already a Chat with the name 'Existing Chat'"));
+                .andExpect(jsonPath("$.message").value("There is already a Chat with the same name."));
     }
 
     @Test
@@ -186,13 +186,13 @@ public class ChatBotTest {
         ChatDto updateDto = new ChatDto(chatId, "Existing Name", null);
 
         when(chatBotService.updateChat(eq(chatId), any(ChatDto.class), any(CustomUserDetails.class)))
-                .thenThrow(new DuplicatedResourceException("There is already a Chat with the name 'Existing Name'"));
+                .thenThrow(new DuplicatedResourceException("There is already a Chat with the same name."));
 
         mockMvc.perform(patch("/api/v1/chatbot/chats/{chatID}", chatId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateDto)))
                 .andExpect(status().isConflict()) // 409 Conflict
-                .andExpect(jsonPath("$.message").value("There is already a Chat with the name 'Existing Name'"));
+                .andExpect(jsonPath("$.message").value("There is already a Chat with the same name."));
     }
 
     @Test
@@ -208,12 +208,12 @@ public class ChatBotTest {
     void deleteChat_ShouldReturnNotFound_WhenChatDoesNotExist() throws Exception {
         UUID chatId = UUID.randomUUID();
 
-        doThrow(new ResourceNotFoundException("Chat not found"))
+        doThrow(new ResourceNotFoundException("Chat not found."))
                 .when(chatBotService).deleteChat(eq(chatId), any(CustomUserDetails.class));
 
         mockMvc.perform(delete("/api/v1/chatbot/chats/{chatID}", chatId))
                 .andExpect(status().isNotFound()) // 404 Not Found
-                .andExpect(jsonPath("$.message").value("Chat not found"));
+                .andExpect(jsonPath("$.message").value("Chat not found."));
     }
 
     @Test
@@ -301,13 +301,13 @@ public class ChatBotTest {
         MessageDto updateDto = new MessageDto(messageId, null, "Illegal Edit", null, SenderType.LLM, null, null);
 
         when(chatBotService.updateMessageContent(eq(chatId), eq(messageId), any(MessageDto.class), any(CustomUserDetails.class)))
-                .thenThrow(new AccessDeniedException("LLM messages cannot be updated"));
+                .thenThrow(new AccessDeniedException("LLM messages cannot be updated."));
 
         mockMvc.perform(patch("/api/v1/chatbot/chats/{chatID}/messages/{messageID}", chatId, messageId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateDto)))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value("Access denied: You do not have permission to perform this action. " + "LLM messages cannot be updated"));
+                .andExpect(jsonPath("$.message").value("LLM messages cannot be updated."));
     }
 
     @Test
@@ -343,13 +343,13 @@ public class ChatBotTest {
         FeedbackRequest feedbackRequest = new FeedbackRequest(Feedback.GOOD);
 
         when(chatBotService.updateMessageFeedback(eq(chatId), eq(messageId), eq(Feedback.GOOD), any(CustomUserDetails.class)))
-                .thenThrow(new AccessDeniedException("Cannot give feedback for USER messages"));
+                .thenThrow(new AccessDeniedException("Cannot give feedback for USER messages."));
 
         mockMvc.perform(patch("/api/v1/chatbot/chats/{chatID}/messages/{messageID}/feedback", chatId, messageId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(feedbackRequest)))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value("Access denied: You do not have permission to perform this action. " + "Cannot give feedback for USER messages"));
+                .andExpect(jsonPath("$.message").value("Cannot give feedback for USER messages."));
     }
 
     @Test
@@ -368,12 +368,12 @@ public class ChatBotTest {
         UUID chatId = UUID.randomUUID();
         UUID messageId = UUID.randomUUID();
 
-        doThrow(new AccessDeniedException("LLM messages cannot be deleted"))
+        doThrow(new AccessDeniedException("LLM messages cannot be deleted."))
                 .when(chatBotService).deleteMessage(eq(chatId), eq(messageId), any(CustomUserDetails.class));
 
         mockMvc.perform(delete("/api/v1/chatbot/chats/{chatID}/messages/{messageID}", chatId, messageId))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value("Access denied: You do not have permission to perform this action. " + "LLM messages cannot be deleted"));
+                .andExpect(jsonPath("$.message").value("LLM messages cannot be deleted."));
     }
 
     @Test
@@ -381,11 +381,11 @@ public class ChatBotTest {
         UUID chatId = UUID.randomUUID();
         UUID messageId = UUID.randomUUID();
 
-        doThrow(new ResourceNotFoundException("Message not found"))
+        doThrow(new ResourceNotFoundException("Message not found."))
                 .when(chatBotService).deleteMessage(eq(chatId), eq(messageId), any(CustomUserDetails.class));
 
         mockMvc.perform(delete("/api/v1/chatbot/chats/{chatID}/messages/{messageID}", chatId, messageId))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Message not found"));
+                .andExpect(jsonPath("$.message").value("Message not found."));
     }
 }

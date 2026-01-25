@@ -140,7 +140,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException e) {
         log.warn("Access denied: {}", e.getMessage());
-        return buildErrorResponse(HttpStatus.FORBIDDEN, "Access denied: You do not have permission to perform this action. " + e.getMessage());
+        return buildErrorResponse(HttpStatus.FORBIDDEN, e.getMessage());
     }
 
     @ExceptionHandler(ServletException.class)

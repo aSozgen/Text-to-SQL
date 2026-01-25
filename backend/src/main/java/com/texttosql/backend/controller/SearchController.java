@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/search")
 @RequiredArgsConstructor
-@Tag(name = "4. Search", description = "Search functionality for schemas and chat history")
+@Tag(name = "4. Search", description = "Search functionality for schemas and chat history.")
 public class SearchController {
 
     private final SearchService searchService;

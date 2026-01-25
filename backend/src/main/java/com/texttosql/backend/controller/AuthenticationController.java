@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
-@Tag(name = "1. Authentication", description = "User registration and authentication operations")
+@Tag(name = "1. Authentication", description = "User registration and authentication operations.")
 public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
@@ -30,7 +30,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UserDto> login(
+    public ResponseEntity<AuthenticationResponse> login(
             @Valid
             @RequestBody LoginRequest loginRequest
     ) {
@@ -49,8 +49,20 @@ public class AuthenticationController {
         return ResponseEntity.ok(authenticationService.validateToken(token));
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<UserDto> getMe(
+            @RequestHeader("Authorization") String authHeader
+    ) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+
+        String token = authHeader.substring(7);
+        return ResponseEntity.ok(authenticationService.getMe(token));
+    }
+
     @GetMapping("/health")
     public ResponseEntity<String> health() {
-        return ResponseEntity.ok("Auth service is running");
+        return ResponseEntity.ok("Auth service is running.");
     }
 }

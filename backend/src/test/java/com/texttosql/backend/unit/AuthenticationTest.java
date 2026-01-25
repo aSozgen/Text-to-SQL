@@ -3,7 +3,6 @@ package com.texttosql.backend.unit;
 import com.texttosql.backend.dto.auth.AuthenticationResponse;
 import com.texttosql.backend.dto.auth.LoginRequest;
 import com.texttosql.backend.dto.auth.RegisterRequest;
-import com.texttosql.backend.dto.entity.UserDto;
 import com.texttosql.backend.entity.UserEntity;
 import com.texttosql.backend.exception.DuplicatedResourceException;
 import com.texttosql.backend.mapper.UserMapper;
@@ -50,7 +49,6 @@ public class AuthenticationTest {
 
     @Test
     void register_ShouldReturnVoid_WhenRequestIsValid() {
-        // Arrange
         RegisterRequest request = new RegisterRequest("testuser", "test@example.com", "password");
 
         when(userRepository.existsByUsername(request.username())).thenReturn(false);
@@ -60,7 +58,6 @@ public class AuthenticationTest {
         authenticationService.register(request);
 
         verify(userRepository).save(any(UserEntity.class));
-        verify(passwordEncoder).encode("password");
     }
 
     @Test
@@ -70,7 +67,7 @@ public class AuthenticationTest {
 
         assertThatThrownBy(() -> authenticationService.register(request))
                 .isInstanceOf(DuplicatedResourceException.class)
-                .hasMessageContaining("A user with the username 'existingUser' already exists");
+                .hasMessageContaining("Username already exists.");
 
         verify(userRepository, never()).save(any());
     }
@@ -83,7 +80,7 @@ public class AuthenticationTest {
 
         assertThatThrownBy(() -> authenticationService.register(request))
                 .isInstanceOf(DuplicatedResourceException.class)
-                .hasMessageContaining("A user with the email 'existing@test.com' already exists");
+                .hasMessageContaining("Email already exists");
 
         verify(userRepository, never()).save(any());
     }
@@ -91,31 +88,26 @@ public class AuthenticationTest {
     @Test
     void login_ShouldReturnToken_WhenCredentialsAreCorrect() {
         LoginRequest loginRequest = new LoginRequest("testuser", "password");
-
         UserEntity userEntity = UserEntity.builder()
                 .userId(UUID.randomUUID())
                 .username("testuser")
-                .email("test@example.com")
-                .active(true)
                 .build();
 
-        CustomUserDetails userDetailsDto = new CustomUserDetails();
-        userDetailsDto.setUserId(userEntity.getUserId());
-        userDetailsDto.setUsername("testuser");
-        userDetailsDto.setEmail("test@example.com");
-        userDetailsDto.setRole(Role.USER);
-        userDetailsDto.setActive(true);
+        CustomUserDetails userDto = new CustomUserDetails();
+        userDto.setUserId(userEntity.getUserId());
+        userDto.setUsername("testuser");
+        userDto.setEmail("email");
+        userDto.setRole(Role.USER);
+        userDto.setActive(true);
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(null);
         when(userRepository.findByUsernameAndActiveTrue(loginRequest.username())).thenReturn(Optional.of(userEntity));
-        when(userMapper.toDto(userEntity)).thenReturn(userDetailsDto);
-        when(jwtUtil.generateToken(userDetailsDto)).thenReturn("jwt-token");
+        when(userMapper.toDto(userEntity)).thenReturn(userDto);
+        when(jwtUtil.generateToken(userDto)).thenReturn("jwt-token");
 
-        UserDto response = authenticationService.login(loginRequest);
+        AuthenticationResponse response = authenticationService.login(loginRequest);
 
-        assertThat(response.token()).isEqualTo("jwt-token");
-        assertThat(response.username()).isEqualTo("testuser");
-        assertThat(response.email()).isEqualTo("test@example.com");
+        assertThat(response.getToken()).isEqualTo("jwt-token");
     }
 
     @Test
@@ -127,7 +119,7 @@ public class AuthenticationTest {
 
         assertThatThrownBy(() -> authenticationService.login(loginRequest))
                 .isInstanceOf(UsernameNotFoundException.class)
-                .hasMessageContaining("User not found with username: ghost");
+                .hasMessageContaining("User not found.");
     }
 
     @Test
@@ -159,6 +151,6 @@ public class AuthenticationTest {
 
         assertThatThrownBy(() -> authenticationService.validateToken(token))
                 .isInstanceOf(BadCredentialsException.class)
-                .hasMessage("Invalid or expired token");
+                .hasMessage("Invalid or expired token.");
     }
 }

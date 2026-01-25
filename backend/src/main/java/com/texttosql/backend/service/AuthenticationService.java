@@ -6,6 +6,7 @@ import com.texttosql.backend.dto.auth.RegisterRequest;
 import com.texttosql.backend.dto.entity.UserDto;
 import com.texttosql.backend.entity.UserEntity;
 import com.texttosql.backend.exception.DuplicatedResourceException;
+import com.texttosql.backend.exception.ResourceNotFoundException;
 import com.texttosql.backend.mapper.UserMapper;
 import com.texttosql.backend.repository.UserRepository;
 import com.texttosql.backend.util.JwtUtil;
@@ -56,7 +57,7 @@ public class AuthenticationService {
     }
 
     @Transactional(readOnly = true)
-    public UserDto login(LoginRequest loginRequest) {
+    public AuthenticationResponse login(LoginRequest loginRequest) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.username(),
@@ -68,7 +69,7 @@ public class AuthenticationService {
                 orElseThrow(() -> new UsernameNotFoundException("User not found."));
         String jwtToken = jwtUtil.generateToken(userMapper.toDto(user));
 
-        return new UserDto(user.getUsername(), user.getEmail(), jwtToken);
+        return new AuthenticationResponse(jwtToken);
     }
 
     @Transactional(readOnly = true)
@@ -79,5 +80,12 @@ public class AuthenticationService {
         }
 
         return new AuthenticationResponse(token);
+    }
+
+    @Transactional(readOnly = true)
+    public UserDto getMe(String token) {
+        UserEntity user = userRepository.findByUsernameAndActiveTrue(jwtUtil.extractUsername(token))
+                .orElseThrow(() -> new UsernameNotFoundException("User not found."));
+        return new UserDto(user.getUsername(), user.getEmail(), user.getRole());
     }
 }

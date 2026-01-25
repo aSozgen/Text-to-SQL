@@ -19,7 +19,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/chatbot")
 @RequiredArgsConstructor
-@Tag(name = "3. Chat Bot", description = "Chat interaction and message history management")
+@Tag(name = "3. Chat Bot", description = "Chat interaction and message history management.")
 public class ChatBotController {
 
     private final ChatBotService chatBotService;
