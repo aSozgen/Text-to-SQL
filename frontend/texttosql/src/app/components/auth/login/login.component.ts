@@ -1,12 +1,12 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 
-// API importları (ng-openapi-gen çıktılarına göre)
 import { Api } from '../../../api/api';
-import { LoginRequest, AuthenticationResponse } from '../../../api/models';
-import { login } from '../../../api/functions';
+import {AuthenticationResponse, LoginRequest} from '../../../api/models';
+import { login, getMe } from '../../../api/functions';
+import { AuthService } from '../../../core/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -17,8 +17,8 @@ import { login } from '../../../api/functions';
 })
 export class LoginComponent {
   private readonly fb = inject(FormBuilder);
-  private readonly router = inject(Router);
   private readonly api = inject(Api);
+  private readonly authService = inject(AuthService);
 
   loginForm: FormGroup = this.fb.group({
     username: ['', [Validators.required]],
@@ -45,20 +45,21 @@ export class LoginComponent {
 
     try {
       const request: LoginRequest = this.loginForm.value;
-      
-      const response = await this.api.invoke(login, { body: request });
-      
-      if (response && response.token) {
-        localStorage.setItem('token', response.token);
-        
-        // Opsiyonel: Kullanıcı bilgisini de saklayabilir veya state management'a atabilirsiniz
-        // localStorage.setItem('currentUser', JSON.stringify(response)); 
+
+      const authResponse: AuthenticationResponse = await this.api.invoke(login, { body: request });
+
+      if (authResponse && authResponse.token) {
+        const token: string = authResponse.token;
+
+        localStorage.setItem('token', token);
+
+        const userDto: any = await this.api.invoke(getMe);
+
+        this.authService.login(userDto, token);
       }
 
-      this.router.navigate(['/home']);
-
     } catch (error: any) {
-      console.error('Login Error:', error);
+      localStorage.removeItem('token');
 
       if (error.error) {
         if (typeof error.error === 'string') {
@@ -78,6 +79,7 @@ export class LoginComponent {
       } else {
         this.errorMessage = 'An unexpected error occurred.';
       }
+
     } finally {
       this.isSubmitting = false;
     }

@@ -1,7 +1,9 @@
+<!--login.component.html-->
+
 <div class="auth-container">
   <div class="auth-card">
     <h2 class="text-center mb-4 fw-bold">Sign In</h2>
-    
+
     @if (errorMessage) {
       <div class="alert alert-danger text-center p-2 mb-3 small" style="background: rgba(248,81,73,0.1); border-color: var(--error-color); color: #ff7b72;">
         {{ errorMessage }}
@@ -9,18 +11,18 @@
     }
 
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" autocomplete="off">
-      
+
       <div class="form-group mb-3">
         <label for="username" class="form-label">Username</label>
-        <input 
-          type="text" 
-          id="username" 
-          class="form-control" 
-          formControlName="username" 
+        <input
+          type="text"
+          id="username"
+          class="form-control"
+          formControlName="username"
           placeholder="johndoe"
           [class.is-invalid]="submitted && f['username'].errors"
           autocomplete="username">
-        
+
         @if (submitted && f['username'].errors) {
           <div class="invalid-feedback">
             @if (f['username'].hasError('required')) {
@@ -32,11 +34,11 @@
 
       <div class="form-group mb-4">
         <label for="password" class="form-label">Password</label>
-        <input 
-          type="password" 
-          id="password" 
-          class="form-control" 
-          formControlName="password" 
+        <input
+          type="password"
+          id="password"
+          class="form-control"
+          formControlName="password"
           placeholder="••••••••"
           [class.is-invalid]="submitted && f['password'].errors"
           autocomplete="current-password">
@@ -63,7 +65,7 @@
 
     <div class="auth-footer mt-4 text-center">
       <span>Don't have an account?</span>
-      <a routerLink="/register" class="ms-2 text-decoration-none fw-bold">Create Account</a>
+      <a routerLink="/register" class="ms-2 text-decoration-none fw-bold">Create Account.</a>
     </div>
   </div>
 </div>

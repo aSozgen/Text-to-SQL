@@ -7,17 +7,14 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
-import { AuthenticationResponse } from '../../models/authentication-response';
-import { LoginRequest } from '../../models/login-request';
+import { UserDto } from '../../models/user-dto';
 
-export interface Login$Params {
-      body: LoginRequest
+export interface GetMe$Params {
 }
 
-export function login(http: HttpClient, rootUrl: string, params: Login$Params, context?: HttpContext): Observable<StrictHttpResponse<AuthenticationResponse>> {
-  const rb = new RequestBuilder(rootUrl, login.PATH, 'post');
+export function getMe(http: HttpClient, rootUrl: string, params?: GetMe$Params, context?: HttpContext): Observable<StrictHttpResponse<UserDto>> {
+  const rb = new RequestBuilder(rootUrl, getMe.PATH, 'get');
   if (params) {
-    rb.body(params.body, 'application/json');
   }
 
   return http.request(
@@ -25,9 +22,9 @@ export function login(http: HttpClient, rootUrl: string, params: Login$Params, c
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<AuthenticationResponse>;
+      return r as StrictHttpResponse<UserDto>;
     })
   );
 }
 
-login.PATH = '/api/v1/auth/login';
+getMe.PATH = '/api/v1/auth/me';

@@ -1,8 +1,12 @@
+<!--navbar.component.html-->
+
 <nav class="navbar navbar-expand-lg">
   <div class="container-fluid px-4">
-    
+
     <a class="navbar-brand d-flex align-items-center gap-2" routerLink="/">
-      <span class="fw-bold text-white fs-4"><i class="fa-solid fa-database" style="color: #63E6BE;"></i>QueryGen</span>
+      <span class="fw-bold text-white fs-4">
+        <i class="fa-solid fa-database" style="color: var(--accent-green);"></i>QueryGen
+      </span>
     </a>
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
@@ -26,47 +30,33 @@
       </ul>
 
       <div class="d-flex align-items-center gap-3">
-        
-        @if (currentUser) {
+        @if (authService.currentUser()) {
           <div class="dropdown">
-            <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle no-arrow user-profile-link" 
-               id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-              
+            <a class="d-flex align-items-center text-decoration-none dropdown-toggle no-arrow user-profile-link"
+               id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false" role="button" style="cursor: pointer;">
               <div class="user-avatar">
-                {{ userInitials }}
+                {{ authService.userInitials() }}
               </div>
-              
               <span class="d-none d-lg-block ms-2 text-white small fw-bold">
-                {{ currentUser.username }}
+                {{ authService.currentUser()?.username }}
               </span>
             </a>
-
             <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark shadow mt-3" aria-labelledby="profileDropdown">
+              <li><a class="dropdown-item" routerLink="/profile"><i class="fas fa-user me-2"></i>Profile</a></li>
+              <li><hr class="dropdown-divider"></li>
               <li>
-                <a class="dropdown-item" routerLink="/profile">
-                  <i class="fas fa-user me-2"></i>Profile
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item text-danger" href="#" (click)="logout()">
-                  <i class="fas fa-sign-out-alt me-2"></i>Sign Out
-                </a>
+                <button class="dropdown-item text-danger" type="button" (click)="logout()">
+                  <i class="fas fa-sign-out-alt me-2"></i>Log out
+                </button>
               </li>
             </ul>
           </div>
-        } 
-        
-        @else {
+        } @else {
           <div class="d-flex gap-2 align-items-center">
-            <a routerLink="/login" class="btn btn-login btn-sm fw-bold px-3">
-              Sign In
-            </a>
-            <a routerLink="/register" class="btn btn-register btn-sm fw-bold px-3">
-              Sign Up
-            </a>
+            <a routerLink="/login" class="btn btn-login btn-sm fw-bold px-3">Log in</a>
+            <a routerLink="/register" class="btn btn-register btn-sm fw-bold px-3">Register</a>
           </div>
         }
-
       </div>
     </div>
   </div>

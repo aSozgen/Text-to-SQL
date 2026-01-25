@@ -59,6 +59,8 @@ export type { Login$Params as Login$Params } from './fn/1-authentication/login';
 export { login as login } from './fn/1-authentication/login';
 export type { Validate$Params as Validate$Params } from './fn/1-authentication/validate';
 export { validate as validate } from './fn/1-authentication/validate';
+export type { GetMe$Params as GetMe$Params } from './fn/1-authentication/get-me';
+export { getMe as getMe } from './fn/1-authentication/get-me';
 export type { Health$Params as Health$Params } from './fn/1-authentication/health';
 export { health as health } from './fn/1-authentication/health';
 export type { SearchSchema$Params as SearchSchema$Params } from './fn/4-search/search-schema';

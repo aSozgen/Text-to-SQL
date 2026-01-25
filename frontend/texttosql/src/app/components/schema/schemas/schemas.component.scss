@@ -1,0 +1,272 @@
+/* schemas.component.scss */
+
+.schemas-container {
+  padding: 40px 10%;
+}
+
+/* HEADER & CONTROLS */
+.header-section { margin-bottom: 2rem; }
+
+.controls-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+/* SEARCH BAR */
+.search-container {
+  flex-grow: 1;
+  max-width: 450px;
+
+  .input-group-text {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-right: none;
+    color: var(--text-muted);
+  }
+
+  input {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-left: none;
+    color: white;
+
+    &::placeholder { color: var(--text-muted); opacity: 0.7; }
+    &:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 2px rgba(31, 111, 235, 0.1);
+    }
+  }
+}
+
+/* BUTTONS */
+.btn-primary {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 38px; padding: 0 20px; font-size: 0.9rem; font-weight: 600;
+  border-radius: 6px;
+  background-color: var(--accent-green);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover:not(:disabled) {
+    background-color: #2ea043; border-color: #2ea043;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(46, 160, 67, 0.4);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: var(--border-color);
+    border-color: var(--border-color);
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+.btn-secondary {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 38px; padding: 0 20px; font-size: 0.9rem; font-weight: 500;
+  border-radius: 6px;
+  background-color: transparent;
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background-color: rgba(255,255,255,0.05);
+    border-color: var(--text-main);
+    color: white;
+  }
+
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+
+/* TABLE STYLES */
+.table-container {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+}
+
+.table {
+  background-color: transparent; margin-bottom: 0;
+
+  th {
+    background-color: #0d1117;
+    color: #e6edf3;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color);
+  }
+  td { padding: 16px; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+}
+
+/* TABLE ROW STYLES */
+.db-row {
+  transition: background-color 0.2s;
+  border-left: 3px solid transparent;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.03);
+    border-left-color: var(--accent-blue);
+  }
+
+  &.expanded {
+    background-color: rgba(31, 111, 235, 0.08);
+    border-left-color: var(--accent-blue);
+    td { border-bottom-color: transparent; }
+  }
+}
+
+/* ACTION BUTTONS (HOVER FIX) */
+.action-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.action-icon-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+
+  i { font-size: 1rem; }
+
+  &.edit-btn:hover:not(:disabled) {
+    background-color: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+  }
+
+  &.delete-btn:hover:not(:disabled) {
+    background-color: rgba(248, 81, 73, 0.15);
+    color: #f85149;
+  }
+
+  &:disabled, &.guest-disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    &:hover { background: transparent; color: var(--text-muted); }
+  }
+}
+
+/* ADD TABLE / COLUMN TEXT BUTTON */
+.btn-text-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent-green);
+  background-color: rgba(35, 134, 54, 0.1);
+  border: 1px solid rgba(35, 134, 54, 0.3);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  text-decoration: none;
+
+  &:hover:not(:disabled) {
+    background-color: var(--accent-green);
+    color: white;
+    box-shadow: 0 2px 8px rgba(35, 134, 54, 0.4);
+  }
+
+  &:disabled, &.guest-disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background-color: transparent;
+    border-color: var(--border-color);
+    color: var(--text-muted);
+  }
+
+  i { font-size: 0.75rem; }
+}
+
+/* TOGGLE ICON */
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+  border-radius: 50%;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+  }
+}
+
+.transition-icon { transition: transform 0.2s ease; }
+.rotated { transform: rotate(90deg); color: var(--accent-blue) !important; }
+
+/* MODAL STYLES (Force Override with ::ng-deep) */
+::ng-deep .modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.85) !important;
+  z-index: 1040 !important;
+}
+
+::ng-deep .modal {
+  z-index: 1050 !important;
+}
+
+::ng-deep .modal-content {
+  background-color: var(--card-bg) !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6) !important;
+  border-radius: 12px !important;
+}
+
+::ng-deep .modal-header {
+  border-bottom: 1px solid var(--border-color) !important;
+  padding: 20px 24px !important;
+
+  .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+  }
+}
+
+::ng-deep .modal-body {
+  padding: 24px !important;
+}
+
+::ng-deep .modal-footer {
+  border-top: 1px solid var(--border-color) !important;
+  padding: 16px 24px !important;
+}
+
+/* FORM INPUTS (Modal Inside) */
+.form-control, .form-select {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid var(--border-color) !important;
+  color: white !important;
+
+  &:focus {
+    background-color: black !important;
+    border-color: var(--accent-blue) !important;
+    box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.2) !important;
+  }
+}
