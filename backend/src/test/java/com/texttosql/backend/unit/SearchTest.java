@@ -85,8 +85,8 @@ public class SearchTest {
         UUID columnId = UUID.randomUUID();
 
         DatabaseDto databaseDto = new DatabaseDto(dbId, "UserDB", "Description", now);
-        TableDto tableDto = new TableDto(dbId, tableId, "Users", "Description", now);
-        ColumnDto columnDto = new ColumnDto(tableId, columnId, "username", "VARCHAR", false, now);
+        TableDto tableDto = new TableDto(tableId, dbId, "Users", "Description", now);
+        ColumnDto columnDto = new ColumnDto(columnId, tableId, dbId, "username", "VARCHAR", false, now);
 
         SchemaSearchResponse response = SchemaSearchResponse.builder()
                 .databases(Collections.singletonList(databaseDto))

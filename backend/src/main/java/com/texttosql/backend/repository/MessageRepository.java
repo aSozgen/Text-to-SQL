@@ -24,6 +24,8 @@ public interface MessageRepository extends JpaRepository<MessageEntity, UUID> {
 
     Page<MessageEntity> findByChatAndActiveTrueOrderByCreatedAtAsc(ChatEntity chat, Pageable pageable);
 
+    List<MessageEntity> findByChatAndActiveTrueOrderByCreatedAtAsc(ChatEntity chat);
+
     List<MessageEntity> findByChatAndSchemaVersionAndActiveTrueOrderByCreatedAtDesc(
             ChatEntity chat,
             SchemaVersionEntity schemaVersion,

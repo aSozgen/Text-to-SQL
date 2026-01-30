@@ -384,7 +384,7 @@ public class SchemaTest {
         UUID tableId = UUID.randomUUID();
         UUID columnId = UUID.randomUUID();
 
-        ColumnDto columnDto = new ColumnDto(columnId, tableId, "username", "VARCHAR", false, now);
+        ColumnDto columnDto = new ColumnDto(columnId, tableId, databaseId, "username", "VARCHAR", false, now);
         List<ColumnDto> columns = Collections.singletonList(columnDto);
 
         // Updated mock: No pagination arguments, returns List
@@ -408,7 +408,7 @@ public class SchemaTest {
         UUID tableId = UUID.randomUUID();
         UUID columnId = UUID.randomUUID();
 
-        ColumnDto columnDto = new ColumnDto(columnId, tableId, "email", "VARCHAR", false, now);
+        ColumnDto columnDto = new ColumnDto(columnId, tableId, databaseId, "email", "VARCHAR", false, now);
 
         when(schemaService.getColumn(eq(databaseId), eq(tableId), eq(columnId), any(CustomUserDetails.class)))
                 .thenReturn(columnDto);
@@ -430,8 +430,8 @@ public class SchemaTest {
         UUID tableId = UUID.randomUUID();
         UUID columnId = UUID.randomUUID();
 
-        ColumnDto requestDto = new ColumnDto(null, tableId, "user_id", "UUID", true, null);
-        ColumnDto responseDto = new ColumnDto(columnId, tableId, "user_id", "UUID", true, now);
+        ColumnDto requestDto = new ColumnDto(null, tableId, databaseId, "user_id", "UUID", true, null);
+        ColumnDto responseDto = new ColumnDto(columnId, tableId, databaseId, "user_id", "UUID", true, now);
 
         when(schemaService.createColumn(eq(databaseId), eq(tableId), any(ColumnDto.class), any(CustomUserDetails.class)))
                 .thenReturn(responseDto);
@@ -453,7 +453,7 @@ public class SchemaTest {
         UUID databaseId = UUID.randomUUID();
         UUID tableId = UUID.randomUUID();
 
-        ColumnDto requestDto = new ColumnDto(null, tableId, "existing_col", "VARCHAR", false, null);
+        ColumnDto requestDto = new ColumnDto(null, tableId, databaseId, "existing_col", "VARCHAR", false, null);
 
         when(schemaService.createColumn(eq(databaseId), eq(tableId), any(ColumnDto.class), any(CustomUserDetails.class)))
                 .thenThrow(new DuplicatedResourceException("There is already a Column with the same name."));
@@ -472,8 +472,8 @@ public class SchemaTest {
         UUID tableId = UUID.randomUUID();
         UUID columnId = UUID.randomUUID();
 
-        ColumnDto updateDto = new ColumnDto(columnId, tableId, "new_col", "INT", false, null);
-        ColumnDto responseDto = new ColumnDto(columnId, tableId, "new_col", "INT", false, now);
+        ColumnDto updateDto = new ColumnDto(columnId, tableId, databaseId, "new_col", "INT", false, null);
+        ColumnDto responseDto = new ColumnDto(columnId, tableId, databaseId, "new_col", "INT", false, now);
 
         when(schemaService.updateColumn(eq(databaseId), eq(tableId), eq(columnId), any(ColumnDto.class), any(CustomUserDetails.class)))
                 .thenReturn(responseDto);

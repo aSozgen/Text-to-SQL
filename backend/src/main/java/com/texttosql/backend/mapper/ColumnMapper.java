@@ -12,6 +12,7 @@ import java.util.List;
 public interface ColumnMapper {
 
     @Mapping(source = "table.tableId", target = "tableId")
+    @Mapping(source = "table.database.databaseId", target = "databaseId")
     ColumnDto toDto(ColumnEntity entity);
 
     @Mapping(target = "table", ignore = true)

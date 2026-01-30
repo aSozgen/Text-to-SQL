@@ -2,11 +2,13 @@ package com.texttosql.backend.service;
 
 import com.texttosql.backend.dto.entity.ChatDto;
 import com.texttosql.backend.entity.ChatEntity;
+import com.texttosql.backend.entity.MessageEntity;
 import com.texttosql.backend.exception.DuplicatedResourceException;
 import com.texttosql.backend.exception.ResourceNotFoundException;
 import com.texttosql.backend.mapper.ChatMapper;
 import com.texttosql.backend.mapper.UserMapper;
 import com.texttosql.backend.repository.ChatRepository;
+import com.texttosql.backend.repository.MessageRepository;
 import com.texttosql.backend.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -26,6 +29,7 @@ public class ChatService {
     private final ChatRepository chatRepository;
     private final ChatMapper chatMapper;
     private final UserMapper userMapper;
+    private final MessageRepository messageRepository;
 
     @Transactional(readOnly = true)
     public Page<ChatDto> getChats(CustomUserDetails userDetails, int page, int size, String sort, String direction) {
@@ -74,8 +78,15 @@ public class ChatService {
     @Transactional
     public void deleteChat(UUID chatId, CustomUserDetails userDetails) {
         ChatEntity chatEntity = getCurrentChatEntity(chatId, userDetails);
-        chatEntity.setActive(false);
 
+        List<MessageEntity> messages = messageRepository.findByChatAndActiveTrueOrderByCreatedAtAsc(chatEntity);
+
+        if (!messages.isEmpty()) {
+            messages.forEach(msg -> msg.setActive(false));
+            messageRepository.saveAll(messages);
+        }
+
+        chatEntity.setActive(false);
         chatRepository.save(chatEntity);
     }
 

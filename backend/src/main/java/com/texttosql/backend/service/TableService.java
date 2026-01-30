@@ -1,11 +1,13 @@
 package com.texttosql.backend.service;
 
 import com.texttosql.backend.dto.entity.TableDto;
+import com.texttosql.backend.entity.ColumnEntity;
 import com.texttosql.backend.entity.DatabaseEntity;
 import com.texttosql.backend.entity.TableEntity;
 import com.texttosql.backend.exception.DuplicatedResourceException;
 import com.texttosql.backend.exception.ResourceNotFoundException;
 import com.texttosql.backend.mapper.TableMapper;
+import com.texttosql.backend.repository.ColumnRepository;
 import com.texttosql.backend.repository.TableRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,6 +24,7 @@ public class TableService {
     private final TableRepository tableRepository;
     private final TableMapper tableMapper;
     private final SchemaVersionService versionService;
+    private final ColumnRepository columnRepository;
 
     @Transactional(readOnly = true)
     public List<TableDto> getTables(DatabaseEntity databaseEntity) {
@@ -84,6 +87,12 @@ public class TableService {
     @Transactional
     public void deleteTable(DatabaseEntity databaseEntity, UUID tableId, boolean versionUsedInMessages) {
         TableEntity oldEntity = getCurrentTableEntity(databaseEntity, tableId);
+
+        List<ColumnEntity> columns = columnRepository.findByTableAndActiveTrueOrderByCreatedAtDesc(oldEntity);
+        if (!columns.isEmpty()) {
+            columns.forEach(col -> col.setActive(false));
+            columnRepository.saveAll(columns);
+        }
 
         oldEntity.setActive(false);
         tableRepository.save(oldEntity);

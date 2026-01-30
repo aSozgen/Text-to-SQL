@@ -379,6 +379,19 @@
   100% { background-color: transparent; }
 }
 
+.step-container {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.bg-dark {
+  background-color: #0d1117 !important;
+}
+
 .highlight-row {
   animation: highlightPulse 2.5s ease-out forwards;
   border-left: 3px solid var(--accent-blue) !important;

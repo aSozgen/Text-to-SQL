@@ -5,6 +5,7 @@ export interface ColumnDto {
   columnId?: string;
   createdAt?: string;
   dataType: string;
+  databaseId?: string;
   name: string;
   primaryKey?: boolean;
   tableId?: string;

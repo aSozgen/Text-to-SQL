@@ -1,14 +1,14 @@
 package com.texttosql.backend.service;
 
 import com.texttosql.backend.dto.entity.DatabaseDto;
-import com.texttosql.backend.entity.DatabaseEntity;
-import com.texttosql.backend.entity.SchemaVersionEntity;
-import com.texttosql.backend.entity.UserEntity;
+import com.texttosql.backend.entity.*;
 import com.texttosql.backend.exception.DuplicatedResourceException;
 import com.texttosql.backend.exception.ResourceNotFoundException;
 import com.texttosql.backend.mapper.DatabaseMapper;
 import com.texttosql.backend.mapper.UserMapper;
+import com.texttosql.backend.repository.ColumnRepository;
 import com.texttosql.backend.repository.DatabaseRepository;
+import com.texttosql.backend.repository.TableRepository;
 import com.texttosql.backend.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -26,6 +27,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class DatabaseService {
     private final DatabaseRepository databaseRepository;
+    private final TableRepository tableRepository;
+    private final ColumnRepository columnRepository;
     private final DatabaseMapper databaseMapper;
     private final UserMapper userMapper;
     private final SchemaVersionService versionService;
@@ -93,10 +96,23 @@ public class DatabaseService {
 
     @Transactional
     public void deleteDatabase(UUID databaseId, CustomUserDetails userDetails) {
-        DatabaseEntity entity = getCurrentDatabaseEntity(databaseId, userMapper.toEntity(userDetails));
+        DatabaseEntity databaseEntity = getCurrentDatabaseEntity(databaseId, userMapper.toEntity(userDetails));
 
-        entity.setActive(false);
-        databaseRepository.save(entity);
+        List<TableEntity> tables = tableRepository.findByDatabaseAndActiveTrueOrderByCreatedAtDesc(databaseEntity);
+
+        for (TableEntity table : tables) {
+            List<ColumnEntity> columns = columnRepository.findByTableAndActiveTrueOrderByCreatedAtDesc(table);
+            if (!columns.isEmpty()) {
+                columns.forEach(c -> c.setActive(false));
+                columnRepository.saveAll(columns);
+            }
+
+            table.setActive(false);
+        }
+        tableRepository.saveAll(tables);
+
+        databaseEntity.setActive(false);
+        databaseRepository.save(databaseEntity);
     }
 
     @Transactional(readOnly = true)
