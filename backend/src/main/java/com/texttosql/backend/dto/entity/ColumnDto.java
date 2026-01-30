@@ -18,6 +18,8 @@ public class ColumnDto {
 
     UUID columnId;
 
+    UUID tableId;
+
     @NotBlank(message = "Column name is required")
     @Size(min = 1, max = 50, message = "Column name must be between 1 and 50 characters")
     @Pattern(regexp = "^[a-zA-Z0-9_-]*$", message = "Name contains invalid characters")

@@ -12,6 +12,7 @@ import java.util.List;
 public interface MessageMapper {
 
     @Mapping(target = "databaseId", ignore = true)
+    @Mapping(source = "chat.chatId", target = "chatId")
     MessageDto toDto(MessageEntity entity);
 
     @Mapping(target = "chat", ignore = true)

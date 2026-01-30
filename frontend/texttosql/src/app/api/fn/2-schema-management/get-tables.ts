@@ -7,24 +7,16 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
-import { PagedModelTableDto } from '../../models/paged-model-table-dto';
+import { TableDto } from '../../models/table-dto';
 
 export interface GetTables$Params {
   databaseId: string;
-  page?: number;
-  size?: number;
-  sort?: string;
-  direction?: string;
 }
 
-export function getTables(http: HttpClient, rootUrl: string, params: GetTables$Params, context?: HttpContext): Observable<StrictHttpResponse<PagedModelTableDto>> {
+export function getTables(http: HttpClient, rootUrl: string, params: GetTables$Params, context?: HttpContext): Observable<StrictHttpResponse<Array<TableDto>>> {
   const rb = new RequestBuilder(rootUrl, getTables.PATH, 'get');
   if (params) {
     rb.path('databaseId', params.databaseId, {});
-    rb.query('page', params.page, {});
-    rb.query('size', params.size, {});
-    rb.query('sort', params.sort, {});
-    rb.query('direction', params.direction, {});
   }
 
   return http.request(
@@ -32,7 +24,7 @@ export function getTables(http: HttpClient, rootUrl: string, params: GetTables$P
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<PagedModelTableDto>;
+      return r as StrictHttpResponse<Array<TableDto>>;
     })
   );
 }

@@ -98,8 +98,8 @@ public class SchemaService {
         return databaseService.getCurrentDatabaseEntity(databaseId, userMapper.toEntity(userDetails));
     }
 
-    public Page<TableDto> getTables(UUID databaseId, CustomUserDetails userDetails, int page, int size, String sort, String direction) {
-        return tableService.getTables(getCurrentDatabaseEntity(databaseId, userDetails), page, size, sort, direction);
+    public List<TableDto> getTables(UUID databaseId, CustomUserDetails userDetails) {
+        return tableService.getTables(getCurrentDatabaseEntity(databaseId, userDetails));
     }
 
     public TableDto getTable(UUID databaseId, UUID tableId, CustomUserDetails userDetails) {
@@ -122,8 +122,8 @@ public class SchemaService {
         return tableService.getCurrentTableEntity(getCurrentDatabaseEntity(databaseId, userDetails), tableId);
     }
 
-    public Page<ColumnDto> getColumns(UUID databaseId, UUID tableId, CustomUserDetails userDetails, int page, int size, String sort, String direction) {
-        return columnService.getColumns(getCurrentTableEntity(databaseId, tableId, userDetails), page, size, sort, direction);
+    public List<ColumnDto> getColumns(UUID databaseId, UUID tableId, CustomUserDetails userDetails) {
+        return columnService.getColumns(getCurrentTableEntity(databaseId, tableId, userDetails));
     }
 
     public ColumnDto getColumn(UUID databaseId, UUID tableId, UUID columnId, CustomUserDetails userDetails) {

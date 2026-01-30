@@ -19,8 +19,6 @@ public interface ColumnRepository extends JpaRepository<ColumnEntity, UUID> {
 
     List<ColumnEntity> findByTableAndActiveTrueOrderByCreatedAtDesc(TableEntity table);
 
-    Page<ColumnEntity> findByTableAndActiveTrue(TableEntity tableEntity, Pageable pageable);
-
     boolean existsByNameIgnoreCaseAndTableAndActiveTrue(String name, TableEntity table);
 
     @Query("SELECT c FROM ColumnEntity c WHERE c.table.database.user = :user AND c.active = true AND " +

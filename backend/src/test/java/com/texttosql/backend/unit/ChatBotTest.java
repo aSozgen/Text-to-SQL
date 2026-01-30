@@ -224,8 +224,8 @@ public class ChatBotTest {
         LocalDateTime now = LocalDateTime.now();
 
 
-        MessageDto requestDto = new MessageDto(null, databaseId, "Hello Bot", null, SenderType.USER, Feedback.NONE, null);
-        MessageDto responseDto = new MessageDto(messageId, databaseId, "Hello User", 95.0, SenderType.LLM, Feedback.NONE, now);
+        MessageDto requestDto = new MessageDto(null, chatId, databaseId, "Hello Bot", null, SenderType.USER, Feedback.NONE, null);
+        MessageDto responseDto = new MessageDto(messageId, chatId, databaseId, "Hello User", 95.0, SenderType.LLM, Feedback.NONE, now);
 
         when(chatBotService.createMessage(eq(chatId), any(MessageDto.class), any(CustomUserDetails.class)))
                 .thenReturn(responseDto);
@@ -250,7 +250,7 @@ public class ChatBotTest {
         UUID databaseId = UUID.randomUUID();
         LocalDateTime now = LocalDateTime.now();
 
-        MessageDto messageDto = new MessageDto(messageId, databaseId, "Hello Bot", -1.0, SenderType.USER, Feedback.NONE, LocalDateTime.now());
+        MessageDto messageDto = new MessageDto(messageId, chatId, databaseId, "Hello Bot", -1.0, SenderType.USER, Feedback.NONE, LocalDateTime.now());
 
         Page<MessageDto> messagePage = new PageImpl<>(Collections.singletonList(messageDto), PageRequest.of(0, 10), 1);
 
@@ -274,8 +274,8 @@ public class ChatBotTest {
         UUID messageId = UUID.randomUUID();
         LocalDateTime now = LocalDateTime.now();
 
-        MessageDto updateDto = new MessageDto(messageId, null, "Edited Content", null, null, null, null);
-        MessageDto responseDto = new MessageDto(messageId, null, "Edited Content", -1.0, SenderType.USER, Feedback.NONE, now);
+        MessageDto updateDto = new MessageDto(messageId, chatId, null, "Edited Content", null, null, null, null);
+        MessageDto responseDto = new MessageDto(messageId, chatId, null, "Edited Content", -1.0, SenderType.USER, Feedback.NONE, now);
 
         when(chatBotService.updateMessageContent(eq(chatId), eq(messageId), any(MessageDto.class), any(CustomUserDetails.class)))
                 .thenReturn(responseDto);
@@ -298,7 +298,7 @@ public class ChatBotTest {
         UUID chatId = UUID.randomUUID();
         UUID messageId = UUID.randomUUID();
 
-        MessageDto updateDto = new MessageDto(messageId, null, "Illegal Edit", null, SenderType.LLM, null, null);
+        MessageDto updateDto = new MessageDto(messageId, chatId, null, "Illegal Edit", null, SenderType.LLM, null, null);
 
         when(chatBotService.updateMessageContent(eq(chatId), eq(messageId), any(MessageDto.class), any(CustomUserDetails.class)))
                 .thenThrow(new AccessDeniedException("LLM messages cannot be updated."));
@@ -317,7 +317,7 @@ public class ChatBotTest {
         FeedbackRequest feedbackRequest = new FeedbackRequest(Feedback.GOOD);
         LocalDateTime now = LocalDateTime.now();
 
-        MessageDto responseDto = new MessageDto(messageId, null, "Content", 95.0, SenderType.LLM, Feedback.GOOD, now);
+        MessageDto responseDto = new MessageDto(messageId, chatId, null, "Content", 95.0, SenderType.LLM, Feedback.GOOD, now);
 
 
         when(chatBotService.updateMessageFeedback(eq(chatId), eq(messageId), eq(Feedback.GOOD), any(CustomUserDetails.class)))

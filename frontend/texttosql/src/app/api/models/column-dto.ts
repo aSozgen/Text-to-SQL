@@ -7,4 +7,5 @@ export interface ColumnDto {
   dataType: string;
   name: string;
   primaryKey?: boolean;
+  tableId?: string;
 }

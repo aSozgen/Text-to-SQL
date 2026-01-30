@@ -85,8 +85,8 @@ public class SearchTest {
         UUID columnId = UUID.randomUUID();
 
         DatabaseDto databaseDto = new DatabaseDto(dbId, "UserDB", "Description", now);
-        TableDto tableDto = new TableDto(tableId, "Users", "Description", now);
-        ColumnDto columnDto = new ColumnDto(columnId, "username", "VARCHAR", false, now);
+        TableDto tableDto = new TableDto(dbId, tableId, "Users", "Description", now);
+        ColumnDto columnDto = new ColumnDto(tableId, columnId, "username", "VARCHAR", false, now);
 
         SchemaSearchResponse response = SchemaSearchResponse.builder()
                 .databases(Collections.singletonList(databaseDto))
@@ -127,6 +127,7 @@ public class SearchTest {
         ChatDto chatDto = new ChatDto(chatId, "Hello Chat", now);
         MessageDto messageDto = new MessageDto(
                 messageId,
+                chatId,
                 null,
                 "Hello World",
                 95.0,

@@ -19,8 +19,6 @@ public interface TableRepository extends JpaRepository<TableEntity, UUID> {
 
     List<TableEntity> findByDatabaseAndActiveTrueOrderByCreatedAtDesc(DatabaseEntity database);
 
-    Page<TableEntity> findByDatabaseAndActiveTrue(DatabaseEntity databaseEntity, Pageable pageable);
-
     boolean existsByNameIgnoreCaseAndDatabaseAndActiveTrue(String name, DatabaseEntity database);
 
     @Query("SELECT t FROM TableEntity t WHERE t.database.user = :user AND t.active = true AND " +

@@ -3,6 +3,7 @@
 
 export interface TableDto {
   createdAt?: string;
+  databaseId?: string;
   description?: string;
   name: string;
   tableId?: string;

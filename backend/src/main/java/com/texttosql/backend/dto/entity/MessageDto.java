@@ -18,6 +18,7 @@ import java.util.UUID;
 public class MessageDto {
 
     UUID messageId;
+    UUID chatId;
     UUID databaseId;
 
     @NotBlank(message = "Message content is required")

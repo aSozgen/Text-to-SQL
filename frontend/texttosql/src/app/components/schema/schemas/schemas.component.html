@@ -15,10 +15,10 @@
     </div>
 
     <div class="d-flex gap-2">
-      <button class="btn btn-secondary" (click)="openImportModal()" [disabled]="isGuest()" title="Import JSON">
+      <button class="btn btn-secondary" (click)="openImportModal()" [class.guest-disabled]="isGuest()" [title]="isGuest() ? 'Please log in to perform this action' : 'Import JSON'">
         <i class="fas fa-file-import me-2"></i>Import
       </button>
-      <button class="btn btn-primary" (click)="openCreateDatabase()" [disabled]="isGuest()" title="Create Database">
+      <button class="btn btn-primary" (click)="openCreateDatabase()" [class.guest-disabled]="isGuest()" [title]="isGuest() ? 'Please log in to perform this action' : 'Create Database'">
         <i class="fas fa-plus me-2"></i>New Database
       </button>
     </div>
@@ -29,9 +29,13 @@
       <thead>
       <tr>
         <th style="width: 50px;"></th>
-        <th style="width: 25%;">Schema Name</th>
+        <th style="width: 25%; cursor: pointer;" (click)="onSortChange('name')" class="sortable-header">
+          Schema Name <i [class]="getSortIcon('name')" class="ms-2"></i>
+        </th>
         <th style="width: 30%;">Description</th>
-        <th style="width: 20%;">Upload Date</th>
+        <th style="width: 20%; cursor: pointer;" (click)="onSortChange('createdAt')" class="sortable-header">
+          Upload Date <i [class]="getSortIcon('createdAt')" class="ms-2"></i>
+        </th>
         <th class="text-end pe-4">Actions</th>
       </tr>
       </thead>
@@ -40,6 +44,8 @@
         @for (db of databases(); track db.databaseId; let i = $index) {
 
           <tr class="db-row"
+              [id]="'db-' + db.databaseId"
+              [class.highlight-row]="highlightedId() === 'db-' + db.databaseId"
               [class.expanded]="expandedDbIds().has(db.databaseId!)"
               [class.row-odd]="i % 2 !== 0">
 
@@ -63,24 +69,9 @@
 
             <td class="align-middle text-end pe-4">
               <div class="action-buttons">
-                <button class="btn-text-action me-3"
-                        [class.guest-disabled]="isGuest()"
-                        [disabled]="isGuest()"
-                        (click)="openCreateTable(db.databaseId!)">
-                  <i class="fas fa-plus"></i> Add Table
-                </button>
-                <button class="action-icon-btn edit-btn"
-                        [class.guest-disabled]="isGuest()"
-                        [disabled]="isGuest()"
-                        (click)="openEditDatabase(db)">
-                  <i class="fas fa-pencil-alt text-warning"></i>
-                </button>
-                <button class="action-icon-btn delete-btn"
-                        [class.guest-disabled]="isGuest()"
-                        [disabled]="isGuest()"
-                        (click)="openDeleteModal('DB', db.databaseId!, db.name)">
-                  <i class="fas fa-trash-alt text-danger"></i>
-                </button>
+                <button class="btn-text-action me-3" [class.guest-disabled]="isGuest()" [title]="isGuest() ? 'Please log in' : 'Add Table'" (click)="openCreateTable(db.databaseId!)"><i class="fas fa-plus"></i> Add Table</button>
+                <button class="action-icon-btn edit-btn" [class.guest-disabled]="isGuest()" [title]="isGuest() ? 'Please log in' : 'Edit DB'" (click)="openEditDatabase(db)"><i class="fas fa-pencil-alt text-warning"></i></button>
+                <button class="action-icon-btn delete-btn" [class.guest-disabled]="isGuest()" [title]="isGuest() ? 'Please log in' : 'Delete DB'" (click)="openDeleteModal('DB', db.databaseId!, db.name)"><i class="fas fa-trash-alt text-danger"></i></button>
               </div>
             </td>
           </tr>
@@ -96,9 +87,7 @@
                   @else if (!tablesMap().get(db.databaseId!)?.length) {
                     <div class="p-4 text-center text-secondary-light">
                       <p class="mb-2 small">No tables found.</p>
-                      <button class="btn btn-sm btn-outline-success" [disabled]="isGuest()" (click)="openCreateTable(db.databaseId!)">
-                        Create First Table
-                      </button>
+                      <button class="btn btn-sm btn-outline-success" [class.guest-disabled]="isGuest()" [title]="isGuest() ? 'Please log in' : 'Create Table'" (click)="openCreateTable(db.databaseId!)">Create First Table</button>
                     </div>
                   }
                   @else {
@@ -106,7 +95,10 @@
                       <tbody>
                         @for (table of tablesMap().get(db.databaseId!); track table.tableId; let j = $index) {
 
-                          <tr class="table-row" [class.nested-odd]="j % 2 !== 0">
+                          <tr class="table-row"
+                              [id]="'table-' + table.tableId"
+                              [class.highlight-row]="highlightedId() === 'table-' + table.tableId"
+                              [class.nested-odd]="j % 2 !== 0">
 
                             <td style="width: 50px;" class="ps-4">
                               <button class="btn-icon btn-sm" (click)="toggleTable(db.databaseId, table.tableId)">
@@ -129,24 +121,9 @@
 
                             <td class="text-end pe-4 align-middle">
                               <div class="action-buttons">
-                                <button class="btn-text-action me-3"
-                                        [class.guest-disabled]="isGuest()"
-                                        [disabled]="isGuest()"
-                                        (click)="openCreateColumn(db.databaseId!, table.tableId!)">
-                                  <i class="fas fa-plus"></i> Add Column
-                                </button>
-                                <button class="action-icon-btn edit-btn"
-                                        [class.guest-disabled]="isGuest()"
-                                        [disabled]="isGuest()"
-                                        (click)="openEditTable(table, db.databaseId!)">
-                                  <i class="fas fa-pencil-alt text-warning"></i>
-                                </button>
-                                <button class="action-icon-btn delete-btn"
-                                        [class.guest-disabled]="isGuest()"
-                                        [disabled]="isGuest()"
-                                        (click)="openDeleteModal('TABLE', table.tableId!, table.name, db.databaseId)">
-                                  <i class="fas fa-trash-alt text-danger"></i>
-                                </button>
+                                <button class="btn-text-action me-3" [class.guest-disabled]="isGuest()" [title]="isGuest() ? 'Please log in' : 'Add Column'" (click)="openCreateColumn(db.databaseId!, table.tableId!)"><i class="fas fa-plus"></i> Add Column</button>
+                                <button class="action-icon-btn edit-btn" [class.guest-disabled]="isGuest()" [title]="isGuest() ? 'Please log in' : 'Edit Table'" (click)="openEditTable(table, db.databaseId!)"><i class="fas fa-pencil-alt text-warning"></i></button>
+                                <button class="action-icon-btn delete-btn" [class.guest-disabled]="isGuest()" [title]="isGuest() ? 'Please log in' : 'Delete Table'" (click)="openDeleteModal('TABLE', table.tableId!, table.name, db.databaseId)"><i class="fas fa-trash-alt text-danger"></i></button>
                               </div>
                             </td>
                           </tr>
@@ -163,7 +140,11 @@
                                     <h6 class="text-uppercase text-secondary-light xsmall fw-bold mb-2 ps-2">Columns</h6>
                                     <div class="d-flex flex-wrap gap-2">
                                       @for (col of columnsMap().get(table.tableId!); track col.columnId) {
-                                        <span class="column-badge" [class.pk]="col.primaryKey">
+
+                                        <span class="column-badge"
+                                              [id]="'col-' + col.columnId"
+                                              [class.pk]="col.primaryKey"
+                                              [class.highlight-badge]="highlightedId() === 'col-' + col.columnId">
 
                                           @if(col.primaryKey) {
                                             <i class="fas fa-key text-warning me-2" title="Primary Key"></i>
@@ -175,15 +156,18 @@
                                           {{ col.name }}
                                           <span class="text-secondary-light opacity-75 ms-1">({{ col.dataType }})</span>
 
-                                          @if (!isGuest()) {
-                                            <div class="vr mx-2 bg-secondary opacity-25"></div>
-                                            <div class="d-flex gap-2">
-                                                <i class="fas fa-pencil-alt action-icon hover-warn text-warning"
-                                                   (click)="openEditColumn(col, db.databaseId!, table.tableId!)"></i>
-                                                <i class="fas fa-times action-icon hover-danger text-danger"
-                                                   (click)="openDeleteModal('COLUMN', col.columnId!, col.name, table.tableId!, db.databaseId!)"></i>
-                                            </div>
-                                          }
+                                          <div class="vr mx-2 bg-secondary opacity-25"></div>
+                                          <div class="d-flex gap-2">
+                                              <i class="fas fa-pencil-alt action-icon hover-warn text-warning"
+                                                 [class.guest-disabled]="isGuest()"
+                                                 [title]="isGuest() ? 'Please log in' : 'Edit Column'"
+                                                 (click)="openEditColumn(col, db.databaseId!, table.tableId!)"></i>
+
+                                              <i class="fas fa-times action-icon hover-danger text-danger"
+                                                 [class.guest-disabled]="isGuest()"
+                                                 [title]="isGuest() ? 'Please log in' : 'Delete Column'"
+                                                 (click)="openDeleteModal('COLUMN', col.columnId!, col.name, table.tableId!, db.databaseId!)"></i>
+                                          </div>
                                         </span>
                                       }
                                     </div>
@@ -203,6 +187,34 @@
         }
       </tbody>
     </table>
+
+    @if (!isLoading() && totalElements() > 0) {
+      <div class="pagination-footer d-flex justify-content-between align-items-center p-3">
+        <div class="d-flex align-items-center gap-3">
+          <div class="d-flex align-items-center gap-2">
+            <label for="pageSize" class="text-secondary-light small mb-0">Rows:</label>
+            <select id="pageSize" class="form-select form-select-sm custom-select" style="width: 70px;" [ngModel]="size()" (ngModelChange)="onSizeChange($event)">
+              <option [ngValue]="5">5</option>
+              <option [ngValue]="10">10</option>
+              <option [ngValue]="20">20</option>
+              <option [ngValue]="50">50</option>
+            </select>
+          </div>
+          <div class="vr bg-secondary opacity-25" style="height: 20px;"></div>
+          <div class="text-secondary-light small">
+            <span class="me-1">Page</span><strong class="text-white">{{ page() + 1 }}</strong>
+            <span class="mx-1">of</span><strong class="text-white">{{ totalPages() }}</strong>
+            <span class="ms-2 opacity-75">({{ totalElements() }} items)</span>
+          </div>
+        </div>
+        <div class="d-flex gap-2">
+          <button class="pagination-btn" [disabled]="page() === 0" (click)="onPageChange(0)" title="First Page"><i class="fas fa-angle-double-left"></i></button>
+          <button class="pagination-btn" [disabled]="page() === 0" (click)="onPageChange(page() - 1)" title="Previous Page"><i class="fas fa-chevron-left"></i></button>
+          <button class="pagination-btn" [disabled]="page() >= totalPages() - 1" (click)="onPageChange(page() + 1)" title="Next Page"><i class="fas fa-chevron-right"></i></button>
+          <button class="pagination-btn" [disabled]="page() >= totalPages() - 1" (click)="onPageChange(totalPages() - 1)" title="Last Page"><i class="fas fa-angle-double-right"></i></button>
+        </div>
+      </div>
+    }
   </div>
 </div>
 
@@ -212,49 +224,47 @@
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title fw-bold text-white">
-            {{ modalMode().replace('_', ' ') }} </h5>
+          <h5 class="modal-title fw-bold text-white">{{ modalMode().replace('_', ' ') }} </h5>
           <button type="button" class="btn-close btn-close-white" (click)="closeModal()"></button>
         </div>
         <div class="modal-body">
           <form>
             <div class="mb-3">
-              <label class="form-label">Name</label>
-              <input type="text" class="form-control" [(ngModel)]="formData.name" name="name">
+              <label class="form-label">Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" [(ngModel)]="formData.name" name="name"
+                     [placeholder]="modalMode().includes('DB') ? 'e.g. E_Commerce_DB' : (modalMode().includes('TABLE') ? 'e.g. t_users' : 'e.g. user_id')"
+                     [maxlength]="modalMode().includes('COLUMN') ? 50 : 64" autocomplete="off">
+              <div class="form-text text-secondary opacity-75 small mt-1">
+                @if(modalMode().includes('COLUMN')) { 1-50 chars. Alphanumeric, '-', '_' only. } @else { 2-64 chars. Alphanumeric, '-', '_' only. }
+              </div>
             </div>
-
             @if(modalMode().includes('DB') || modalMode().includes('TABLE') || modalMode() === 'IMPORT') {
               <div class="mb-3">
                 <label class="form-label">Description</label>
-                <textarea class="form-control" [(ngModel)]="formData.description" name="description"></textarea>
+                <textarea class="form-control" [(ngModel)]="formData.description" name="description" placeholder="Optional description..." maxlength="255" rows="3"></textarea>
+                <div class="text-end text-secondary opacity-50 xsmall mt-1">{{ (formData.description || '').length }} / 255</div>
               </div>
             }
-
             @if(modalMode().includes('COLUMN')) {
               <div class="row">
                 <div class="col-md-8 mb-3">
-                  <label class="form-label">Data Type</label>
-                  <select class="form-select" [(ngModel)]="formData.dataType" name="dataType">
-                    @for(type of dataTypes; track type) {
-                      <option [value]="type">{{ type }}</option>
-                    }
+                  <label class="form-label">Data Type <span class="text-danger">*</span></label>
+                  <select class="form-select custom-select" [(ngModel)]="formData.dataType" name="dataType">
+                    @for(type of dataTypes; track type) { <option [value]="type">{{ type }}</option> }
                   </select>
                 </div>
                 <div class="col-md-4 mb-3 d-flex align-items-end">
                   <div class="form-check mb-2">
                     <input class="form-check-input" type="checkbox" id="pkCheck" [(ngModel)]="formData.primaryKey" name="pk">
-                    <label class="form-check-label text-white" for="pkCheck">
-                      Primary Key
-                    </label>
+                    <label class="form-check-label text-white" for="pkCheck">Primary Key</label>
                   </div>
                 </div>
               </div>
             }
-
             @if(modalMode() === 'IMPORT') {
               <div class="mb-3">
-                <label class="form-label">JSON Content</label>
-                <textarea class="form-control font-monospace" rows="5" [(ngModel)]="formData.jsonContent" name="json"></textarea>
+                <label class="form-label">JSON Content <span class="text-danger">*</span></label>
+                <textarea class="form-control font-monospace" rows="6" [(ngModel)]="formData.jsonContent" name="json" placeholder='{"name": "...", "tables": [...]}'></textarea>
               </div>
             }
           </form>
@@ -274,9 +284,7 @@
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content border-danger">
         <div class="modal-header border-bottom border-secondary">
-          <h5 class="modal-title fw-bold text-danger">
-            <i class="fas fa-exclamation-triangle me-2"></i>Confirm Delete
-          </h5>
+          <h5 class="modal-title fw-bold text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Confirm Delete</h5>
           <button type="button" class="btn-close btn-close-white" (click)="closeDeleteModal()"></button>
         </div>
         <div class="modal-body text-center p-4">
@@ -285,9 +293,7 @@
         </div>
         <div class="modal-footer border-top border-secondary justify-content-center">
           <button class="btn btn-secondary px-4" (click)="closeDeleteModal()">Cancel</button>
-          <button class="btn btn-danger px-4" (click)="confirmDelete()">
-            Delete
-          </button>
+          <button class="btn btn-danger px-4" (click)="confirmDelete()">Delete</button>
         </div>
       </div>
     </div>
@@ -300,16 +306,14 @@
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content border-warning">
         <div class="modal-header border-bottom border-secondary">
-          <h5 class="modal-title fw-bold text-warning">
-            <i class="fas fa-exclamation-circle me-2"></i>Error
-          </h5>
+          <h5 class="modal-title fw-bold text-warning"><i class="fas fa-exclamation-circle me-2"></i>Warning</h5>
           <button type="button" class="btn-close btn-close-white" (click)="closeErrorModal()"></button>
         </div>
         <div class="modal-body text-center p-4">
           <p class="mb-0 text-white">{{ errorMessage() }}</p>
         </div>
         <div class="modal-footer border-top border-secondary justify-content-center">
-          <button class="btn btn-secondary px-4" (click)="closeErrorModal()">Close</button>
+          <button class="btn btn-secondary px-4" (click)="closeErrorModal()">OK</button>
         </div>
       </div>
     </div>

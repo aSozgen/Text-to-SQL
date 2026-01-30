@@ -257,24 +257,28 @@ public class SchemaTest {
                 .andExpect(jsonPath("$.message").value("Database not found."));
     }
 
+    // --- TABLE TESTS ---
+
     @Test
-    void getTables_ShouldReturnPage() throws Exception {
+    void getTables_ShouldReturnList() throws Exception {
         LocalDateTime now = LocalDateTime.now();
         UUID databaseId = UUID.randomUUID();
         UUID tableId = UUID.randomUUID();
 
-        TableDto tableDto = new TableDto(tableId, "Users_Table", "Desc", now);
-        Page<TableDto> page = new PageImpl<>(Collections.singletonList(tableDto), PageRequest.of(0, 10), 1);
+        TableDto tableDto = new TableDto(tableId, databaseId, "Users_Table", "Desc", now);
+        List<TableDto> tables = Collections.singletonList(tableDto);
 
-        when(schemaService.getTables(eq(databaseId), any(CustomUserDetails.class), anyInt(), anyInt(), anyString(), anyString()))
-                .thenReturn(page);
+        // Updated mock: No pagination arguments, returns List
+        when(schemaService.getTables(eq(databaseId), any(CustomUserDetails.class)))
+                .thenReturn(tables);
 
         mockMvc.perform(get("/api/v1/schemas/databases/{databaseId}/tables", databaseId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].tableId").value(tableId.toString()))
-                .andExpect(jsonPath("$.content[0].name").value("Users_Table"))
-                .andExpect(jsonPath("$.content[0].description").value("Desc"))
-                .andExpect(jsonPath("$.content[0].createdAt").value(now.format(formatter)));
+                .andExpect(jsonPath("$[0].tableId").value(tableId.toString()))
+                .andExpect(jsonPath("$[0].databaseId").value(databaseId.toString()))
+                .andExpect(jsonPath("$[0].name").value("Users_Table"))
+                .andExpect(jsonPath("$[0].description").value("Desc"))
+                .andExpect(jsonPath("$[0].createdAt").value(now.format(formatter)));
     }
 
     @Test
@@ -283,7 +287,7 @@ public class SchemaTest {
         UUID databaseId = UUID.randomUUID();
         UUID tableId = UUID.randomUUID();
 
-        TableDto tableDto = new TableDto(tableId, "My_Table", "Desc", now);
+        TableDto tableDto = new TableDto(tableId, databaseId, "My_Table", "Desc", now);
 
         when(schemaService.getTable(eq(databaseId), eq(tableId), any(CustomUserDetails.class)))
                 .thenReturn(tableDto);
@@ -291,6 +295,7 @@ public class SchemaTest {
         mockMvc.perform(get("/api/v1/schemas/databases/{databaseId}/tables/{tableId}", databaseId, tableId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.tableId").value(tableId.toString()))
+                .andExpect(jsonPath("$.databaseId").value(databaseId.toString()))
                 .andExpect(jsonPath("$.name").value("My_Table"))
                 .andExpect(jsonPath("$.description").value("Desc"))
                 .andExpect(jsonPath("$.createdAt").value(now.format(formatter)));
@@ -302,8 +307,8 @@ public class SchemaTest {
         UUID databaseId = UUID.randomUUID();
         UUID tableId = UUID.randomUUID();
 
-        TableDto requestDto = new TableDto(null, "New_Table", "New Desc", null);
-        TableDto responseDto = new TableDto(tableId, "New_Table", "New Desc", now);
+        TableDto requestDto = new TableDto(null, databaseId, "New_Table", "New Desc", null);
+        TableDto responseDto = new TableDto(tableId, databaseId, "New_Table", "New Desc", now);
 
         when(schemaService.createTable(eq(databaseId), any(TableDto.class), any(CustomUserDetails.class)))
                 .thenReturn(responseDto);
@@ -313,6 +318,7 @@ public class SchemaTest {
                         .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.tableId").value(tableId.toString()))
+                .andExpect(jsonPath("$.databaseId").value(databaseId.toString()))
                 .andExpect(jsonPath("$.name").value("New_Table"))
                 .andExpect(jsonPath("$.description").value("New Desc"))
                 .andExpect(jsonPath("$.createdAt").value(now.format(formatter)));
@@ -321,7 +327,7 @@ public class SchemaTest {
     @Test
     void createTable_ShouldReturnConflict_WhenNameExists() throws Exception {
         UUID databaseId = UUID.randomUUID();
-        TableDto requestDto = new TableDto(null, "Existing_Table", "Desc", null);
+        TableDto requestDto = new TableDto(null, databaseId, "Existing_Table", "Desc", null);
 
         when(schemaService.createTable(eq(databaseId), any(TableDto.class), any(CustomUserDetails.class)))
                 .thenThrow(new DuplicatedResourceException("There is already a Table with the same name."));
@@ -339,8 +345,8 @@ public class SchemaTest {
         UUID databaseId = UUID.randomUUID();
         UUID tableId = UUID.randomUUID();
 
-        TableDto updateDto = new TableDto(tableId, "Updated_Table", "Updated Desc", null);
-        TableDto responseDto = new TableDto(tableId, "Updated_Table", "Updated Desc", now);
+        TableDto updateDto = new TableDto(tableId, databaseId, "Updated_Table", "Updated Desc", null);
+        TableDto responseDto = new TableDto(tableId, databaseId, "Updated_Table", "Updated Desc", now);
 
         when(schemaService.updateTable(eq(databaseId), eq(tableId), any(TableDto.class), any(CustomUserDetails.class)))
                 .thenReturn(responseDto);
@@ -350,6 +356,7 @@ public class SchemaTest {
                         .content(objectMapper.writeValueAsString(updateDto)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.tableId").value(tableId.toString()))
+                .andExpect(jsonPath("$.databaseId").value(databaseId.toString()))
                 .andExpect(jsonPath("$.name").value("Updated_Table"))
                 .andExpect(jsonPath("$.description").value("Updated Desc"))
                 .andExpect(jsonPath("$.createdAt").value(now.format(formatter)));
@@ -368,26 +375,30 @@ public class SchemaTest {
                 .andExpect(jsonPath("$.message").value("Table not found"));
     }
 
+    // --- COLUMN TESTS ---
+
     @Test
-    void getColumns_ShouldReturnPage() throws Exception {
+    void getColumns_ShouldReturnList() throws Exception {
         LocalDateTime now = LocalDateTime.now();
         UUID databaseId = UUID.randomUUID();
         UUID tableId = UUID.randomUUID();
         UUID columnId = UUID.randomUUID();
 
-        ColumnDto columnDto = new ColumnDto(columnId, "username", "VARCHAR", false, now);
-        Page<ColumnDto> page = new PageImpl<>(Collections.singletonList(columnDto), PageRequest.of(0, 10), 1);
+        ColumnDto columnDto = new ColumnDto(columnId, tableId, "username", "VARCHAR", false, now);
+        List<ColumnDto> columns = Collections.singletonList(columnDto);
 
-        when(schemaService.getColumns(eq(databaseId), eq(tableId), any(CustomUserDetails.class), anyInt(), anyInt(), anyString(), anyString()))
-                .thenReturn(page);
+        // Updated mock: No pagination arguments, returns List
+        when(schemaService.getColumns(eq(databaseId), eq(tableId), any(CustomUserDetails.class)))
+                .thenReturn(columns);
 
         mockMvc.perform(get("/api/v1/schemas/databases/{databaseId}/tables/{tableId}/columns", databaseId, tableId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].columnId").value(columnId.toString()))
-                .andExpect(jsonPath("$.content[0].name").value("username"))
-                .andExpect(jsonPath("$.content[0].dataType").value("VARCHAR"))
-                .andExpect(jsonPath("$.content[0].primaryKey").value(Boolean.FALSE.toString().toLowerCase()))
-                .andExpect(jsonPath("$.content[0].createdAt").value(now.format(formatter)));
+                .andExpect(jsonPath("$[0].columnId").value(columnId.toString()))
+                .andExpect(jsonPath("$[0].tableId").value(tableId.toString()))
+                .andExpect(jsonPath("$[0].name").value("username"))
+                .andExpect(jsonPath("$[0].dataType").value("VARCHAR"))
+                .andExpect(jsonPath("$[0].primaryKey").value(Boolean.FALSE.toString().toLowerCase()))
+                .andExpect(jsonPath("$[0].createdAt").value(now.format(formatter)));
     }
 
     @Test
@@ -397,7 +408,7 @@ public class SchemaTest {
         UUID tableId = UUID.randomUUID();
         UUID columnId = UUID.randomUUID();
 
-        ColumnDto columnDto = new ColumnDto(columnId, "email", "VARCHAR", false, now);
+        ColumnDto columnDto = new ColumnDto(columnId, tableId, "email", "VARCHAR", false, now);
 
         when(schemaService.getColumn(eq(databaseId), eq(tableId), eq(columnId), any(CustomUserDetails.class)))
                 .thenReturn(columnDto);
@@ -405,6 +416,7 @@ public class SchemaTest {
         mockMvc.perform(get("/api/v1/schemas/databases/{databaseId}/tables/{tableId}/columns/{columnId}", databaseId, tableId, columnId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.columnId").value(columnId.toString()))
+                .andExpect(jsonPath("$.tableId").value(tableId.toString()))
                 .andExpect(jsonPath("$.name").value("email"))
                 .andExpect(jsonPath("$.dataType").value("VARCHAR"))
                 .andExpect(jsonPath("$.primaryKey").value(Boolean.FALSE.toString().toLowerCase()))
@@ -418,8 +430,8 @@ public class SchemaTest {
         UUID tableId = UUID.randomUUID();
         UUID columnId = UUID.randomUUID();
 
-        ColumnDto requestDto = new ColumnDto(null, "user_id", "UUID", true, null);
-        ColumnDto responseDto = new ColumnDto(columnId, "user_id", "UUID", true, now);
+        ColumnDto requestDto = new ColumnDto(null, tableId, "user_id", "UUID", true, null);
+        ColumnDto responseDto = new ColumnDto(columnId, tableId, "user_id", "UUID", true, now);
 
         when(schemaService.createColumn(eq(databaseId), eq(tableId), any(ColumnDto.class), any(CustomUserDetails.class)))
                 .thenReturn(responseDto);
@@ -429,6 +441,7 @@ public class SchemaTest {
                         .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.columnId").value(columnId.toString()))
+                .andExpect(jsonPath("$.tableId").value(tableId.toString()))
                 .andExpect(jsonPath("$.name").value("user_id"))
                 .andExpect(jsonPath("$.dataType").value("UUID"))
                 .andExpect(jsonPath("$.primaryKey").value(Boolean.TRUE.toString().toLowerCase()))
@@ -440,7 +453,7 @@ public class SchemaTest {
         UUID databaseId = UUID.randomUUID();
         UUID tableId = UUID.randomUUID();
 
-        ColumnDto requestDto = new ColumnDto(null, "existing_col", "VARCHAR", false, null);
+        ColumnDto requestDto = new ColumnDto(null, tableId, "existing_col", "VARCHAR", false, null);
 
         when(schemaService.createColumn(eq(databaseId), eq(tableId), any(ColumnDto.class), any(CustomUserDetails.class)))
                 .thenThrow(new DuplicatedResourceException("There is already a Column with the same name."));
@@ -459,8 +472,8 @@ public class SchemaTest {
         UUID tableId = UUID.randomUUID();
         UUID columnId = UUID.randomUUID();
 
-        ColumnDto updateDto = new ColumnDto(columnId, "new_col", "INT", false, null);
-        ColumnDto responseDto = new ColumnDto(columnId, "new_col", "INT", false, now);
+        ColumnDto updateDto = new ColumnDto(columnId, tableId, "new_col", "INT", false, null);
+        ColumnDto responseDto = new ColumnDto(columnId, tableId, "new_col", "INT", false, now);
 
         when(schemaService.updateColumn(eq(databaseId), eq(tableId), eq(columnId), any(ColumnDto.class), any(CustomUserDetails.class)))
                 .thenReturn(responseDto);
@@ -470,6 +483,7 @@ public class SchemaTest {
                         .content(objectMapper.writeValueAsString(updateDto)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.columnId").value(columnId.toString()))
+                .andExpect(jsonPath("$.tableId").value(tableId.toString()))
                 .andExpect(jsonPath("$.name").value("new_col"))
                 .andExpect(jsonPath("$.dataType").value("INT"))
                 .andExpect(jsonPath("$.primaryKey").value(Boolean.FALSE.toString().toLowerCase()))

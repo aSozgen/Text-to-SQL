@@ -7,26 +7,18 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
-import { PagedModelColumnDto } from '../../models/paged-model-column-dto';
+import { ColumnDto } from '../../models/column-dto';
 
 export interface GetColumns$Params {
   databaseId: string;
   tableId: string;
-  page?: number;
-  size?: number;
-  sort?: string;
-  direction?: string;
 }
 
-export function getColumns(http: HttpClient, rootUrl: string, params: GetColumns$Params, context?: HttpContext): Observable<StrictHttpResponse<PagedModelColumnDto>> {
+export function getColumns(http: HttpClient, rootUrl: string, params: GetColumns$Params, context?: HttpContext): Observable<StrictHttpResponse<Array<ColumnDto>>> {
   const rb = new RequestBuilder(rootUrl, getColumns.PATH, 'get');
   if (params) {
     rb.path('databaseId', params.databaseId, {});
     rb.path('tableId', params.tableId, {});
-    rb.query('page', params.page, {});
-    rb.query('size', params.size, {});
-    rb.query('sort', params.sort, {});
-    rb.query('direction', params.direction, {});
   }
 
   return http.request(
@@ -34,7 +26,7 @@ export function getColumns(http: HttpClient, rootUrl: string, params: GetColumns
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<PagedModelColumnDto>;
+      return r as StrictHttpResponse<Array<ColumnDto>>;
     })
   );
 }

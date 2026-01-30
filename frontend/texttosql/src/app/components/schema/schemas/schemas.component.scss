@@ -3,6 +3,7 @@
 }
 
 .text-secondary-light { color: #c9d1d9 !important; opacity: 0.8; }
+.text-muted { color: #6e7681 !important; }
 
 /* HEADER & CONTROLS */
 .header-section { margin-bottom: 2rem; }
@@ -27,17 +28,32 @@
   }
 }
 
-/* BUTTONS */
+/* --- BUTTONS & DISABLED STATES --- */
+
+%guest-disabled-style {
+  opacity: 0.4 !important;
+  cursor: not-allowed !important;
+  pointer-events: auto !important; /* Tooltip çalışsın diye auto */
+  box-shadow: none !important;
+  transform: none !important;
+}
+
 .btn-primary {
   display: inline-flex; align-items: center; justify-content: center;
   height: 38px; padding: 0 20px; font-size: 0.9rem; font-weight: 600;
   border-radius: 6px; background-color: var(--accent-green); color: white;
   border: 1px solid rgba(255,255,255,0.1); transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  &:hover:not(:disabled) {
+
+  &:hover:not(:disabled):not(.guest-disabled) {
     background-color: #2ea043; border-color: #2ea043;
     transform: translateY(-1px); box-shadow: 0 4px 12px rgba(46, 160, 67, 0.4);
   }
-  &:disabled { opacity: 0.5; cursor: not-allowed; background-color: var(--border-color); border-color: var(--border-color); transform: none; box-shadow: none; }
+
+  &:disabled, &.guest-disabled {
+    @extend %guest-disabled-style;
+    background-color: var(--border-color);
+    border-color: var(--border-color);
+  }
 }
 
 .btn-secondary {
@@ -45,8 +61,30 @@
   height: 38px; padding: 0 20px; font-size: 0.9rem; font-weight: 500;
   border-radius: 6px; background-color: transparent; color: var(--text-main);
   border: 1px solid var(--border-color); transition: all 0.2s ease;
-  &:hover:not(:disabled) { background-color: rgba(255,255,255,0.05); border-color: var(--text-main); color: white; }
-  &:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  &:hover:not(:disabled):not(.guest-disabled) {
+    background-color: rgba(255,255,255,0.05); border-color: var(--text-main); color: white;
+  }
+
+  &:disabled, &.guest-disabled {
+    @extend %guest-disabled-style;
+  }
+}
+
+/* Create First Table button specific style */
+.btn-outline-success {
+  &.guest-disabled {
+    @extend %guest-disabled-style;
+    color: #6e7681 !important;
+    border-color: var(--border-color) !important;
+    background-color: transparent !important;
+
+    &:hover {
+      background-color: transparent !important;
+      color: #6e7681 !important;
+      border-color: var(--border-color) !important;
+    }
+  }
 }
 
 /* TABLE CONTAINER */
@@ -66,13 +104,23 @@
     border-bottom: 1px solid var(--border-color);
   }
 
-  /* TD için varsayılan stil: Transparent değil, inherit */
   td {
     padding: 16px;
     border-bottom: 1px solid var(--border-color);
     vertical-align: middle;
-    background-color: inherit; /* Parent row rengini al */
+    background-color: inherit;
     color: inherit;
+  }
+}
+
+/* SORTABLE HEADER */
+.sortable-header {
+  user-select: none;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: white;
   }
 }
 
@@ -81,23 +129,16 @@
   transition: background-color 0.15s ease;
   border-left: 3px solid transparent;
   color: var(--text-main);
-
-  /* Varsayılan (Even) - Card BG */
   background-color: var(--card-bg);
 
-  /* Tek (Odd) Satırlar */
-  &.row-odd {
-    background-color: rgba(255, 255, 255, 0.03); /* Hafif açık ton */
-  }
+  &.row-odd { background-color: rgba(255, 255, 255, 0.03); }
 
-  /* Hover Efekti (Tüm TD'leri kapsar) */
   &:hover {
     background-color: rgba(56, 139, 253, 0.08) !important;
     border-left-color: var(--accent-blue);
-    td { background-color: transparent; } /* TD kendi rengini bıraksın */
+    td { background-color: transparent; }
   }
 
-  /* Expanded Durum */
   &.expanded {
     background-color: rgba(56, 139, 253, 0.12) !important;
     border-left-color: var(--accent-blue);
@@ -108,7 +149,7 @@
 
 /* NESTED CONTAINER */
 .nested-container {
-  background-color: #0d1117; /* Daha koyu zemin */
+  background-color: #0d1117;
   box-shadow: inset 0 6px 12px -4px rgba(0,0,0,0.6);
   border-bottom: 1px solid var(--border-color);
   padding: 0;
@@ -120,21 +161,17 @@
 
   .table-row {
     transition: background-color 0.15s;
-    background-color: #0d1117; /* Default Even */
+    background-color: #0d1117;
     color: #adbac7;
 
     td {
       border-bottom: 1px solid rgba(48, 54, 61, 0.4);
       padding: 12px 16px;
-      background-color: inherit; /* Parent row rengini al */
+      background-color: inherit;
     }
 
-    /* Nested Odd */
-    &.nested-odd {
-      background-color: rgba(255, 255, 255, 0.03);
-    }
+    &.nested-odd { background-color: rgba(255, 255, 255, 0.03); }
 
-    /* Nested Hover */
     &:hover {
       background-color: rgba(56, 139, 253, 0.1);
       td { color: white; background-color: transparent; }
@@ -153,9 +190,13 @@
   width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
   border: none; background: transparent; border-radius: 50%; transition: all 0.2s ease;
   i { font-size: 1rem; }
-  &.edit-btn:hover:not(:disabled) { background-color: rgba(255, 193, 7, 0.15); }
-  &.delete-btn:hover:not(:disabled) { background-color: rgba(248, 81, 73, 0.15); }
-  &:disabled, &.guest-disabled { opacity: 0.3; cursor: not-allowed; }
+
+  &.edit-btn:hover:not(:disabled):not(.guest-disabled) { background-color: rgba(255, 193, 7, 0.15); }
+  &.delete-btn:hover:not(:disabled):not(.guest-disabled) { background-color: rgba(248, 81, 73, 0.15); }
+
+  &:disabled, &.guest-disabled {
+    @extend %guest-disabled-style;
+  }
 }
 
 .btn-text-action {
@@ -164,8 +205,17 @@
   color: var(--accent-green); background-color: rgba(35, 134, 54, 0.1);
   border: 1px solid rgba(35, 134, 54, 0.3); border-radius: 4px;
   text-decoration: none; transition: all 0.2s ease;
-  &:hover:not(:disabled) { background-color: var(--accent-green); color: white; box-shadow: 0 2px 8px rgba(35, 134, 54, 0.4); }
-  &:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  &:hover:not(:disabled):not(.guest-disabled) {
+    background-color: var(--accent-green); color: white; box-shadow: 0 2px 8px rgba(35, 134, 54, 0.4);
+  }
+
+  &:disabled, &.guest-disabled {
+    @extend %guest-disabled-style;
+    color: #6e7681;
+    background-color: rgba(255,255,255,0.05);
+    border-color: transparent;
+  }
 }
 
 /* COLUMN BADGE */
@@ -185,7 +235,13 @@
 
   .action-icon {
     cursor: pointer; opacity: 0.6; transition: all 0.2s; margin-left: 8px;
-    &:hover { opacity: 1; transform: scale(1.15); }
+
+    &:hover:not(.guest-disabled) { opacity: 1; transform: scale(1.15); }
+
+    &.guest-disabled {
+      @extend %guest-disabled-style;
+      opacity: 0.3;
+    }
   }
 }
 
@@ -200,6 +256,88 @@
 .transition-icon { transition: transform 0.2s ease; }
 .rotated { transform: rotate(90deg); color: var(--accent-blue) !important; }
 
+/* --- PAGINATION & FOOTER STYLES --- */
+.pagination-footer {
+  background-color: rgba(13, 17, 23, 0.95); /* Hafif transparan koyu zemin */
+  border-top: 1px solid var(--border-color) !important;
+  backdrop-filter: blur(5px); /* Buzlu cam efekti */
+
+  /* Dropdown (Select) Stili */
+  .custom-select {
+    appearance: none; /* Varsayılan tarayıcı stilini gizle */
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid var(--border-color) !important;
+    color: #e6edf3 !important;
+    padding-right: 32px; /* Ok için boşluk */
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    /* Beyaz Ok İşareti (SVG Data URI) */
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23e6edf3' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent-blue) !important;
+      box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.25);
+      background-color: rgba(0, 0, 0, 0.4) !important;
+    }
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1) !important;
+      border-color: #8b949e !important;
+    }
+
+    option {
+      background-color: #161b22; /* Açılan menü arkaplanı */
+      color: white;
+    }
+  }
+
+  /* Sayfalama Butonları */
+  .pagination-btn {
+    min-width: 36px; /* Sabit genişlik */
+    height: 36px;
+    padding: 0 8px; /* İkonlar sığsın diye */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: transparent;
+    color: var(--text-secondary-light);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Hover Efekti */
+    &:hover:not(:disabled) {
+      background-color: rgba(56, 139, 253, 0.15);
+      border-color: var(--accent-blue);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(56, 139, 253, 0.3);
+    }
+
+    /* Tıklama Efekti */
+    &:active:not(:disabled) {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    /* Disabled */
+    &:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      border-color: transparent;
+      background-color: rgba(255,255,255,0.02);
+    }
+
+    i { font-size: 0.85rem; }
+  }
+}
+/* ... Önceki kodlar aynı kalacak ... */
+
 /* MODAL & FORM */
 ::ng-deep .modal-backdrop { background-color: rgba(0, 0, 0, 0.85) !important; z-index: 1040 !important; }
 ::ng-deep .modal { z-index: 1050 !important; }
@@ -212,8 +350,43 @@
 ::ng-deep .modal-header { border-bottom: 1px solid var(--border-color) !important; padding: 20px 24px !important; .btn-close { filter: invert(1); } }
 ::ng-deep .modal-body { padding: 24px !important; }
 ::ng-deep .modal-footer { border-top: 1px solid var(--border-color) !important; padding: 16px 24px !important; }
+
+/* INPUT & SELECT STYLES (GÜNCELLENDİ) */
 .form-control, .form-select {
   background-color: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid var(--border-color) !important; color: white !important;
-  &:focus { background-color: black !important; border-color: var(--accent-blue) !important; box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.2) !important; }
+  border: 1px solid var(--border-color) !important;
+  color: white !important;
+
+  /* Placeholder Rengini Açık Yapma */
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.4) !important; /* %40 görünür beyaz */
+    opacity: 1; /* Firefox varsayılan opaklığını düzeltmek için */
+  }
+
+  /* Focus Durumu */
+  &:focus {
+    background-color: black !important;
+    border-color: var(--accent-blue) !important;
+    box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.2) !important;
+    color: white !important;
+  }
+}
+
+/* HIGHLIGHT ANIMATIONS */
+@keyframes highlightPulse {
+  0% { background-color: rgba(56, 139, 253, 0.4); }
+  50% { background-color: rgba(56, 139, 253, 0.2); }
+  100% { background-color: transparent; }
+}
+
+.highlight-row {
+  animation: highlightPulse 2.5s ease-out forwards;
+  border-left: 3px solid var(--accent-blue) !important;
+}
+
+.highlight-badge {
+  animation: highlightPulse 2.5s ease-out forwards;
+  border-color: var(--accent-blue) !important;
+  box-shadow: 0 0 10px rgba(56, 139, 253, 0.5);
+  transition: all 0.3s ease;
 }

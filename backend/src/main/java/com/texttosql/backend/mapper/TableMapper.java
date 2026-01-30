@@ -11,6 +11,7 @@ import java.util.List;
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface TableMapper {
 
+    @Mapping(source = "database.databaseId", target = "databaseId")
     TableDto toDto(TableEntity entity);
 
     @Mapping(target = "database", ignore = true)

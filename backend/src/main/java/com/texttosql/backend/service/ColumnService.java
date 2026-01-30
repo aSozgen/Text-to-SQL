@@ -9,14 +9,11 @@ import com.texttosql.backend.exception.ResourceNotFoundException;
 import com.texttosql.backend.mapper.ColumnMapper;
 import com.texttosql.backend.repository.ColumnRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -28,11 +25,9 @@ public class ColumnService {
     private final SchemaVersionService versionService;
 
     @Transactional(readOnly = true)
-    public Page<ColumnDto> getColumns(TableEntity tableEntity, int page, int size, String sort, String direction) {
-        Sort.Direction sortDirection = direction.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
-        Page<ColumnEntity> entities = columnRepository.findByTableAndActiveTrue(tableEntity, pageable);
-        return entities.map(columnMapper::toDto);
+    public List<ColumnDto> getColumns(TableEntity tableEntity) {
+        List<ColumnEntity> entities = columnRepository.findByTableAndActiveTrueOrderByCreatedAtDesc(tableEntity);
+        return columnMapper.toDtoList(entities);
     }
 
     @Transactional(readOnly = true)
