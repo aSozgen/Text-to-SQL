@@ -66,6 +66,16 @@ public class AuthenticationController {
         return ResponseEntity.ok().build();
     }
 
+    @DeleteMapping("/profile")
+    public ResponseEntity<Void> deleteAccount(
+            @RequestHeader("Authorization") String authHeader
+    ) {
+
+        String token = extractToken(authHeader);
+        authenticationService.deleteAccount(token);
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/me")
     public ResponseEntity<UserDto> getMe(
             @RequestHeader("Authorization") String authHeader

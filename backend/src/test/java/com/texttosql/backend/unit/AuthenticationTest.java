@@ -153,4 +153,42 @@ public class AuthenticationTest {
                 .isInstanceOf(BadCredentialsException.class)
                 .hasMessage("Invalid or expired token.");
     }
+
+    @Test
+    void deleteAccount_ShouldDeleteUser_WhenUserExists() {
+        String token = "valid-token";
+        String email = "test@example.com";
+
+        UserEntity userEntity = UserEntity.builder()
+                .userId(UUID.randomUUID())
+                .username("testuser")
+                .email(email)
+                .active(true)
+                .build();
+
+        when(jwtUtil.extractUsername(token)).thenReturn(email);
+        when(userRepository.findByEmailAndActiveTrue(email)).thenReturn(Optional.of(userEntity));
+
+        authenticationService.deleteAccount(token);
+
+        verify(userRepository).save(userEntity);
+
+        assertThat(userEntity.getActive()).isFalse();
+    }
+
+    @Test
+    void deleteAccount_ShouldThrowException_WhenUserNotFound() {
+        // Arrange
+        String token = "valid-token";
+        String email = "ghostUser";
+
+        when(jwtUtil.extractUsername(token)).thenReturn(email);
+        when(userRepository.findByEmailAndActiveTrue(email)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> authenticationService.deleteAccount(token))
+                .isInstanceOf(UsernameNotFoundException.class)
+                .hasMessage("User not found.");
+
+        verify(userRepository, never()).delete(any());
+    }
 }
