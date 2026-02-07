@@ -28,6 +28,6 @@ public class TableDto {
     @Size(max = 255, message = "Description cannot exceed 255 characters")
     String description;
 
-    @JsonFormat(pattern = "dd.MM.yyyy")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd.MM.yyyy HH:mm:ss", timezone = "Europe/Istanbul")
     private LocalDateTime createdAt;
 }

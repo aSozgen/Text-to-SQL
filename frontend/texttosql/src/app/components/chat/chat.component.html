@@ -1,0 +1,321 @@
+<div class="layout">
+
+  <div class="sidebar-backdrop"
+       [class.show]="isLeftSidebarOpen() || isRightSidebarOpen()"
+       (click)="isLeftSidebarOpen.set(false); isRightSidebarOpen.set(false)">
+  </div>
+
+  <aside class="sidebar-left" [class.closed]="!isLeftSidebarOpen()">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div class="history-title mb-0">History</div>
+      <button class="btn btn-sm btn-outline-secondary py-0" (click)="createNewChat()" title="New Chat">
+        <i class="fas fa-plus"></i>
+      </button>
+    </div>
+
+    <div class="search-box mb-3">
+      <div class="input-group input-group-sm">
+        <span class="input-group-text bg-dark border-secondary text-secondary"><i class="fas fa-search"></i></span>
+        <input type="text" class="form-control bg-dark text-white border-secondary"
+               placeholder="Search chats..."
+               [ngModel]="searchQuery()"
+               (ngModelChange)="searchQuery.set($event)"
+               (keyup.enter)="onSearch()">
+      </div>
+    </div>
+
+    <div class="history-list">
+      @for (chat of chats(); track chat.chatId) {
+        <div class="history-item d-flex justify-content-between align-items-center"
+             [class.active]="chat.chatId === selectedChatId()"
+             (click)="selectChat(chat.chatId!)">
+
+          <div class="chat-name-wrapper">
+            <i class="far fa-comment-alt me-2 small opacity-50"></i>
+            <span class="text-truncate" [title]="chat.name">{{ chat.name }}</span>
+          </div>
+
+          <div class="actions">
+            <div class="dropdown">
+              <i class="fas fa-ellipsis-v action-icon px-2" id="chatAction{{chat.chatId}}" data-bs-toggle="dropdown"></i>
+              <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" [attr.aria-labelledby]="'chatAction'+chat.chatId">
+                <li><a class="dropdown-item small" (click)="openRenameChatModal(chat, $event)"><i class="fas fa-pen me-2"></i> Rename</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item small text-danger" (click)="openDeleteChatModal(chat, $event)"><i class="fas fa-trash-alt me-2"></i> Delete</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      } @empty {
+        <div class="d-flex flex-column align-items-center justify-content-center h-50 text-muted opacity-50 mt-5">
+          <i class="far fa-comments fa-2x mb-2"></i>
+          <span class="small">{{ searchQuery() ? 'No results' : 'No history yet' }}</span>
+        </div>
+      }
+
+      @if (hasMoreChats()) {
+        <div class="text-center mt-2">
+          <button class="btn btn-xs btn-link text-secondary text-decoration-none" (click)="loadMoreChats()">
+            Load More <i class="fas fa-chevron-down ms-1"></i>
+          </button>
+        </div>
+      }
+    </div>
+  </aside>
+
+  <main class="chat-main">
+
+    <button class="toggle-btn toggle-left" (click)="toggleLeftSidebar()" title="Toggle History">
+      <i class="fas" [class.fa-chevron-left]="isLeftSidebarOpen()" [class.fa-chevron-right]="!isLeftSidebarOpen()"></i>
+    </button>
+    <button class="toggle-btn toggle-right" (click)="toggleRightSidebar()" title="Toggle Schema">
+      <i class="fas" [class.fa-chevron-right]="isRightSidebarOpen()" [class.fa-chevron-left]="!isRightSidebarOpen()"></i>
+    </button>
+
+    <div class="chat-container">
+
+      <div class="selection-bar">
+        <select [(ngModel)]="selectedDbId" [disabled]="isSending()">
+          <option value="" selected>Select Database (Optional)</option>
+          @for (db of databases(); track db.databaseId) {
+            <option [value]="db.databaseId">{{ db.name }}</option>
+          }
+        </select>
+
+        <select [(ngModel)]="selectedTableId" [disabled]="!selectedDbId() || isSending()">
+          <option value="" selected>Select Table (Optional)</option>
+          @for (table of tables(); track table.tableId) {
+            <option [value]="table.tableId">{{ table.name }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="messages" #scrollContainer (scroll)="onScroll($event)">
+
+        @if (isLoadingMoreMsg()) {
+          <div class="text-center py-2"><div class="spinner-border spinner-border-sm text-secondary"></div></div>
+        }
+
+        @if (messages().length === 0 && !isLoading()) {
+          <div class="welcome-msg">
+            <i class="fas fa-robot fa-3x mb-3 text-primary"></i>
+            <h5>Welcome to QueryGen!</h5>
+            <p class="text-secondary">Select a database context above and ask any question about your data.</p>
+          </div>
+        }
+
+        @for (msg of messages(); track msg.messageId) {
+          <div class="msg-row" [class.user-row]="msg.senderType === 'USER'" [class.system-row]="msg.senderType !== 'USER'">
+
+            <div class="avatar" *ngIf="msg.senderType !== 'USER'">
+              <i class="fas fa-robot"></i>
+            </div>
+
+            <div class="msg-bubble" [class.user]="msg.senderType === 'USER'" [class.system]="msg.senderType !== 'USER'">
+
+              <div *ngIf="msg.senderType === 'USER'">
+
+                <div class="user-actions-left" *ngIf="!editingMessageId()">
+                  <button class="action-btn edit-btn" (click)="startEditMessage(msg)" title="Edit">
+                    <i class="fas fa-pen"></i>
+                  </button>
+                  <button class="action-btn delete-btn" (click)="openDeleteMessageModal(msg)" title="Delete">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+
+                @if (editingMessageId() === msg.messageId) {
+                  <div class="edit-box">
+                    <textarea
+                      [(ngModel)]="editContent"
+                      rows="3"
+                      class="edit-textarea"
+                      placeholder="Edit your message...">
+                    </textarea>
+                    <div class="edit-actions">
+                      <button class="btn-cancel" (click)="cancelEdit()">
+                        <i class="fas fa-times me-1"></i> Cancel
+                      </button>
+                      <button class="btn-save" (click)="saveEditMessage(msg)">
+                        <i class="fas fa-check me-1"></i> Save
+                      </button>
+                    </div>
+                  </div>
+                } @else {
+                  <div class="content-text">{{ msg.content }}</div>
+                }
+              </div>
+
+              <div *ngIf="msg.senderType !== 'USER'">
+                <div class="d-flex justify-content-between align-items-center mb-2 meta-header">
+                  <span class="badge-sql">Generated SQL</span>
+                  @if (msg.confidence) {
+                    <span class="confidence-score" title="Confidence Score">
+                      <i class="fas fa-shield-alt me-1"></i>{{ msg.confidence | number:'1.4-4' }}
+                    </span>
+                  }
+                </div>
+
+                <div class="sql-wrapper">
+                  <div class="sql-code">{{ msg.content }}</div>
+                  <button class="copy-btn"
+                          [class.copied]="copiedMessageId() === msg.messageId"
+                          (click)="copySQL(msg.messageId!, msg.content)"
+                          [title]="copiedMessageId() === msg.messageId ? 'Copied!' : 'Copy to Clipboard'">
+                    @if (copiedMessageId() === msg.messageId) {
+                      <i class="fas fa-check me-1"></i> Copied!
+                    } @else {
+                      <i class="far fa-copy"></i>
+                    }
+                  </button>
+                </div>
+
+                <div class="feedback-area">
+                  <span class="helper-text">Was this helpful?</span>
+                  <div class="thumbs">
+                    <i class="fas fa-thumbs-up feedback-icon"
+                       [class.active]="msg.feedback === 'GOOD'"
+                       (click)="sendFeedback(msg, 'GOOD')"></i>
+                    <i class="fas fa-thumbs-down feedback-icon"
+                       [class.active]="msg.feedback === 'BAD'"
+                       (click)="sendFeedback(msg, 'BAD')"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        @if (isSending()) {
+          <div class="msg-row system-row">
+            <div class="avatar"><i class="fas fa-robot"></i></div>
+            <div class="msg-bubble system loading-bubble">
+              <div class="typing-indicator">
+                <span></span><span></span><span></span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="input-box">
+        <input type="text"
+               #queryInput
+               [value]="userQuery()"
+               (input)="userQuery.set(queryInput.value)"
+               (keyup.enter)="sendMessage(userQuery())"
+               [disabled]="isSending()"
+               placeholder="Ask a question about your data... (e.g., 'Show top selling products')">
+        <button class="btn-gen" (click)="sendMessage(userQuery())" [disabled]="isSending() || !userQuery().trim()">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <aside class="sidebar-right" [class.closed]="!isRightSidebarOpen()">
+    <div class="panel-section">
+      <div class="panel-title">Active Schema Insights</div>
+      @if (activeColumns().length > 0) {
+        <div class="info-card">
+          <div class="mb-2 text-primary fw-bold border-bottom border-secondary pb-1">
+            <i class="fas fa-table me-2"></i>{{ selectedTableName() }}
+          </div>
+          <div>
+            @for (col of activeColumns(); track col.columnId) {
+              <span class="schema-tag" [class.border-warning]="col.primaryKey">
+                {{ col.name }}: <span class="text-uppercase">{{ col.dataType }}</span>
+                @if(col.primaryKey){ <i class="fas fa-key ms-1 text-warning" style="font-size:0.6rem"></i> }
+              </span>
+            }
+          </div>
+        </div>
+      } @else {
+        <div class="empty-schema-state">
+          <i class="fas fa-columns mb-2"></i>
+          <div>Select a table to view structure</div>
+        </div>
+      }
+    </div>
+    <div class="panel-section">
+      <div class="panel-title">Action Toolbox</div>
+      <div class="dropdown w-100">
+        <button class="toolbox-btn mb-2 dropdown-toggle d-flex justify-content-between align-items-center" type="button" data-bs-toggle="dropdown">
+          <span><i class="fas fa-download me-2"></i> Export Result</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-dark w-100">
+          <li><a class="dropdown-item" (click)="exportChat('JSON')">JSON Format</a></li>
+          <li><a class="dropdown-item" (click)="exportChat('CSV')">CSV Format</a></li>
+          <li><a class="dropdown-item" (click)="exportChat('TXT')">Text File</a></li>
+        </ul>
+      </div>
+    </div>
+  </aside>
+</div>
+
+@if (modalMode() === 'DELETE_CHAT' || modalMode() === 'DELETE_MSG') {
+  <div class="modal-backdrop fade show" style="z-index: 1060;"></div>
+  <div class="modal fade show d-block" tabindex="-1" style="z-index: 1070;">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-danger">
+        <div class="modal-header border-bottom border-secondary">
+          <h5 class="modal-title fw-bold text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Confirm Delete</h5>
+          <button type="button" class="btn-close btn-close-white" (click)="closeModal()"></button>
+        </div>
+        <div class="modal-body text-center p-4">
+          <p class="mb-1 text-white">Are you sure you want to delete {{ modalMode() === 'DELETE_CHAT' ? 'this chat' : 'this message' }}?</p>
+          <p class="text-secondary-light small mb-0">This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer border-top border-secondary justify-content-center">
+          <button class="btn btn-secondary px-4" (click)="closeModal()">Cancel</button>
+          <button class="btn btn-danger px-4" (click)="confirmAction()">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+@if (modalMode() === 'RENAME_CHAT') {
+  <div class="modal-backdrop fade show"></div>
+  <div class="modal fade show d-block" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold text-white">Rename Chat</h5>
+          <button type="button" class="btn-close btn-close-white" (click)="closeModal()"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Chat Name</label>
+            <input type="text" class="form-control" [ngModel]="newNameInput()" (ngModelChange)="newNameInput.set($event)"
+                   placeholder="Enter new name" maxlength="64" autocomplete="off">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+          <button class="btn btn-primary" (click)="confirmAction()">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+@if (errorMessage()) {
+  <div class="modal-backdrop fade show" style="z-index: 1080;"></div>
+  <div class="modal fade show d-block" tabindex="-1" style="z-index: 1090;">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-warning">
+        <div class="modal-header border-bottom border-secondary">
+          <h5 class="modal-title fw-bold text-warning"><i class="fas fa-exclamation-circle me-2"></i>Warning</h5>
+          <button type="button" class="btn-close btn-close-white" (click)="closeErrorModal()"></button>
+        </div>
+        <div class="modal-body text-center p-4">
+          <p class="mb-0 text-white">{{ errorMessage() }}</p>
+        </div>
+        <div class="modal-footer border-top border-secondary justify-content-center">
+          <button class="btn btn-secondary px-4" (click)="closeErrorModal()">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

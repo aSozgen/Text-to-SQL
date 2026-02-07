@@ -20,7 +20,7 @@ public class ChatDto {
 
     @NotBlank(message = "Chat name is required")
     @Size(min = 1, max = 50, message = "Chat name must be between 1 and 50 characters")
-    @Pattern(regexp = "^[a-zA-Z0-9_ -]*$", message = "Name contains invalid characters")
+    @Pattern(regexp = "^[a-zA-Z0-9_ -.]*$", message = "Name contains invalid characters")
     String name;
 
     @JsonFormat(pattern = "dd.MM.yyyy")

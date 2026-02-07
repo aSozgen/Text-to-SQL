@@ -32,6 +32,6 @@ public class ColumnDto {
     String dataType;
     private boolean isPrimaryKey;
 
-    @JsonFormat(pattern = "dd.MM.yyyy")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd.MM.yyyy HH:mm:ss", timezone = "Europe/Istanbul")
     private LocalDateTime createdAt;
 }

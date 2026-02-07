@@ -75,11 +75,16 @@ public class MessageService {
 
     @Transactional
     public MessageDto createMessage(ChatEntity chat, MessageDto messageDto) {
-        SchemaVersionEntity schemaVersion = versionService.getSchemaVersion(messageDto.getDatabaseId());
+        SchemaVersionEntity schemaVersion = null;
+
+        if (messageDto.getDatabaseId() != null) {
+            schemaVersion = versionService.getSchemaVersion(messageDto.getDatabaseId());
+        }
+
         List<ConversationTurn> history = getHistoryForLlm(chat, schemaVersion);
         LLMRequest request = new LLMRequest(
                 messageDto.getContent(),
-                schemaVersion.getSchemaStructure(),
+                schemaVersion != null ? schemaVersion.getSchemaStructure() : null,
                 history
         );
 
