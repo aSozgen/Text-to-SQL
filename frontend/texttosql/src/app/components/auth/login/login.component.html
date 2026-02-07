@@ -13,20 +13,20 @@
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" autocomplete="off">
 
       <div class="form-group mb-3">
-        <label for="username" class="form-label">Username</label>
+        <label for="email" class="form-label">E-mail</label>
         <input
-          type="text"
-          id="username"
+          type="email"
+          id="email"
           class="form-control"
-          formControlName="username"
-          placeholder="johndoe"
-          [class.is-invalid]="submitted && f['username'].errors"
-          autocomplete="username">
+          formControlName="email"
+          placeholder="name@company.com"
+          [class.is-invalid]="submitted && f['email'].errors"
+          autocomplete="email">
 
-        @if (submitted && f['username'].errors) {
+        @if (submitted && f['email'].errors) {
           <div class="invalid-feedback">
-            @if (f['username'].hasError('required')) {
-              Username is required.
+            @if (f['email'].hasError('required')) {
+              email is required.
             }
           </div>
         }
