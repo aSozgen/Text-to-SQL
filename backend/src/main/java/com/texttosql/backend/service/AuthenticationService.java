@@ -1,12 +1,9 @@
 package com.texttosql.backend.service;
 
-import com.texttosql.backend.dto.auth.AuthenticationResponse;
-import com.texttosql.backend.dto.auth.LoginRequest;
-import com.texttosql.backend.dto.auth.RegisterRequest;
+import com.texttosql.backend.dto.auth.*;
 import com.texttosql.backend.dto.entity.UserDto;
 import com.texttosql.backend.entity.UserEntity;
 import com.texttosql.backend.exception.DuplicatedResourceException;
-import com.texttosql.backend.exception.ResourceNotFoundException;
 import com.texttosql.backend.mapper.UserMapper;
 import com.texttosql.backend.repository.UserRepository;
 import com.texttosql.backend.util.JwtUtil;
@@ -36,12 +33,12 @@ public class AuthenticationService {
     public void register(RegisterRequest registerRequest) {
 
         String username = registerRequest.username();
-        if (userRepository.existsByUsername(username)) {
+        if (userRepository.existsByUsernameAndActiveTrue(username)) {
             throw new DuplicatedResourceException("Username already exists.");
         }
 
         String email = registerRequest.email();
-        if (userRepository.existsByEmail(email)) {
+        if (userRepository.existsByEmailAndActiveTrue(email)) {
             throw new DuplicatedResourceException("Email already exists.");
         }
 
@@ -60,12 +57,12 @@ public class AuthenticationService {
     public AuthenticationResponse login(LoginRequest loginRequest) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        loginRequest.username(),
+                        loginRequest.email(),
                         loginRequest.password()
                 )
         );
 
-        UserEntity user = userRepository.findByUsernameAndActiveTrue(loginRequest.username()).
+        UserEntity user = userRepository.findByEmailAndActiveTrue(loginRequest.email()).
                 orElseThrow(() -> new UsernameNotFoundException("User not found."));
         String jwtToken = jwtUtil.generateToken(userMapper.toDto(user));
 
@@ -84,8 +81,47 @@ public class AuthenticationService {
 
     @Transactional(readOnly = true)
     public UserDto getMe(String token) {
-        UserEntity user = userRepository.findByUsernameAndActiveTrue(jwtUtil.extractUsername(token))
-                .orElseThrow(() -> new UsernameNotFoundException("User not found."));
+        UserEntity user = getUserFromToken(token);
+
         return new UserDto(user.getUsername(), user.getEmail(), user.getRole());
+    }
+
+    @Transactional
+    public void updateProfile(String token, UpdateProfileRequest request) {
+        UserEntity user = getUserFromToken(token);
+
+        if (!user.getUsername().equals(request.username()) &&
+                userRepository.existsByUsernameAndActiveTrue(request.username())) {
+            throw new DuplicatedResourceException("Username already exists.");
+        }
+
+        user.setUsername(request.username());
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void changePassword(String token, ChangePasswordRequest request) {
+        UserEntity user = getUserFromToken(token);
+
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+            throw new BadCredentialsException("Current password is incorrect.");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void deleteAccount(String token) {
+        UserEntity user = getUserFromToken(token);
+        user.setActive(false);
+        userRepository.save(user);
+    }
+
+    private UserEntity getUserFromToken(String token) {
+        String email = jwtUtil.extractUsername(token);
+
+        return userRepository.findByEmailAndActiveTrue(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found."));
     }
 }

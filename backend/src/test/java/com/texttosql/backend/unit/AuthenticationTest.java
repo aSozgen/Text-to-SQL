@@ -51,8 +51,8 @@ public class AuthenticationTest {
     void register_ShouldReturnVoid_WhenRequestIsValid() {
         RegisterRequest request = new RegisterRequest("testuser", "test@example.com", "password");
 
-        when(userRepository.existsByUsername(request.username())).thenReturn(false);
-        when(userRepository.existsByEmail(request.email())).thenReturn(false);
+        when(userRepository.existsByUsernameAndActiveTrue(request.username())).thenReturn(false);
+        when(userRepository.existsByEmailAndActiveTrue(request.email())).thenReturn(false);
         when(passwordEncoder.encode(request.password())).thenReturn("encodedPass");
 
         authenticationService.register(request);
@@ -63,7 +63,7 @@ public class AuthenticationTest {
     @Test
     void register_ShouldThrowException_WhenUsernameExists() {
         RegisterRequest request = new RegisterRequest("existingUser", "email@test.com", "password");
-        when(userRepository.existsByUsername(request.username())).thenReturn(true);
+        when(userRepository.existsByUsernameAndActiveTrue(request.username())).thenReturn(true);
 
         assertThatThrownBy(() -> authenticationService.register(request))
                 .isInstanceOf(DuplicatedResourceException.class)
@@ -75,8 +75,8 @@ public class AuthenticationTest {
     @Test
     void register_ShouldThrowException_WhenEmailExists() {
         RegisterRequest request = new RegisterRequest("newUser", "existing@test.com", "password");
-        when(userRepository.existsByUsername(request.username())).thenReturn(false);
-        when(userRepository.existsByEmail(request.email())).thenReturn(true);
+        when(userRepository.existsByUsernameAndActiveTrue(request.username())).thenReturn(false);
+        when(userRepository.existsByEmailAndActiveTrue(request.email())).thenReturn(true);
 
         assertThatThrownBy(() -> authenticationService.register(request))
                 .isInstanceOf(DuplicatedResourceException.class)
@@ -101,7 +101,7 @@ public class AuthenticationTest {
         userDto.setActive(true);
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(null);
-        when(userRepository.findByUsernameAndActiveTrue(loginRequest.username())).thenReturn(Optional.of(userEntity));
+        when(userRepository.findByEmailAndActiveTrue(loginRequest.email())).thenReturn(Optional.of(userEntity));
         when(userMapper.toDto(userEntity)).thenReturn(userDto);
         when(jwtUtil.generateToken(userDto)).thenReturn("jwt-token");
 
@@ -115,7 +115,7 @@ public class AuthenticationTest {
         LoginRequest loginRequest = new LoginRequest("ghost", "password");
 
         when(authenticationManager.authenticate(any())).thenReturn(null);
-        when(userRepository.findByUsernameAndActiveTrue("ghost")).thenReturn(Optional.empty());
+        when(userRepository.findByEmailAndActiveTrue("ghost")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> authenticationService.login(loginRequest))
                 .isInstanceOf(UsernameNotFoundException.class)
@@ -131,7 +131,7 @@ public class AuthenticationTest {
         assertThatThrownBy(() -> authenticationService.login(loginRequest))
                 .isInstanceOf(BadCredentialsException.class);
 
-        verify(userRepository, never()).findByUsernameAndActiveTrue(any());
+        verify(userRepository, never()).findByEmailAndActiveTrue(any());
     }
 
     @Test

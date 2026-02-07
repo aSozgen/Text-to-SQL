@@ -1,8 +1,6 @@
 package com.texttosql.backend.controller;
 
-import com.texttosql.backend.dto.auth.AuthenticationResponse;
-import com.texttosql.backend.dto.auth.LoginRequest;
-import com.texttosql.backend.dto.auth.RegisterRequest;
+import com.texttosql.backend.dto.auth.*;
 import com.texttosql.backend.dto.entity.UserDto;
 import com.texttosql.backend.service.AuthenticationService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -41,28 +39,51 @@ public class AuthenticationController {
     public ResponseEntity<AuthenticationResponse> validate(
             @RequestHeader("Authorization") String authHeader
     ) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-        }
 
-        String token = authHeader.substring(7);
+        String token = extractToken(authHeader);
         return ResponseEntity.ok(authenticationService.validateToken(token));
+    }
+
+    @PutMapping("/profile")
+    public ResponseEntity<Void> updateProfile(
+            @RequestHeader("Authorization") String authHeader,
+            @Valid @RequestBody UpdateProfileRequest request
+    ) {
+
+        String token = extractToken(authHeader);
+        authenticationService.updateProfile(token, request);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<Void> changePassword(
+            @RequestHeader("Authorization") String authHeader,
+            @Valid @RequestBody ChangePasswordRequest request
+    ) {
+
+        String token = extractToken(authHeader);
+        authenticationService.changePassword(token, request);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/me")
     public ResponseEntity<UserDto> getMe(
             @RequestHeader("Authorization") String authHeader
     ) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-        }
 
-        String token = authHeader.substring(7);
+        String token = extractToken(authHeader);
         return ResponseEntity.ok(authenticationService.getMe(token));
     }
 
     @GetMapping("/health")
     public ResponseEntity<String> health() {
         return ResponseEntity.ok("Auth service is running.");
+    }
+
+    private String extractToken(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new IllegalArgumentException("Invalid Authorization header");
+        }
+        return authHeader.substring(7);
     }
 }
