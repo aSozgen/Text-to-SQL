@@ -5,12 +5,10 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Api } from '../../../api/api';
 import { AuthService } from '../../../core/auth.service';
 
-// Models
 import { DatabaseDto } from '../../../api/models/database-dto';
 import { TableDto } from '../../../api/models/table-dto';
 import { ColumnDto } from '../../../api/models/column-dto';
 
-// Functions
 import {
   getDatabases, getTables, getColumns,
   getDatabase, getTable,
@@ -31,7 +29,7 @@ interface SchemaFormData {
   name: string;
   description: string;
   dataType: string;
-  isPrimaryKey: boolean; // Updated to match DTO
+  primaryKey: boolean;
   jsonContent: string;
 }
 
@@ -63,7 +61,6 @@ export class SchemasComponent {
   importStep = signal<1 | 2 | 3>(1);
   selectedDb = signal<SupportedDb>('POSTGRESQL');
 
-  // SQL Queries
   dbQueries: Record<SupportedDb, string> = {
     POSTGRESQL: `SELECT json_agg(json_build_object('table_name', table_name, 'column_name', column_name, 'data_type', data_type)) FROM information_schema.columns WHERE table_schema NOT IN ('information_schema', 'pg_catalog', 'pg_toast');`,
     MYSQL: `SELECT JSON_ARRAYAGG(JSON_OBJECT('table_name', TABLE_NAME, 'column_name', COLUMN_NAME, 'data_type', DATA_TYPE)) FROM information_schema.columns WHERE TABLE_SCHEMA = DATABASE();`,
@@ -73,7 +70,6 @@ export class SchemasComponent {
 
   currentQuery = computed(() => this.dbQueries[this.selectedDb()]);
 
-  // Caching & Loading State
   private pageCache = new Map<string, PageCacheData>();
   fullyLoadedDbIds = signal<Set<string>>(new Set());
   fullyLoadedTableIds = signal<Set<string>>(new Set());
@@ -84,10 +80,8 @@ export class SchemasComponent {
   loadingTables = signal<Set<string>>(new Set());
   loadingColumns = signal<Set<string>>(new Set());
 
-  // Highlight / Focus
   highlightedId = signal<string | null>(null);
 
-  // Pagination & Search
   searchQuery = signal<string>('');
   page = signal<number>(0);
   size = signal<number>(5);
@@ -95,7 +89,6 @@ export class SchemasComponent {
   direction = signal<'asc' | 'desc'>('desc');
   totalElements = signal<number>(0);
 
-  // Modals
   showModal = signal<boolean>(false);
   showDeleteModal = signal<boolean>(false);
   showErrorModal = signal<boolean>(false);
@@ -107,8 +100,85 @@ export class SchemasComponent {
   selectedColumnId: string | null = null;
   deleteTarget: { type: DeleteType, id: string, pid?: string, gpid?: string, name?: string } | null = null;
 
-  formData: SchemaFormData = { name: '', description: '', dataType: 'varchar', isPrimaryKey: false, jsonContent: '' };
-  dataTypes = ['integer', 'varchar', 'boolean', 'date', 'text', 'timestamp', 'double', 'float', 'json', 'uuid', 'blob'];
+  formData: SchemaFormData = { name: '', description: '', dataType: 'varchar', primaryKey: false, jsonContent: '' };
+  dataTypes = [
+    'integer',
+    'int',
+    'smallint',
+    'bigint',
+    'tinyint',
+    'mediumint',
+    'decimal',
+    'numeric',
+    'float',
+    'double',
+    'real',
+    'double precision',
+    'money',
+    'varchar',
+    'char',
+    'text',
+    'varchar2',
+    'nvarchar',
+    'nchar',
+    'ntext',
+    'character',
+    'character varying',
+    'longtext',
+    'mediumtext',
+    'tinytext',
+    'clob',
+    'nclob',
+    'boolean',
+    'bool',
+    'bit',
+    'date',
+    'time',
+    'datetime',
+    'timestamp',
+    'timestamp with time zone',
+    'timestamp without time zone',
+    'timestamptz',
+    'year',
+    'interval',
+    'blob',
+    'binary',
+    'varbinary',
+    'bytea',
+    'raw',
+    'long raw',
+    'image',
+    'json',
+    'jsonb',
+    'xml',
+    'array',
+    'hstore',
+    'uuid',
+    'guid',
+    'serial',
+    'bigserial',
+    'smallserial',
+    'auto_increment',
+    'enum',
+    'set',
+    'point',
+    'line',
+    'polygon',
+    'geometry',
+    'geography',
+    'inet',
+    'cidr',
+    'macaddr',
+    'number',
+    'long',
+    'rowid',
+    'urowid',
+    'bfile',
+    'any',
+    'sql_variant',
+    'cursor',
+    'table'
+  ];
   nameRegex = /^[a-zA-Z0-9_-]+$/;
 
   totalPages = computed(() => {
@@ -124,12 +194,10 @@ export class SchemasComponent {
     });
   }
 
-  // --- HELPER: Cache Key ---
   private getPageCacheKey(): string {
     return `${this.page()}-${this.size()}-${this.sort()}-${this.direction()}-${this.searchQuery()}`;
   }
 
-  // --- HELPER: Invalidate Cache ---
   private invalidateCache(type: 'DB' | 'TABLE' | 'COLUMN', parentId?: string) {
     if (type === 'DB') {
       this.pageCache.clear();
@@ -151,12 +219,10 @@ export class SchemasComponent {
     }
   }
 
-  // --- CORE: Load Schemas (Search & List) ---
   async loadSchemas() {
     this.isLoading.set(true);
     this.highlightedId.set(null);
 
-    // Guest Mode
     if (this.isGuest()) {
       if (!this.loadFromLocal()) this.saveToLocal();
       this.totalElements.set(this.databases().length);
@@ -164,7 +230,6 @@ export class SchemasComponent {
       return;
     }
 
-    // Cache Check (Skip if searching)
     const cacheKey = this.getPageCacheKey();
     if ((!this.searchQuery() || !this.searchQuery().trim()) && this.pageCache.has(cacheKey)) {
       const cached = this.pageCache.get(cacheKey)!;
@@ -178,24 +243,18 @@ export class SchemasComponent {
       const params = { page: this.page(), size: this.size(), sort: this.sort(), direction: this.direction() };
 
       if (this.searchQuery() && this.searchQuery().trim().length > 0) {
-        // === SEARCH LOGIC ===
         const res = await this.api.invoke(searchSchema, { query: this.searchQuery(), ...params });
 
         const resDbs = res.databases || [];
         const resTables = res.tables || [];
         const resCols = res.columns || [];
 
-        // 1. Identify missing Parent DBs
         const requiredDbIds = new Set<string>();
 
-        // From direct DB results
         resDbs.forEach(d => { if(d.databaseId) requiredDbIds.add(d.databaseId); });
-        // From Table results (using new DTO field)
         resTables.forEach(t => { if (t.databaseId) requiredDbIds.add(t.databaseId); });
-        // From Column results (using new DTO field)
         resCols.forEach(c => { if (c.databaseId) requiredDbIds.add(c.databaseId); });
 
-        // Fetch missing DBs
         const finalDbs = [...resDbs];
         const missingDbPromises: Promise<DatabaseDto>[] = [];
 
@@ -209,19 +268,18 @@ export class SchemasComponent {
           try {
             const fetchedDbs = await Promise.all(missingDbPromises);
             finalDbs.push(...fetchedDbs);
-          } catch (e) { console.warn("Failed to fetch parent DBs", e); }
+          } catch (e) {
+            // Silent catch: If parent DB metadata fails, just skip adding them.
+            // User sees the search result but maybe not the parent context.
+          }
         }
 
-        // 2. Identify missing Parent Tables (for Columns)
         const finalTables = [...resTables];
         const missingTablePromises: Promise<TableDto>[] = [];
-
-        // Map to track distinct tables to fetch: key = tableId
-        const tablesToFetch = new Map<string, string>(); // tableId -> databaseId
+        const tablesToFetch = new Map<string, string>();
 
         resCols.forEach(c => {
           if (c.tableId && c.databaseId) {
-            // Check if this column's table is already in the result list
             if (!finalTables.some(t => t.tableId === c.tableId)) {
               tablesToFetch.set(c.tableId, c.databaseId);
             }
@@ -236,26 +294,25 @@ export class SchemasComponent {
           try {
             const fetchedTables = await Promise.all(missingTablePromises);
             finalTables.push(...fetchedTables);
-          } catch (e) { console.warn("Failed to fetch parent Tables", e); }
+          } catch (e) {
+            // Silent catch: Similar to DBs, avoid interrupting user flow for metadata.
+          }
         }
 
-        // 3. Update State & Maps
         this.databases.set(finalDbs);
         this.totalElements.set(finalDbs.length);
 
         const tMap = new Map(this.tablesMap());
         const expandedDbs = new Set(this.expandedDbIds());
 
-        // Map Tables
         finalTables.forEach(table => {
           if (table.databaseId) {
             const list = tMap.get(table.databaseId) || [];
-            // Prevent duplicates
             if (!list.some(t => t.tableId === table.tableId)) {
               list.push(table);
             }
             tMap.set(table.databaseId, list);
-            expandedDbs.add(table.databaseId); // Auto-expand DB
+            expandedDbs.add(table.databaseId);
           }
         });
         this.tablesMap.set(tMap);
@@ -264,7 +321,6 @@ export class SchemasComponent {
         const cMap = new Map(this.columnsMap());
         const expandedTables = new Set(this.expandedTableIds());
 
-        // Map Columns
         resCols.forEach(col => {
           if (col.tableId) {
             const list = cMap.get(col.tableId) || [];
@@ -272,19 +328,17 @@ export class SchemasComponent {
               list.push(col);
             }
             cMap.set(col.tableId, list);
-            expandedTables.add(col.tableId); // Auto-expand Table
+            expandedTables.add(col.tableId);
           }
         });
         this.columnsMap.set(cMap);
         this.expandedTableIds.set(expandedTables);
 
-        // 4. Focus on leaf node
         setTimeout(() => {
           this.focusOnFirstResult(resCols, resTables, resDbs);
         }, 300);
 
       } else {
-        // === NORMAL LIST LOGIC ===
         const response: any = await this.api.invoke(getDatabases, params);
         const content = response.content || (Array.isArray(response) ? response : []);
         let total = 0;
@@ -298,16 +352,13 @@ export class SchemasComponent {
       }
 
     } catch (e: any) {
-      console.error(e);
+      this.openErrorModal(this.getErrorMessage(e));
     } finally {
       this.isLoading.set(false);
     }
   }
-
-  // --- FOCUS HELPER ---
   private focusOnFirstResult(cols: ColumnDto[], tables: TableDto[], dbs: DatabaseDto[]) {
     let targetId = '';
-    // Priority: Column > Table > DB
     if (cols.length > 0) targetId = 'col-' + cols[0].columnId;
     else if (tables.length > 0) targetId = 'table-' + tables[0].tableId;
     else if (dbs.length > 0) targetId = 'db-' + dbs[0].databaseId;
@@ -319,7 +370,6 @@ export class SchemasComponent {
     }
   }
 
-  // --- TOGGLE & LOAD (Partial vs Full) ---
 
   async toggleDatabase(dbId: string | undefined) {
     if (!dbId) return;
@@ -328,7 +378,6 @@ export class SchemasComponent {
       expanded.delete(dbId);
     } else {
       expanded.add(dbId);
-      // Fetch full list if not fully loaded (e.g. from search partial result)
       if (!this.fullyLoadedDbIds().has(dbId)) {
         await this.loadTablesForDb(dbId);
       }
@@ -351,10 +400,9 @@ export class SchemasComponent {
       const tables = Array.isArray(res) ? res : (res.content || []);
 
       const newMap = new Map(this.tablesMap());
-      newMap.set(dbId, tables); // Override with full list
+      newMap.set(dbId, tables);
       this.tablesMap.set(newMap);
 
-      // Mark as fully loaded
       this.fullyLoadedDbIds.update(set => { set.add(dbId); return new Set(set); });
     } catch (e) { console.error(e); }
     finally {
@@ -409,7 +457,7 @@ export class SchemasComponent {
   hasExistingPrimaryKey(tableId: string, excludeColumnId?: string): boolean {
     const cols = this.columnsMap().get(tableId) || [];
     // Using 'isPrimaryKey' based on DTO update
-    return cols.some(c => (c as any).isPrimaryKey && c.columnId !== excludeColumnId);
+    return cols.some(c => c.primaryKey && c.columnId !== excludeColumnId);
   }
 
   copyQuery() {
@@ -420,7 +468,7 @@ export class SchemasComponent {
   }
 
   checkGuest() { return this.isGuest(); }
-  resetForm() { this.formData = { name: '', description: '', dataType: 'varchar', isPrimaryKey: false, jsonContent: '' }; this.selectedDbId = null; this.selectedTableId = null; this.selectedColumnId = null; }
+  resetForm() { this.formData = { name: '', description: '', dataType: 'varchar', primaryKey: false, jsonContent: '' }; this.selectedDbId = null; this.selectedTableId = null; this.selectedColumnId = null; }
 
   openImportModal() { if (this.checkGuest()) return; this.resetForm(); this.importStep.set(1); this.modalMode.set('IMPORT'); this.showModal.set(true); }
   openCreateDatabase() { if (this.checkGuest()) return; this.resetForm(); this.modalMode.set('CREATE_DB'); this.showModal.set(true); }
@@ -437,7 +485,7 @@ export class SchemasComponent {
     this.selectedColumnId = col.columnId!;
     this.formData.name = col.name!;
     this.formData.dataType = col.dataType!.toLowerCase();
-    this.formData.isPrimaryKey = !!(col as any).isPrimaryKey; // Handle updated DTO
+    this.formData.primaryKey = !!col.primaryKey;
     this.showModal.set(true);
   }
 
@@ -497,13 +545,13 @@ export class SchemasComponent {
       else if (mode === 'CREATE_TABLE' && this.selectedDbId) { await this.api.invoke(createTable, { databaseId: this.selectedDbId, body: { name: this.formData.name, description: this.formData.description } }); this.invalidateCache('TABLE', this.selectedDbId); await this.loadTablesForDb(this.selectedDbId); }
       else if (mode === 'EDIT_TABLE' && this.selectedDbId && this.selectedTableId) { await this.api.invoke(updateTable, { databaseId: this.selectedDbId, tableId: this.selectedTableId, body: { name: this.formData.name, description: this.formData.description } }); this.invalidateCache('TABLE', this.selectedDbId); await this.loadTablesForDb(this.selectedDbId); }
       else if (mode === 'CREATE_COLUMN' && this.selectedDbId && this.selectedTableId) {
-        if (this.formData.isPrimaryKey && this.hasExistingPrimaryKey(this.selectedTableId)) { this.openErrorModal("This table already has a Primary Key."); this.isLoading.set(false); return; }
-        await this.api.invoke(createColumn, { databaseId: this.selectedDbId, tableId: this.selectedTableId, body: { name: this.formData.name, dataType: this.formData.dataType, isPrimaryKey: this.formData.isPrimaryKey } });
+        if (this.formData.primaryKey && this.hasExistingPrimaryKey(this.selectedTableId)) { this.openErrorModal("This table already has a Primary Key."); this.isLoading.set(false); return; }
+        await this.api.invoke(createColumn, { databaseId: this.selectedDbId, tableId: this.selectedTableId, body: { name: this.formData.name, dataType: this.formData.dataType, isPrimaryKey: this.formData.primaryKey } });
         this.invalidateCache('COLUMN', this.selectedTableId); await this.loadColumnsForTable(this.selectedDbId, this.selectedTableId);
       }
       else if (mode === 'EDIT_COLUMN' && this.selectedDbId && this.selectedTableId && this.selectedColumnId) {
-        if (this.formData.isPrimaryKey && this.hasExistingPrimaryKey(this.selectedTableId, this.selectedColumnId)) { this.openErrorModal("This table already has a Primary Key."); this.isLoading.set(false); return; }
-        await this.api.invoke(updateColumn, { databaseId: this.selectedDbId, tableId: this.selectedTableId, columnId: this.selectedColumnId, body: { name: this.formData.name, dataType: this.formData.dataType, isPrimaryKey: this.formData.isPrimaryKey } });
+        if (this.formData.primaryKey && this.hasExistingPrimaryKey(this.selectedTableId, this.selectedColumnId)) { this.openErrorModal("This table already has a Primary Key."); this.isLoading.set(false); return; }
+        await this.api.invoke(updateColumn, { databaseId: this.selectedDbId, tableId: this.selectedTableId, columnId: this.selectedColumnId, body: { name: this.formData.name, dataType: this.formData.dataType, primaryKey: this.formData.primaryKey } });
         this.invalidateCache('COLUMN', this.selectedTableId); await this.loadColumnsForTable(this.selectedDbId, this.selectedTableId);
       }
       this.closeModal();
