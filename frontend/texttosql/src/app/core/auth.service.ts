@@ -1,8 +1,8 @@
-import {Injectable, signal, computed, inject, WritableSignal, Signal} from '@angular/core';
+import { Injectable, signal, computed, inject, WritableSignal, Signal } from '@angular/core';
 import { Router } from '@angular/router';
-import {UserDto} from '../api/models/user-dto';
-import {Api} from '../api/api';
-import {getMe} from '../api/functions';
+import { UserDto } from '../api/models/user-dto';
+import { Api } from '../api/api';
+import { getMe } from '../api/functions';
 
 @Injectable({
   providedIn: 'root'
@@ -11,7 +11,7 @@ export class AuthService {
   private api = inject(Api);
   private router = inject(Router);
 
-  currentUser: WritableSignal<UserDto|null> = signal<UserDto | null>(null);
+  currentUser: WritableSignal<UserDto | null> = signal<UserDto | null>(null);
 
   userInitials: Signal<string> = computed(() => {
     const user = this.currentUser();
@@ -30,15 +30,17 @@ export class AuthService {
 
   private async initializeUser() {
     const token = localStorage.getItem('token');
-
     if (token) {
-      try {
-        const user = await this.api.invoke(getMe);
-        this.currentUser.set(user);
-      } catch (error) {
-        console.warn("Couldn't confirm session, logging out", error);
-        this.logout();
-      }
+      await this.refreshUser();
+    }
+  }
+
+  async refreshUser() {
+    try {
+      const user = await this.api.invoke(getMe);
+      this.currentUser.set(user);
+    } catch (error) {
+      this.logout();
     }
   }
 

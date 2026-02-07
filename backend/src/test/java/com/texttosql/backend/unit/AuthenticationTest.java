@@ -51,8 +51,8 @@ public class AuthenticationTest {
     void register_ShouldReturnVoid_WhenRequestIsValid() {
         RegisterRequest request = new RegisterRequest("testuser", "test@example.com", "password");
 
-        when(userRepository.existsByUsernameAndActiveTrue(request.username())).thenReturn(false);
-        when(userRepository.existsByEmailAndActiveTrue(request.email())).thenReturn(false);
+        when(userRepository.existsByUsername(request.username())).thenReturn(false);
+        when(userRepository.existsByEmail(request.email())).thenReturn(false);
         when(passwordEncoder.encode(request.password())).thenReturn("encodedPass");
 
         authenticationService.register(request);
@@ -63,7 +63,7 @@ public class AuthenticationTest {
     @Test
     void register_ShouldThrowException_WhenUsernameExists() {
         RegisterRequest request = new RegisterRequest("existingUser", "email@test.com", "password");
-        when(userRepository.existsByUsernameAndActiveTrue(request.username())).thenReturn(true);
+        when(userRepository.existsByUsername(request.username())).thenReturn(true);
 
         assertThatThrownBy(() -> authenticationService.register(request))
                 .isInstanceOf(DuplicatedResourceException.class)
@@ -75,8 +75,8 @@ public class AuthenticationTest {
     @Test
     void register_ShouldThrowException_WhenEmailExists() {
         RegisterRequest request = new RegisterRequest("newUser", "existing@test.com", "password");
-        when(userRepository.existsByUsernameAndActiveTrue(request.username())).thenReturn(false);
-        when(userRepository.existsByEmailAndActiveTrue(request.email())).thenReturn(true);
+        when(userRepository.existsByUsername(request.username())).thenReturn(false);
+        when(userRepository.existsByEmail(request.email())).thenReturn(true);
 
         assertThatThrownBy(() -> authenticationService.register(request))
                 .isInstanceOf(DuplicatedResourceException.class)

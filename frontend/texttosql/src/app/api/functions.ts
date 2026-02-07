@@ -3,6 +3,8 @@
 
 export type { UpdateProfile$Params as UpdateProfile$Params } from './fn/1-authentication/update-profile';
 export { updateProfile as updateProfile } from './fn/1-authentication/update-profile';
+export type { DeleteAccount$Params as DeleteAccount$Params } from './fn/1-authentication/delete-account';
+export { deleteAccount as deleteAccount } from './fn/1-authentication/delete-account';
 export type { Register$Params as Register$Params } from './fn/1-authentication/register';
 export { register as register } from './fn/1-authentication/register';
 export type { Login$Params as Login$Params } from './fn/1-authentication/login';

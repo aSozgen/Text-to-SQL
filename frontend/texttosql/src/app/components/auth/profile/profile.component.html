@@ -1,0 +1,160 @@
+<div class="profile-container">
+  <div class="settings-card">
+
+    <div class="card-header">
+      <h2>Profile Settings</h2>
+      <p>Manage your account details and security preferences.</p>
+    </div>
+
+    <div class="card-body">
+
+      @if (isLoading) {
+        <div class="text-center p-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      } @else {
+
+        @if (successMessage) {
+          <div class="alert-custom success">
+            <i class="fas fa-check-circle"></i>
+            <span>{{ successMessage }}</span>
+          </div>
+        }
+        @if (errorMessage) {
+          <div class="alert-custom error">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>{{ errorMessage }}</span>
+          </div>
+        }
+
+        <section class="mb-5">
+          <h3 class="section-title">Personal Information</h3>
+          <form [formGroup]="profileForm">
+            <div class="row">
+              <div class="col-md-6 form-group">
+                <label for="username" class="form-label">Username</label>
+                <input
+                  type="text"
+                  id="username"
+                  class="form-control"
+                  formControlName="username"
+                  [class.is-invalid]="p['username'].touched && p['username'].errors">
+
+                @if (p['username'].touched && p['username'].errors) {
+                  <div class="invalid-feedback">
+                    @if (p['username'].hasError('required')) { Username is required. }
+                    @if (p['username'].hasError('minlength')) { At least 3 characters. }
+                  </div>
+                }
+              </div>
+
+              <div class="col-md-6 form-group">
+                <label for="email" class="form-label">Email Address</label>
+                <input
+                  type="email"
+                  id="email"
+                  class="form-control"
+                  formControlName="email">
+
+                <small class="form-text-hint">
+                  <i class="fas fa-lock"></i> Email cannot be changed.
+                </small>
+              </div>
+            </div>
+          </form>
+        </section>
+
+        <section class="mb-5">
+          <h3 class="section-title">Security & Password</h3>
+          <form [formGroup]="passwordForm" autocomplete="off">
+            <div class="form-group">
+              <label for="currentPassword" class="form-label">Current Password</label>
+              <input
+                type="password"
+                id="currentPassword"
+                class="form-control"
+                formControlName="currentPassword"
+                placeholder="Enter current password to change it"
+                [class.is-invalid]="pw['currentPassword'].touched && pw['currentPassword'].errors">
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 form-group">
+                <label for="newPassword" class="form-label">New Password</label>
+                <input
+                  type="password"
+                  id="newPassword"
+                  class="form-control"
+                  formControlName="newPassword"
+                  placeholder="New password"
+                  [class.is-invalid]="pw['newPassword'].touched && pw['newPassword'].errors">
+
+                @if (pw['newPassword'].touched && pw['newPassword'].errors?.['minlength']) {
+                  <div class="invalid-feedback">
+                    Password must be at least 6 characters long.
+                  </div>
+                }
+              </div>
+
+              <div class="col-md-6 form-group">
+                <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  class="form-control"
+                  formControlName="confirmPassword"
+                  placeholder="Confirm new password"
+                  [class.is-invalid]="passwordForm.errors?.['mismatch'] && pw['confirmPassword'].touched">
+
+                @if (passwordForm.errors?.['mismatch'] && pw['confirmPassword'].touched) {
+                  <div class="invalid-feedback">Passwords do not match.</div>
+                }
+              </div>
+            </div>
+          </form>
+        </section>
+
+        <div class="d-flex justify-content-end mb-4">
+          <button class="btn-save" (click)="onSaveAll()" [disabled]="isSaveDisabled">
+            @if (isSaving) {
+              <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              Saving...
+            } @else {
+              Save All Changes
+            }
+          </button>
+        </div>
+
+        <section class="danger-zone">
+          <div class="danger-header">
+            <h3>Dangerous Area</h3>
+          </div>
+
+          @if (!showDeleteConfirm) {
+            <div class="danger-body">
+              <p>Once you delete your account, all your data, chats, and schemas will be permanently removed. This action cannot be undone.</p>
+              <button class="btn-danger-action" (click)="initiateAccountDeletion()">Delete Account</button>
+            </div>
+          } @else {
+            <div class="danger-confirmation">
+              <p class="text-danger">Are you absolutely sure you want to delete your account?</p>
+              <div class="d-flex justify-content-center gap-2">
+                <button class="btn-cancel" (click)="cancelAccountDeletion()">Cancel</button>
+                <button class="btn-danger-action confirm-delete" (click)="confirmDeleteAccount()">
+                  @if (isSaving) {
+                    <span class="spinner-border spinner-border-sm me-1"></span> Deleting...
+                  } @else {
+                    Yes, Delete My Account
+                  }
+                </button>
+              </div>
+            </div>
+          }
+        </section>
+
+      }
+    </div>
+  </div>
+</div>

@@ -7,16 +7,15 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
-import { ChangePasswordRequest } from '../../models/change-password-request';
 
-export interface ChangePassword$Params {
-      body: ChangePasswordRequest
+export interface DeleteAccount$Params {
+  Authorization: string;
 }
 
-export function changePassword(http: HttpClient, rootUrl: string, params: ChangePassword$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
-  const rb = new RequestBuilder(rootUrl, changePassword.PATH, 'post');
+export function deleteAccount(http: HttpClient, rootUrl: string, params?: DeleteAccount$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+  const rb = new RequestBuilder(rootUrl, deleteAccount.PATH, 'delete');
   if (params) {
-    rb.body(params.body, 'application/json');
+    rb.header('Authorization', params.Authorization, {});
   }
 
   return http.request(
@@ -29,4 +28,4 @@ export function changePassword(http: HttpClient, rootUrl: string, params: Change
   );
 }
 
-changePassword.PATH = '/api/v1/auth/change-password';
+deleteAccount.PATH = '/api/v1/auth/profile';

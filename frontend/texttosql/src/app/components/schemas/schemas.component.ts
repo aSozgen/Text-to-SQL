@@ -2,12 +2,12 @@ import { Component, inject, signal, WritableSignal, computed, effect, untracked 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Api } from '../../../api/api';
-import { AuthService } from '../../../core/auth.service';
+import { Api } from '../../api/api';
+import { AuthService } from '../../core/auth.service';
 
-import { DatabaseDto } from '../../../api/models/database-dto';
-import { TableDto } from '../../../api/models/table-dto';
-import { ColumnDto } from '../../../api/models/column-dto';
+import { DatabaseDto } from '../../api/models/database-dto';
+import { TableDto } from '../../api/models/table-dto';
+import { ColumnDto } from '../../api/models/column-dto';
 
 import {
   getDatabases, getTables, getColumns,
@@ -16,10 +16,10 @@ import {
   updateDatabase, updateTable, updateColumn,
   createDatabase, createTable, createColumn,
   importSchema
-} from '../../../api/functions';
+} from '../../api/functions';
 
 // Search Function
-import { searchSchema } from '../../../api/fn/4-search/search-schema';
+import { searchSchema } from '../../api/fn/4-search/search-schema';
 
 type ModalMode = 'IMPORT' | 'CREATE_DB' | 'EDIT_DB' | 'CREATE_TABLE' | 'EDIT_TABLE' | 'CREATE_COLUMN' | 'EDIT_COLUMN';
 type DeleteType = 'DB' | 'TABLE' | 'COLUMN';

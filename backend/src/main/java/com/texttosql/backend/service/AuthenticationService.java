@@ -33,12 +33,12 @@ public class AuthenticationService {
     public void register(RegisterRequest registerRequest) {
 
         String username = registerRequest.username();
-        if (userRepository.existsByUsernameAndActiveTrue(username)) {
+        if (userRepository.existsByUsername(username)) {
             throw new DuplicatedResourceException("Username already exists.");
         }
 
         String email = registerRequest.email();
-        if (userRepository.existsByEmailAndActiveTrue(email)) {
+        if (userRepository.existsByEmail(email)) {
             throw new DuplicatedResourceException("Email already exists.");
         }
 
@@ -91,7 +91,7 @@ public class AuthenticationService {
         UserEntity user = getUserFromToken(token);
 
         if (!user.getUsername().equals(request.username()) &&
-                userRepository.existsByUsernameAndActiveTrue(request.username())) {
+                userRepository.existsByUsername(request.username())) {
             throw new DuplicatedResourceException("Username already exists.");
         }
 
