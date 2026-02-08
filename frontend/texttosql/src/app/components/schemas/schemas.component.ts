@@ -1,7 +1,6 @@
 import { Component, inject, signal, WritableSignal, computed, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpErrorResponse } from '@angular/common/http';
 import { Api } from '../../api/api';
 import { AuthService } from '../../core/auth.service';
 
@@ -10,16 +9,16 @@ import { TableDto } from '../../api/models/table-dto';
 import { ColumnDto } from '../../api/models/column-dto';
 
 import {
-  getDatabases, getTables, getColumns,
-  getDatabase, getTable,
+  getDatabase, getTable, importSchema,
   deleteDatabase, deleteTable, deleteColumn,
   updateDatabase, updateTable, updateColumn,
-  createDatabase, createTable, createColumn,
-  importSchema
+  createDatabase, createTable, createColumn
 } from '../../api/functions';
 
 // Search Function
 import { searchSchema } from '../../api/fn/4-search/search-schema';
+import {extractErrorMessage} from '../../core/error.utils';
+import {SchemaService} from '../../core/schema.service';
 
 type ModalMode = 'IMPORT' | 'CREATE_DB' | 'EDIT_DB' | 'CREATE_TABLE' | 'EDIT_TABLE' | 'CREATE_COLUMN' | 'EDIT_COLUMN';
 type DeleteType = 'DB' | 'TABLE' | 'COLUMN';
@@ -48,6 +47,7 @@ interface PageCacheData {
 export class SchemasComponent {
   private readonly api = inject(Api);
   private readonly authService = inject(AuthService);
+  private readonly schemaService = inject(SchemaService);
 
   isGuest = computed(() => !this.authService.currentUser());
   isCopied = signal<boolean>(false);
@@ -339,7 +339,7 @@ export class SchemasComponent {
         }, 300);
 
       } else {
-        const response: any = await this.api.invoke(getDatabases, params);
+        const response: any = await this.schemaService.loadDatabases(params);
         const content = response.content || (Array.isArray(response) ? response : []);
         let total = 0;
         if (response.page && typeof response.page.totalElements === 'number') total = response.page.totalElements;
@@ -352,7 +352,7 @@ export class SchemasComponent {
       }
 
     } catch (e: any) {
-      this.openErrorModal(this.getErrorMessage(e));
+      this.openErrorModal(extractErrorMessage(e));
     } finally {
       this.isLoading.set(false);
     }
@@ -396,8 +396,7 @@ export class SchemasComponent {
     this.loadingTables.set(loading);
 
     try {
-      const res: any = await this.api.invoke(getTables, { databaseId: dbId });
-      const tables = Array.isArray(res) ? res : (res.content || []);
+      const tables: TableDto[] = await this.schemaService.loadTables(dbId);
 
       const newMap = new Map(this.tablesMap());
       newMap.set(dbId, tables);
@@ -437,8 +436,7 @@ export class SchemasComponent {
     this.loadingColumns.set(loading);
 
     try {
-      const res: any = await this.api.invoke(getColumns, { databaseId: dbId, tableId: tableId });
-      const columns = Array.isArray(res) ? res : (res.content || []);
+      const columns = await this.schemaService.loadColumns(dbId, tableId);
 
       const newMap = new Map(this.columnsMap());
       newMap.set(tableId, columns);
@@ -555,7 +553,7 @@ export class SchemasComponent {
         this.invalidateCache('COLUMN', this.selectedTableId); await this.loadColumnsForTable(this.selectedDbId, this.selectedTableId);
       }
       this.closeModal();
-    } catch (e: any) { console.error("Op Failed:", e); const msg = this.getErrorMessage(e); this.openErrorModal(msg); } finally { this.isLoading.set(false); }
+    } catch (e: any) { console.error("Op Failed:", e); const msg = extractErrorMessage(e); this.openErrorModal(msg); } finally { this.isLoading.set(false); }
   }
 
   async confirmDelete() {
@@ -568,20 +566,9 @@ export class SchemasComponent {
       else if (type === 'TABLE' && pid) { await this.api.invoke(deleteTable, { databaseId: pid, tableId: id }); this.invalidateCache('TABLE', pid); await this.loadTablesForDb(pid); }
       else if (type === 'COLUMN' && pid && gpid) { await this.api.invoke(deleteColumn, { databaseId: gpid, tableId: pid, columnId: id }); this.invalidateCache('COLUMN', pid); await this.loadColumnsForTable(gpid, pid); }
       this.closeDeleteModal();
-    } catch (e: any) { const msg = this.getErrorMessage(e); this.openErrorModal(msg); } finally { this.isLoading.set(false); }
+    } catch (e: any) { const msg = extractErrorMessage(e); this.openErrorModal(msg); } finally { this.isLoading.set(false); }
   }
 
   private saveToLocal() { if (!this.isGuest()) return; const data = { dbs: this.databases(), tables: Array.from(this.tablesMap().entries()), columns: Array.from(this.columnsMap().entries()) }; localStorage.setItem('guest_schema_data_v2', JSON.stringify(data)); }
   private loadFromLocal() { const raw = localStorage.getItem('guest_schema_data_v2'); if (raw) { const data = JSON.parse(raw); this.databases.set(data.dbs || []); this.tablesMap.set(new Map(data.tables)); this.columnsMap.set(new Map(data.columns)); return true; } return false; }
-  private getErrorMessage(err: any): string {
-    if (err && err.error && typeof err.error === 'object') {
-      const backendMsg = err.error.message;
-      const backendErrorType = err.error.error;
-      if (backendMsg) return backendErrorType ? `${backendErrorType}: ${backendMsg}` : backendMsg;
-    }
-    if (err instanceof HttpErrorResponse) {
-      return `Error (${err.status}): ${err.statusText}`;
-    }
-    return "An unexpected error occurred.";
-  }
 }

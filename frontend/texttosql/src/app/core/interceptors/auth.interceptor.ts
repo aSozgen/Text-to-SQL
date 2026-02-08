@@ -1,20 +1,31 @@
 import { HttpInterceptorFn } from '@angular/common/http';
+import { inject } from '@angular/core';
+import { tap } from 'rxjs/operators';
+import { AuthService } from '../auth.service';
+import {environment} from '../../../environments/environment';
+
+const PUBLIC_PATHS: string[] = environment.PUBLIC_PATHS;
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const token = localStorage.getItem('token');
+  const authService: AuthService = inject(AuthService);
+  const isPublic: boolean = PUBLIC_PATHS.some(path => req.url.includes(path));
 
-  if (req.url.includes('/auth/login') || req.url.includes('/auth/register')) {
+  if (isPublic) {
     return next(req);
   }
 
-  if (token) {
-    const cloned = req.clone({
-      setHeaders: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-    return next(cloned);
-  }
+  const token : string | null = localStorage.getItem('token');
+  const request = token
+    ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
+    : req;
 
-  return next(req);
+  return next(request).pipe(
+    tap({
+      error: (err) => {
+        if (err.status === 401 && token) {
+          authService.logout();
+        }
+      }
+    })
+  );
 };
