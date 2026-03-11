@@ -5,8 +5,22 @@
     <h2 class="text-center mb-4 fw-bold">Sign In</h2>
 
     @if (errorMessage) {
-      <div class="alert alert-danger text-center p-2 mb-3 small" style="background: rgba(248,81,73,0.1); border-color: var(--error-color); color: #ff7b72;">
+      <div class="alert alert-danger text-center p-2 mb-3 small"
+           style="background: rgba(248,81,73,0.1); border-color: var(--error-color); color: #ff7b72;">
         {{ errorMessage }}
+      </div>
+    }
+
+    @if (showResendVerification) {
+      <div class="resend-banner mb-3">
+        <span>Your email is not verified.</span>
+        <button class="btn-link ms-2" (click)="onResendVerification()" [disabled]="isResending">
+          @if (isResending) { Sending... }
+          @else { Resend verification email }
+        </button>
+        @if (resendSuccess) {
+          <div class="resend-success mt-1">✓ Verification email sent! Check your inbox.</div>
+        }
       </div>
     }
 
@@ -22,37 +36,35 @@
           placeholder="name@company.com"
           [class.is-invalid]="submitted && f['email'].errors"
           autocomplete="email">
-
         @if (submitted && f['email'].errors) {
           <div class="invalid-feedback">
-            @if (f['email'].hasError('required')) {
-              email is required.
-            }
+            @if (f['email'].hasError('required')) { Email is required. }
+            @if (f['email'].hasError('email')) { Please enter a valid email. }
           </div>
         }
       </div>
 
-      <div class="form-group mb-4">
-        <label for="password" class="form-label">Password</label>
+      <div class="form-group mb-2">
+        <div class="d-flex justify-content-between align-items-center">
+          <label for="password" class="form-label mb-0">Password</label>
+          <a routerLink="/forgot-password" class="forgot-link">Forgot password?</a>
+        </div>
         <input
           type="password"
           id="password"
-          class="form-control"
+          class="form-control mt-2"
           formControlName="password"
           placeholder="••••••••"
           [class.is-invalid]="submitted && f['password'].errors"
           autocomplete="current-password">
-
         @if (submitted && f['password'].errors) {
           <div class="invalid-feedback">
-            @if (f['password'].hasError('required')) {
-              Password is required.
-            }
+            @if (f['password'].hasError('required')) { Password is required. }
           </div>
         }
       </div>
 
-      <button type="submit" class="btn-submit" [disabled]="isSubmitting">
+      <button type="submit" class="btn-submit mt-4" [disabled]="isSubmitting">
         @if (isSubmitting) {
           <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
           Signing In...

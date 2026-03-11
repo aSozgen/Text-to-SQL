@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${BACKEND_PORT}
   error:
     include-message: always
     include-binding-errors: always
@@ -8,14 +8,15 @@ server:
 
 llm:
   service:
-    url: http://localhost:8000
+    url: ${LLM_URL}
     endpoint: /predict
     read-timeout: 60000
     connection-timeout: 50000
     conversation-turn: 2
 
-angular-frontend:
-  url: http://localhost:4200
+app:
+  frontend:
+    url: ${FRONTEND_URL}
 
 rate-limit:
   enabled: true
@@ -31,9 +32,9 @@ spring:
     name: backend
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/texttosql
-    username: postgres
-    password: postgres
+    url: ${POSTGRES_URL}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -69,13 +70,34 @@ spring:
     time-zone: UTC
     default-property-inclusion: non_null
 
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=30m
+
 jwt:
-  secret: c5e163309292b0cc856f4a955d48e07b5e9f6fefd490c1dcd703efbb3eae065e
-  expiration: 86400000
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION}
 
 logging:
   level:
-    root: INFO
+    root: ${LOG_LEVEL}
     com.texttosql.backend: DEBUG
     org.springframework.security: DEBUG
     org.springframework.web: DEBUG

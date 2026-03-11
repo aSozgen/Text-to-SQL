@@ -1,0 +1,71 @@
+<!-- verify-email.component.html -->
+
+<div class="auth-container">
+  <div class="auth-card text-center">
+
+    @if (state === 'loading') {
+      <div class="status-icon loading-icon">
+        <span class="spinner-border" role="status"></span>
+      </div>
+      <h2 class="mb-2 fw-bold">Verifying Email</h2>
+      <p class="text-muted">Please wait while we verify your email address...</p>
+    }
+
+    @if (state === 'success') {
+      <div class="status-icon success-icon">✓</div>
+      <h2 class="mb-2 fw-bold">Email Verified!</h2>
+      <p class="text-muted mb-4">Your email has been verified successfully. You can now sign in.</p>
+      <a routerLink="/login" class="btn-submit text-decoration-none">
+        Go to Sign In
+      </a>
+    }
+
+    @if (state === 'error') {
+      <div class="status-icon error-icon">✕</div>
+      <h2 class="mb-2 fw-bold">Verification Failed</h2>
+      <p class="error-message mb-4">{{ errorMessage }}</p>
+
+      <div class="divider mb-4"></div>
+
+      <p class="text-muted small mb-3">Didn't receive a valid link? Request a new one.</p>
+
+      @if (resendSuccess) {
+        <div class="alert-success-box mb-3">
+          Verification email resent! Please check your inbox.
+        </div>
+      } @else {
+        <form [formGroup]="resendForm" (ngSubmit)="onResend()" autocomplete="off">
+          <div class="form-group mb-3 text-start">
+            <label for="email" class="form-label">Email Address</label>
+            <input
+              type="email"
+              id="email"
+              class="form-control"
+              formControlName="email"
+              placeholder="name@company.com"
+              [class.is-invalid]="resendSubmitted && r['email'].errors">
+            @if (resendSubmitted && r['email'].errors) {
+              <div class="invalid-feedback">
+                @if (r['email'].hasError('required')) { Email is required. }
+                @if (r['email'].hasError('email')) { Please enter a valid email. }
+              </div>
+            }
+          </div>
+          <button type="submit" class="btn-submit" [disabled]="isResending">
+            @if (isResending) {
+              <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+              Sending...
+            } @else {
+              Resend Verification Email
+            }
+          </button>
+        </form>
+      }
+
+      <div class="auth-footer mt-3">
+        <a routerLink="/login" class="text-decoration-none">← Back to Sign In</a>
+      </div>
+    }
+
+  </div>
+</div>

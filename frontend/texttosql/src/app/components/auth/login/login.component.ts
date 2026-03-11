@@ -1,12 +1,15 @@
+// login.component.ts
+
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
 import { Api } from '../../../api/api';
-import {AuthenticationResponse, LoginRequest} from '../../../api/models';
-import { login, getMe } from '../../../api/functions';
+import { AuthenticationResponse, LoginRequest } from '../../../api/models';
+import { login, getMe, resendVerification } from '../../../api/functions';
 import { AuthService } from '../../../core/auth.service';
+import {ErrorHandlerService} from '../../../core/error.handler.service';
 
 @Component({
   selector: 'app-login',
@@ -19,6 +22,7 @@ export class LoginComponent {
   private readonly fb = inject(FormBuilder);
   private readonly api = inject(Api);
   private readonly authService = inject(AuthService);
+  private readonly errorHandler = inject(ErrorHandlerService);
 
   loginForm: FormGroup = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
@@ -28,60 +32,61 @@ export class LoginComponent {
   submitted = false;
   isSubmitting = false;
   errorMessage: string | null = null;
+  showResendVerification = false;
+  isResending = false;
+  resendSuccess = false;
 
-  get f() {
-    return this.loginForm.controls;
-  }
+  get f() { return this.loginForm.controls; }
 
   async onSubmit() {
     this.submitted = true;
     this.errorMessage = null;
+    this.showResendVerification = false;
+    this.resendSuccess = false;
 
-    if (this.loginForm.invalid) {
-      return;
-    }
+    if (this.loginForm.invalid) return;
 
     this.isSubmitting = true;
 
     try {
       const request: LoginRequest = this.loginForm.value;
-
       const authResponse: AuthenticationResponse = await this.api.invoke(login, { body: request });
 
-      if (authResponse && authResponse.token) {
-        const token: string = authResponse.token;
-
-        localStorage.setItem('token', token);
-
+      if (authResponse?.token) {
+        localStorage.setItem('token', authResponse.token);
         const userDto: any = await this.api.invoke(getMe);
-
-        this.authService.login(userDto, token);
+        this.authService.login(userDto, authResponse.token);
       }
 
     } catch (error: any) {
       localStorage.removeItem('token');
+      const parsed = this.errorHandler.parse(error);
 
-      if (error.error) {
-        if (typeof error.error === 'string') {
-          try {
-            const parsedError = JSON.parse(error.error);
-            this.errorMessage = parsedError.message || error.error;
-          } catch (e) {
-            this.errorMessage = error.error;
-          }
-        } else if (typeof error.error === 'object' && error.error.message) {
-          this.errorMessage = error.error.message;
-        } else {
-          this.errorMessage = 'Login failed. Please check your credentials.';
-        }
-      } else if (error.message) {
-        this.errorMessage = error.message;
+      if (parsed.isUnauthorized && parsed.message.toLowerCase().includes('email not verified')) {
+        this.errorMessage = null;
+        this.showResendVerification = true;
       } else {
-        this.errorMessage = 'An unexpected error occurred.';
+        this.errorMessage = parsed.message;
       }
-
     } finally {
       this.isSubmitting = false;
+    }
+  }
+
+  async onResendVerification() {
+    const email = this.f['email'].value;
+    if (!email) return;
+
+    this.isResending = true;
+    this.resendSuccess = false;
+
+    try {
+      await this.api.invoke(resendVerification, { body: { email } });
+      this.resendSuccess = true;
+    } catch {
+      // Silently fail
+    } finally {
+      this.isResending = false;
     }
   }
 }

@@ -17,7 +17,7 @@ import {
 
 // Search Function
 import { searchSchema } from '../../api/fn/4-search/search-schema';
-import {extractErrorMessage} from '../../core/error.utils';
+import {ErrorHandlerService} from '../../core/error.handler.service';
 import {SchemaService} from '../../core/schema.service';
 
 type ModalMode = 'IMPORT' | 'CREATE_DB' | 'EDIT_DB' | 'CREATE_TABLE' | 'EDIT_TABLE' | 'CREATE_COLUMN' | 'EDIT_COLUMN';
@@ -48,6 +48,7 @@ export class SchemasComponent {
   private readonly api = inject(Api);
   private readonly authService = inject(AuthService);
   private readonly schemaService = inject(SchemaService);
+  private readonly errorHandler = inject(ErrorHandlerService);
 
   isGuest = computed(() => !this.authService.currentUser());
   isCopied = signal<boolean>(false);
@@ -352,7 +353,7 @@ export class SchemasComponent {
       }
 
     } catch (e: any) {
-      this.openErrorModal(extractErrorMessage(e));
+      this.openErrorModal(this.errorHandler.message(e));
     } finally {
       this.isLoading.set(false);
     }
@@ -553,7 +554,7 @@ export class SchemasComponent {
         this.invalidateCache('COLUMN', this.selectedTableId); await this.loadColumnsForTable(this.selectedDbId, this.selectedTableId);
       }
       this.closeModal();
-    } catch (e: any) { console.error("Op Failed:", e); const msg = extractErrorMessage(e); this.openErrorModal(msg); } finally { this.isLoading.set(false); }
+    } catch (e: any) { console.error("Op Failed:", e); const msg = this.errorHandler.message(e); this.openErrorModal(msg); } finally { this.isLoading.set(false); }
   }
 
   async confirmDelete() {
@@ -566,7 +567,7 @@ export class SchemasComponent {
       else if (type === 'TABLE' && pid) { await this.api.invoke(deleteTable, { databaseId: pid, tableId: id }); this.invalidateCache('TABLE', pid); await this.loadTablesForDb(pid); }
       else if (type === 'COLUMN' && pid && gpid) { await this.api.invoke(deleteColumn, { databaseId: gpid, tableId: pid, columnId: id }); this.invalidateCache('COLUMN', pid); await this.loadColumnsForTable(gpid, pid); }
       this.closeDeleteModal();
-    } catch (e: any) { const msg = extractErrorMessage(e); this.openErrorModal(msg); } finally { this.isLoading.set(false); }
+    } catch (e: any) { const msg = this.errorHandler.message(e); this.openErrorModal(msg); } finally { this.isLoading.set(false); }
   }
 
   private saveToLocal() { if (!this.isGuest()) return; const data = { dbs: this.databases(), tables: Array.from(this.tablesMap().entries()), columns: Array.from(this.columnsMap().entries()) }; localStorage.setItem('guest_schema_data_v2', JSON.stringify(data)); }

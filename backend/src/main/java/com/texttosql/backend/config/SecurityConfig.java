@@ -39,8 +39,8 @@ public class SecurityConfig {
     @Value("${llm.service.url}")
     private String LLMServerURL;
 
-    @Value("${angular-frontend.url}")
-    private String angularFrontendURL;
+    @Value("${app.frontend.url}")
+    private String appFrontendURL;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -60,6 +60,10 @@ public class SecurityConfig {
                                         "/api/v1/auth/login",
                                         "/api/v1/auth/register",
                                         "/api/v1/auth/health",
+                                        "/api/v1/auth/verify-email",
+                                        "/api/v1/auth/resend-verification",
+                                        "/api/v1/auth/forgot-password",
+                                        "/api/v1/auth/reset-password",
                                         "/actuator/health",
                                         "/error",
                                         "/v3/api-docs/**",
@@ -96,7 +100,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(LLMServerURL, angularFrontendURL));
+        configuration.setAllowedOrigins(List.of(LLMServerURL, appFrontendURL));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept"));
         configuration.setExposedHeaders(List.of("Authorization"));

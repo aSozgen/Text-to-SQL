@@ -22,10 +22,11 @@ import {
   getChats, createChat, deleteChat, updateChat, getMessages, createMessage,
   updateMessageFeedback, deleteMessage, updateMessageContent, searchChat
 } from '../../api/functions';
-import {extractErrorMessage} from '../../core/error.utils';
 import {SchemaService} from '../../core/schema.service';
+import {ErrorHandlerService} from '../../core/error.handler.service';
+import { exportChatToCsv, exportChatToJson, exportChatToMarkdown } from '../../api/functions';
 
-type ExportFormat = 'JSON' | 'CSV' | 'TXT';
+type ExportFormat = 'JSON' | 'CSV' | 'Markdown';
 type ModalType = 'DELETE_CHAT' | 'DELETE_MSG' | 'RENAME_CHAT' | 'NONE';
 
 type ModalTarget = ChatDto | MessageDto | null;
@@ -43,6 +44,7 @@ export class ChatComponent implements OnInit {
   private readonly api = inject(Api);
   private readonly authService = inject(AuthService);
   private readonly schemaService = inject(SchemaService);
+  private readonly errorHandler = inject(ErrorHandlerService);
   private readonly destroyRef = inject(DestroyRef);
 
   @ViewChild('scrollContainer') private scrollContainer!: ElementRef<HTMLElement>;
@@ -281,7 +283,7 @@ export class ChatComponent implements OnInit {
         this.chats.update(c => [...c, ...content]);
       }
     } catch (e) {
-      this.showError(extractErrorMessage(e));
+      this.showError(this.errorHandler.message(e));
     }
   }
 
@@ -361,7 +363,7 @@ export class ChatComponent implements OnInit {
 
       if (isInitialLoad) this.scrollToBottom();
     } catch (e) {
-      this.showError(extractErrorMessage(e));
+      this.showError(this.errorHandler.message(e));
     } finally {
       this.isLoading.set(false);
       this.isLoadingMoreMsg.set(false);
@@ -602,46 +604,41 @@ export class ChatComponent implements OnInit {
   }
 
   // --- Export ---
-  exportChat(format: ExportFormat): void {
+  async exportChat(format: ExportFormat): Promise<void> {
     const chatId = this.selectedChatId();
-    if (!chatId || this.messages().length === 0) {
-      this.showError('Nothing to export.');
+    if (!chatId) {
+      this.showError('No chat selected.');
       return;
     }
 
     const chatName = this.chats().find(c => c.chatId === chatId)?.name || 'export';
-    const data = this.messages();
-    let content: string;
-    let mime: string;
-    let ext: string;
 
-    switch (format) {
-      case 'JSON':
-        content = JSON.stringify(data.map(({ messageId, ...rest }) => rest), null, 2);
-        mime = 'application/json';
-        ext = 'json';
-        break;
-      case 'CSV':
-        content = 'Sender,Time,Content\n' +
-          data.map(m => `${m.senderType},${m.createdAt},"${m.content.replace(/"/g, '""')}"`).join('\n');
-        mime = 'text/csv';
-        ext = 'csv';
-        break;
-      default:
-        content = data.map(m => `[${m.createdAt}] ${m.senderType}:\n${m.content}\n---`).join('\n');
-        mime = 'text/plain';
-        ext = 'txt';
-        break;
+    const config: Record<ExportFormat, { fn: any; ext: string; mime: string }> = {
+      CSV:  { fn: exportChatToCsv,      ext: 'csv', mime: 'text/csv' },
+      JSON: { fn: exportChatToJson,     ext: 'json', mime: 'application/json' },
+      Markdown:  { fn: exportChatToMarkdown, ext: 'md',  mime: 'text/markdown' },
+    };
+
+    const { fn, ext, mime } = config[format];
+
+    try {
+      const response = await this.api.invoke(fn, { chatID: chatId });
+
+      const blob = response instanceof Blob
+        ? response
+        : new Blob([response as string], { type: mime });
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${chatName}.${ext}`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+    } catch (e) {
+      this.showError(this.errorHandler.message(e));
     }
-
-    const blobUrl = URL.createObjectURL(new Blob([content], { type: mime }));
-    const a = document.createElement('a');
-    a.href = blobUrl;
-    a.download = `${chatName}.${ext}`;
-    a.click();
-    URL.revokeObjectURL(blobUrl);
   }
-
   copySQL(messageId: string, sql: string): void {
     navigator.clipboard.writeText(sql).then(() => {
       this.copiedMessageId.set(messageId);

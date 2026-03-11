@@ -3,62 +3,118 @@ version: '3.8'
 services:
   db:
     image: postgres:15-alpine
-    container_name: postgres
-    restart: always
+    container_name: texttosql-postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: texttosql
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-texttosql}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - app-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-texttosql}"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
 
   llm:
-    build: llm-server/texttosql
-    container_name: llm-server
-    restart: on-failure
+    build:
+      context: llm-server/texttosql/servers/v1-2-3
+      dockerfile: Dockerfile
+    container_name: texttosql-llm
+    restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "${LLM_PORT:-8000}:8000"
     environment:
-      - HOST=0.0.0.0
-      - PORT=8000
-      - LOG_LEVEL=INFO
+      HOST: 0.0.0.0
+      PORT: 8000
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
 
   backend:
-    build: ./backend
-    container_name: backend
-    restart: on-failure
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        - MAVEN_OPTS=-Xmx512m
+    container_name: texttosql-backend
+    restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
       llm:
         condition: service_started
     ports:
-      - "8080:8080"
+      - "${BACKEND_PORT:-8080}:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/texttosql
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      # Database
+      SPRING_DATASOURCE_URL: ${POSTGRES_URL}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${HIBERNATE_DDL_AUTO}
+      # LLM Service
       LLM_SERVICE_URL: http://llm:8000
-      ANGULAR_FRONTEND_URL: http://localhost:4200
-
+      # Frontend
+      ANGULAR_FRONTEND_URL: ${FRONTEND_URL}
+      APP_FRONTEND_URL: ${FRONTEND_URL}
+      # JWT
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION}
+      # Email
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      # Logging
+      LOGGING_LEVEL_ROOT: ${LOG_LEVEL}
+      # Server
+      SERVER_PORT: 8080
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+    volumes:
+      - backend_logs:/app/logs
 
 networks:
   app-network:
     driver: bridge
+    name: texttosql-network
 
 volumes:
   postgres_data:
+    name: texttosql-postgres-data
+  backend_logs:
+    name: texttosql-backend-logs

@@ -9,7 +9,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -98,5 +100,35 @@ public class ChatBotController {
                                               @AuthenticationPrincipal CustomUserDetails userDetails) {
         chatBotService.deleteMessage(chatID, messageID, userDetails);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/chats/{chatID}/export/csv")
+    public ResponseEntity<String> exportChatToCsv(@PathVariable UUID chatID,
+                                                    @AuthenticationPrincipal CustomUserDetails userDetails) {
+        String csv = chatBotService.exportChatToCsv(chatID, userDetails);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("text/csv"));
+        headers.setContentDispositionFormData("attachment", "chat-" + chatID + ".csv");
+        return ResponseEntity.ok().headers(headers).body(csv);
+    }
+
+    @GetMapping("/chats/{chatID}/export/markdown")
+    public ResponseEntity<String> exportChatToMarkdown(@PathVariable UUID chatID,
+                                                        @AuthenticationPrincipal CustomUserDetails userDetails) {
+        String markdown = chatBotService.exportChatToMarkdown(chatID, userDetails);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.TEXT_PLAIN);
+        headers.setContentDispositionFormData("attachment", "chat-" + chatID + ".md");
+        return ResponseEntity.ok().headers(headers).body(markdown);
+    }
+
+    @GetMapping("/chats/{chatID}/export/json")
+    public ResponseEntity<String> exportChatToJson(@PathVariable UUID chatID,
+                                                    @AuthenticationPrincipal CustomUserDetails userDetails) {
+        String json = chatBotService.exportChatToJson(chatID, userDetails);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setContentDispositionFormData("attachment", "chat-" + chatID + ".json");
+        return ResponseEntity.ok().headers(headers).body(json);
     }
 }

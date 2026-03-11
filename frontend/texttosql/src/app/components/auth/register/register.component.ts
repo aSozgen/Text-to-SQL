@@ -1,10 +1,14 @@
+// register.component.ts
+
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
+
 import { Api } from '../../../api/api';
 import { RegisterRequest } from '../../../api/models';
 import { register } from '../../../api/functions';
+import {ErrorHandlerService} from '../../../core/error.handler.service';
 
 @Component({
   selector: 'app-register',
@@ -15,8 +19,8 @@ import { register } from '../../../api/functions';
 })
 export class RegisterComponent {
   private readonly fb = inject(FormBuilder);
-  private readonly router = inject(Router);
   private readonly api = inject(Api);
+  private readonly errorHandler = inject(ErrorHandlerService);
 
   registerForm: FormGroup = this.fb.group({
     username: ['', [Validators.required, Validators.minLength(3)]],
@@ -27,49 +31,26 @@ export class RegisterComponent {
   submitted = false;
   isSubmitting = false;
   errorMessage: string | null = null;
+  registerSuccess = false;
+  registeredEmail = '';
 
-  get f() {
-    return this.registerForm.controls;
-  }
+  get f() { return this.registerForm.controls; }
 
   async onSubmit() {
     this.submitted = true;
     this.errorMessage = null;
 
-    if (this.registerForm.invalid) {
-      return;
-    }
+    if (this.registerForm.invalid) return;
 
     this.isSubmitting = true;
 
     try {
       const request: RegisterRequest = this.registerForm.value;
-      
       await this.api.invoke(register, { body: request });
-      
-      this.router.navigate(['/login']);
-
+      this.registeredEmail = this.registerForm.value.email;
+      this.registerSuccess = true;
     } catch (error: any) {
-      console.error('API Error:', error);
-
-      if (error.error) {
-        if (typeof error.error === 'string') {
-          try {
-            const parsedError = JSON.parse(error.error);
-            this.errorMessage = parsedError.message || error.error;
-          } catch (e) {
-            this.errorMessage = error.error;
-          }
-        } else if (typeof error.error === 'object' && error.error.message) {
-          this.errorMessage = error.error.message;
-        } else {
-          this.errorMessage = 'Registration failed. Please try again.';
-        }
-      } else if (error.message) {
-        this.errorMessage = error.message;
-      } else {
-        this.errorMessage = 'An unexpected error occurred.';
-      }
+      this.errorMessage = this.errorHandler.message(error);
     } finally {
       this.isSubmitting = false;
     }

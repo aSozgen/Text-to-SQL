@@ -48,6 +48,24 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.NOT_FOUND, e.getMessage());
     }
 
+    @ExceptionHandler(EmailNotVerifiedException.class)
+    public ResponseEntity<ErrorResponse> handleEmailNotVerifiedException(EmailNotVerifiedException e) {
+        log.error("EmailNotVerifiedException: {}", e.getMessage());
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, e.getMessage());
+    }
+
+    @ExceptionHandler(TokenExpiredException.class)
+    public ResponseEntity<ErrorResponse> handleTokenExpiredException(TokenExpiredException e) {
+        log.warn("TokenExpiredException: {}", e.getMessage());
+        return buildErrorResponse(HttpStatus.GONE, e.getMessage());
+    }
+
+    @ExceptionHandler(TokenAlreadyUsedException.class)
+    public ResponseEntity<ErrorResponse> handleTokenAlreadyUsedException(TokenAlreadyUsedException e) {
+        log.warn("TokenAlreadyUsedException: {}", e.getMessage());
+        return buildErrorResponse(HttpStatus.CONFLICT, e.getMessage());
+    }
+
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorResponse> handleBadCredentialsException(BadCredentialsException e) {
         log.error("BadCredentialsException: {}", e.getMessage());

@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir torch==2.6.0 --index-url https://download.pytorch
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY ../.. .
+COPY . .
 
 EXPOSE 8000
 

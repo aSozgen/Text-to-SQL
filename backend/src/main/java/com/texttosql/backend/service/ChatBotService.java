@@ -18,6 +18,7 @@ import java.util.UUID;
 public class ChatBotService {
     private final ChatService chatService;
     private final MessageService messageService;
+    private final ExportService exportService;
 
     public Page<ChatDto> getChats(CustomUserDetails userDetails, int page, int size, String sort, String direction) {
         return chatService.getChats(userDetails, page, size, sort, direction);
@@ -61,5 +62,17 @@ public class ChatBotService {
 
     public void deleteMessage(UUID chatID, UUID messageID, CustomUserDetails userDetails) {
         messageService.deleteMessage(getCurrentChatEntity(chatID, userDetails), messageID);
+    }
+
+    public String exportChatToCsv(UUID chatID, CustomUserDetails userDetails) {
+        return exportService.exportChatToCsv(getCurrentChatEntity(chatID, userDetails));
+    }
+
+    public String exportChatToMarkdown(UUID chatID, CustomUserDetails userDetails) {
+        return exportService.exportChatToMarkdown(getCurrentChatEntity(chatID, userDetails));
+    }
+
+    public String exportChatToJson(UUID chatID, CustomUserDetails userDetails) {
+        return exportService.exportChatToJson(getCurrentChatEntity(chatID, userDetails));
     }
 }
