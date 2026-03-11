@@ -44,28 +44,46 @@ A production-ready Text-to-SQL application powered by machine learning that conv
 ### 1. Clone the Repository
 
 ```bash
-git clone <https://github.com/ramazanbozkurt-dev/text-to-sql>
+git clone https://github.com/ramazanbozkurt-dev/text-to-sql
 cd text-to-sql
 ```
 
 ### 2. Configure Environment
 
 ```bash
-cp .env .env
+cp .env.example .env
 ```
 
-Edit `.env` and update the following:
+Edit `.env` and update the following required values:
 
 ```env
-# Generate a secure JWT secret (32+ characters)
-JWT_SECRET=your-secure-jwt-secret-key-here
+# Database Configuration
+POSTGRES_URL=jdbc:postgresql://db:5432/texttosql
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=CHANGE_THIS_TO_SECURE_PASSWORD
 
-# Database password
-POSTGRES_PASSWORD=your-secure-database-password
+# Backend Configuration
+BACKEND_PORT=8080
+HIBERNATE_DDL_AUTO=update
 
-# Email configuration (for Gmail)
-MAIL_USERNAME=your-email@gmail.com
-MAIL_PASSWORD=your-gmail-app-password
+# JWT Configuration
+JWT_SECRET=GENERATE_A_SECURE_32_CHARACTER_SECRET_KEY_HERE
+JWT_EXPIRATION=86400000
+
+# LLM Configuration
+LLM_URL=http://llm:8000
+
+# Email Configuration
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=your-gmail@gmail.com
+MAIL_PASSWORD=your-gmail-app-password  # Use a Gmail App Password, not your regular password
+
+# Frontend Configuration
+FRONTEND_URL=http://localhost:4200
+
+# Logging
+LOG_LEVEL=INFO
 ```
 
 ### 3. Start with Docker
@@ -168,6 +186,7 @@ npm test
 | POST | `/api/v1/auth/register` | Register new user | No |
 | POST | `/api/v1/auth/login` | Login user | No |
 | POST | `/api/v1/auth/verify-email` | Verify email | No |
+| POST | `/api/v1/auth/resend-verification` | Resend verification email | No |
 | POST | `/api/v1/auth/forgot-password` | Request password reset | No |
 | POST | `/api/v1/auth/reset-password` | Reset password | No |
 | GET | `/api/v1/auth/me` | Get current user | Yes |
@@ -188,6 +207,9 @@ npm test
 | POST | `/api/v1/chatbot/chats` | Create new chat | Yes |
 | GET | `/api/v1/chatbot/chats` | List all chats | Yes |
 | POST | `/api/v1/chatbot/chats/{id}/messages` | Send message | Yes |
+| GET | `/api/v1/chatbot/chats/{id}/export/csv` | Export chat as CSV | Yes |
+| GET | `/api/v1/chatbot/chats/{id}/export/json` | Export chat as JSON | Yes |
+| GET | `/api/v1/chatbot/chats/{id}/export/markdown` | Export chat as Markdown | Yes |
 
 For complete API documentation, visit [Swagger UI](http://localhost:8080/swagger-ui.html) when the application is running.
 
@@ -226,12 +248,12 @@ For complete API documentation, visit [Swagger UI](http://localhost:8080/swagger
 
 ### Optimization Features
 
+- **LLM Response Caching** - Caffeine cache with 30-minute TTL (10-20x faster for repeated queries)
+- **Retry Logic** - Automatic retry with exponential backoff (up to 3 attempts)
 - **Database Connection Pooling** - HikariCP with optimized settings
-- **Multi-stage Docker Builds** - Reduced image sizes
+- **Multi-stage Docker Builds** - Reduced image sizes (~50% smaller)
 - **JVM Tuning** - G1GC with optimized heap settings
 - **Lazy Loading** - Efficient entity relationships
-- **Batch Processing** - Optimized database operations
-- **Response Caching** - Static resource caching
 
 ## 🐳 Docker Configuration
 
@@ -254,39 +276,55 @@ All services include health checks:
 
 ### Production Checklist
 
-- [ ] Update `JWT_SECRET` with secure random value
-- [ ] Change default database password
-- [ ] Configure email SMTP settings
+- [ ] Update `JWT_SECRET` with secure random value (32+ characters)
+- [ ] Change default `POSTGRES_PASSWORD`
+- [ ] Configure email SMTP settings (use Gmail App Password)
 - [ ] Set `HIBERNATE_DDL_AUTO=validate`
+- [ ] Set `FRONTEND_URL` to your production domain
 - [ ] Enable HTTPS
 - [ ] Configure proper CORS origins
-- [ ] Set up backup strategy
+- [ ] Set `LOG_LEVEL=WARN` for production
+- [ ] Set up database backups
 - [ ] Configure log aggregation
 - [ ] Set up monitoring/alerting
-- [ ] Review security headers
 
-### Environment Variables
+### Environment Variables Reference
 
-See [.env.example](.env.example) for all available configuration options.
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `POSTGRES_URL` | PostgreSQL JDBC URL | `jdbc:postgresql://db:5432/texttosql` |
+| `POSTGRES_USER` | Database username | `postgres` |
+| `POSTGRES_PASSWORD` | Database password | *(required)* |
+| `BACKEND_PORT` | Backend server port | `8080` |
+| `HIBERNATE_DDL_AUTO` | Hibernate DDL strategy | `update` |
+| `JWT_SECRET` | JWT signing secret (32+ chars) | *(required)* |
+| `JWT_EXPIRATION` | JWT expiry in ms | `86400000` (24h) |
+| `LLM_URL` | LLM server URL | `http://llm:8000` |
+| `MAIL_HOST` | SMTP host | `smtp.gmail.com` |
+| `MAIL_PORT` | SMTP port | `587` |
+| `MAIL_USERNAME` | SMTP username / sender email | *(required)* |
+| `MAIL_PASSWORD` | Gmail App Password | *(required)* |
+| `FRONTEND_URL` | Frontend base URL (for email links) | `http://localhost:4200` |
+| `LOG_LEVEL` | Root logging level | `INFO` |
 
 ## 📝 License
 
-This project is a graduation project.
+This project is a graduation project developed at Alanya Alaaddin Keykubat University.
 
 ## 👥 Team
 
-For questions or support, please refer to:
-
-- **Notion**: [Project Documentation](https://www.notion.so/231ee26c446080f88dc6eafd06e34573?v=231ee26c44608022a022000c345ac6d7&source=copy_link)
-- **Drive**: [Project Files](https://drive.google.com/drive/folders/1B4ujZLiT5LzXWm8dSQ07WOmFdtbIJoyR?usp=sharing)
-- **Colab**: [Model Training](https://colab.research.google.com/drive/1-SXf1OOFJBrhWnrGpY9_m5LbuxYh7O-c?usp=sharing)
+| Role | Name                        |
+|------|-----------------------------|
+| Developer | Ramazan Bozkurt             |
+| Developer | Abdulkadir Sözgen           |
+| Advisor | Prof. Dr. Yılmaz Kemal Yüce |
 
 ## 🙏 Acknowledgments
 
 - Built with Spring Boot and Angular
-- LLM model trained for Text-to-SQL conversion
+- LLM model custom-trained for Text-to-SQL conversion
 - PostgreSQL for reliable data storage
 
 ---
 
-**Made with ❤️ as a graduation project**
+**Made with ❤️ as a graduation project — Alanya Alaaddin Keykubat University**
