@@ -11,8 +11,8 @@ import com.texttosql.backend.exception.GlobalExceptionHandler;
 import com.texttosql.backend.exception.ResourceNotFoundException;
 import com.texttosql.backend.security.CustomUserDetails;
 import com.texttosql.backend.service.ChatBotService;
-import com.texttosql.backend.util.Feedback;
-import com.texttosql.backend.util.SenderType;
+import com.texttosql.backend.entity.enums.Feedback;
+import com.texttosql.backend.entity.enums.SenderType;
 import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,8 +44,7 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
 public class ChatBotTest {
@@ -60,7 +59,8 @@ public class ChatBotTest {
 
     private CustomUserDetails mockUser;
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
 
     @BeforeEach
     void setUp() {
@@ -104,7 +104,7 @@ public class ChatBotTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.chatId").value(newChatId.toString()))
                 .andExpect(jsonPath("$.name").value("New Chat"))
-                .andExpect(jsonPath("$.createdAt").value(now.format(formatter)));
+                .andExpect(jsonPath("$.createdAt").value(now.format(dateFormatter)));
     }
 
     @Test
@@ -138,7 +138,7 @@ public class ChatBotTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].chatId").value(chatId.toString()))
                 .andExpect(jsonPath("$.content[0].name").value("Test Chat"))
-                .andExpect(jsonPath("$.content[0].createdAt").value(now.format(formatter)));
+                .andExpect(jsonPath("$.content[0].createdAt").value(now.format(dateFormatter)));
 
     }
 
@@ -156,7 +156,7 @@ public class ChatBotTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.chatId").value(chatId.toString()))
                 .andExpect(jsonPath("$.name").value("Single Chat"))
-                .andExpect(jsonPath("$.createdAt").value(now.format(formatter)));
+                .andExpect(jsonPath("$.createdAt").value(now.format(dateFormatter)));
     }
 
     @Test
@@ -176,7 +176,7 @@ public class ChatBotTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.chatId").value(chatId.toString()))
                 .andExpect(jsonPath("$.name").value("Updated Name"))
-                .andExpect(jsonPath("$.createdAt").value(now.format(formatter)));
+                .andExpect(jsonPath("$.createdAt").value(now.format(dateFormatter)));
     }
 
     @Test
@@ -191,7 +191,7 @@ public class ChatBotTest {
         mockMvc.perform(patch("/api/v1/chatbot/chats/{chatID}", chatId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateDto)))
-                .andExpect(status().isConflict()) // 409 Conflict
+                .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message").value("There is already a Chat with the same name."));
     }
 
@@ -212,7 +212,7 @@ public class ChatBotTest {
                 .when(chatBotService).deleteChat(eq(chatId), any(CustomUserDetails.class));
 
         mockMvc.perform(delete("/api/v1/chatbot/chats/{chatID}", chatId))
-                .andExpect(status().isNotFound()) // 404 Not Found
+                .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Chat not found."));
     }
 
@@ -222,7 +222,6 @@ public class ChatBotTest {
         UUID messageId = UUID.randomUUID();
         UUID databaseId = UUID.randomUUID();
         LocalDateTime now = LocalDateTime.now();
-
 
         MessageDto requestDto = new MessageDto(null, chatId, databaseId, "Hello Bot", null, SenderType.USER, Feedback.NONE, null);
         MessageDto responseDto = new MessageDto(messageId, chatId, databaseId, "Hello User", 95.0, SenderType.LLM, Feedback.NONE, now);
@@ -240,7 +239,7 @@ public class ChatBotTest {
                 .andExpect(jsonPath("$.confidence").value(95.0))
                 .andExpect(jsonPath("$.senderType").value("LLM"))
                 .andExpect(jsonPath("$.feedback").value("NONE"))
-                .andExpect(jsonPath("$.createdAt").value(now.format(formatter)));
+                .andExpect(jsonPath("$.createdAt").value(now.format(dateTimeFormatter)));
     }
 
     @Test
@@ -250,7 +249,7 @@ public class ChatBotTest {
         UUID databaseId = UUID.randomUUID();
         LocalDateTime now = LocalDateTime.now();
 
-        MessageDto messageDto = new MessageDto(messageId, chatId, databaseId, "Hello Bot", -1.0, SenderType.USER, Feedback.NONE, LocalDateTime.now());
+        MessageDto messageDto = new MessageDto(messageId, chatId, databaseId, "Hello Bot", -1.0, SenderType.USER, Feedback.NONE, now);
 
         Page<MessageDto> messagePage = new PageImpl<>(Collections.singletonList(messageDto), PageRequest.of(0, 10), 1);
 
@@ -265,7 +264,7 @@ public class ChatBotTest {
                 .andExpect(jsonPath("$.content[0].confidence").value(-1.0))
                 .andExpect(jsonPath("$.content[0].senderType").value(SenderType.USER.toString()))
                 .andExpect(jsonPath("$.content[0].feedback").value("NONE"))
-                .andExpect(jsonPath("$.content[0].createdAt").value(now.format(formatter)));
+                .andExpect(jsonPath("$.content[0].createdAt").value(now.format(dateTimeFormatter)));
     }
 
     @Test
@@ -290,7 +289,7 @@ public class ChatBotTest {
                 .andExpect(jsonPath("$.confidence").value(-1.0))
                 .andExpect(jsonPath("$.senderType").value("USER"))
                 .andExpect(jsonPath("$.feedback").value("NONE"))
-                .andExpect(jsonPath("$.createdAt").value(now.format(formatter)));
+                .andExpect(jsonPath("$.createdAt").value(now.format(dateTimeFormatter)));
     }
 
     @Test
@@ -319,7 +318,6 @@ public class ChatBotTest {
 
         MessageDto responseDto = new MessageDto(messageId, chatId, null, "Content", 95.0, SenderType.LLM, Feedback.GOOD, now);
 
-
         when(chatBotService.updateMessageFeedback(eq(chatId), eq(messageId), eq(Feedback.GOOD), any(CustomUserDetails.class)))
                 .thenReturn(responseDto);
 
@@ -333,7 +331,7 @@ public class ChatBotTest {
                 .andExpect(jsonPath("$.confidence").value(95.0))
                 .andExpect(jsonPath("$.senderType").value("LLM"))
                 .andExpect(jsonPath("$.feedback").value("GOOD"))
-                .andExpect(jsonPath("$.createdAt").value(now.format(formatter)));
+                .andExpect(jsonPath("$.createdAt").value(now.format(dateTimeFormatter)));
     }
 
     @Test
@@ -387,5 +385,78 @@ public class ChatBotTest {
         mockMvc.perform(delete("/api/v1/chatbot/chats/{chatID}/messages/{messageID}", chatId, messageId))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Message not found."));
+    }
+
+    @Test
+    void exportChatToCsv_ShouldReturnCsvFile() throws Exception {
+        UUID chatId = UUID.randomUUID();
+        String csvContent = "timestamp,sender,message\n2026-03-12 10:00:00,USER,Hello\n2026-03-12 10:01:00,ASSISTANT,Hi there";
+
+        when(chatBotService.exportChatToCsv(eq(chatId), any(CustomUserDetails.class)))
+                .thenReturn(csvContent);
+
+        mockMvc.perform(get("/api/v1/chatbot/chats/{chatID}/export/csv", chatId))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.parseMediaType("text/csv")))
+                .andExpect(content().string(csvContent))
+                .andExpect(header().exists("Content-Disposition"));
+
+        verify(chatBotService).exportChatToCsv(eq(chatId), any(CustomUserDetails.class));
+    }
+
+    @Test
+    void exportChatToMarkdown_ShouldReturnMarkdownFile() throws Exception {
+        UUID chatId = UUID.randomUUID();
+        String markdownContent = "# Chat Export\n\n## Messages\n\n**User**: Hello\n\n**Assistant**: Hi there";
+
+        when(chatBotService.exportChatToMarkdown(eq(chatId), any(CustomUserDetails.class)))
+                .thenReturn(markdownContent);
+
+        mockMvc.perform(get("/api/v1/chatbot/chats/{chatID}/export/markdown", chatId))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN))
+                .andExpect(content().string(markdownContent))
+                .andExpect(header().exists("Content-Disposition"));
+
+        verify(chatBotService).exportChatToMarkdown(eq(chatId), any(CustomUserDetails.class));
+    }
+
+    @Test
+    void exportChatToJson_ShouldReturnJsonFile() throws Exception {
+        UUID chatId = UUID.randomUUID();
+        String jsonContent = "{\"chatId\":\"" + chatId + "\",\"messages\":[{\"sender\":\"USER\",\"message\":\"Hello\"}]}";
+
+        when(chatBotService.exportChatToJson(eq(chatId), any(CustomUserDetails.class)))
+                .thenReturn(jsonContent);
+
+        mockMvc.perform(get("/api/v1/chatbot/chats/{chatID}/export/json", chatId))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().string(jsonContent))
+                .andExpect(header().exists("Content-Disposition"));
+
+        verify(chatBotService).exportChatToJson(eq(chatId), any(CustomUserDetails.class));
+    }
+
+    @Test
+    void exportChat_ShouldReturnUnauthorized_WhenUserNotOwner() throws Exception {
+        UUID chatId = UUID.randomUUID();
+
+        when(chatBotService.exportChatToCsv(eq(chatId), any(CustomUserDetails.class)))
+                .thenThrow(new AccessDeniedException("You don't have access to this chat"));
+
+        mockMvc.perform(get("/api/v1/chatbot/chats/{chatID}/export/csv", chatId))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void exportChat_ShouldReturnNotFound_WhenChatDoesNotExist() throws Exception {
+        UUID chatId = UUID.randomUUID();
+
+        when(chatBotService.exportChatToCsv(eq(chatId), any(CustomUserDetails.class)))
+                .thenThrow(new ResourceNotFoundException("Chat not found"));
+
+        mockMvc.perform(get("/api/v1/chatbot/chats/{chatID}/export/csv", chatId))
+                .andExpect(status().isNotFound());
     }
 }

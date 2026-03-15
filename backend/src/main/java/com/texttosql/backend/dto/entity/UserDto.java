@@ -1,6 +1,6 @@
 package com.texttosql.backend.dto.entity;
 
-import com.texttosql.backend.util.Role;
+import com.texttosql.backend.entity.enums.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;

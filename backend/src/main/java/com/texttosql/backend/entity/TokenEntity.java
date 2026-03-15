@@ -1,5 +1,6 @@
 package com.texttosql.backend.entity;
 
+import com.texttosql.backend.entity.enums.TokenType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -8,13 +9,13 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "password_reset_tokens")
+@Table(name = "tokens")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PasswordResetTokenEntity {
+public class TokenEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -23,6 +24,10 @@ public class PasswordResetTokenEntity {
 
     @Column(nullable = false, unique = true)
     private String token;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private TokenType type;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

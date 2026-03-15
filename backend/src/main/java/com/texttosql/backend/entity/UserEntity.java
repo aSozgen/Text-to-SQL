@@ -1,6 +1,6 @@
 package com.texttosql.backend.entity;
 
-import com.texttosql.backend.util.Role;
+import com.texttosql.backend.entity.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -22,7 +22,7 @@ public class UserEntity {
     @Column(name = "user_id", columnDefinition = "UUID")
     private UUID userId;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false)
     private String username;
 
     @Column(unique = true, nullable = false)
@@ -33,7 +33,8 @@ public class UserEntity {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private Role role;
+    @Builder.Default
+    private Role role = Role.USER;
 
     @Column(nullable = false)
     @Builder.Default

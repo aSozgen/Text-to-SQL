@@ -1,6 +1,6 @@
 package com.texttosql.backend.security;
 
-import com.texttosql.backend.util.Role;
+import com.texttosql.backend.entity.enums.Role;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

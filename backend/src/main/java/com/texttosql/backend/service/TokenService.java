@@ -1,13 +1,12 @@
 package com.texttosql.backend.service;
 
-import com.texttosql.backend.entity.PasswordResetTokenEntity;
+import com.texttosql.backend.entity.TokenEntity;
 import com.texttosql.backend.entity.UserEntity;
-import com.texttosql.backend.entity.VerificationTokenEntity;
+import com.texttosql.backend.entity.enums.TokenType;
 import com.texttosql.backend.exception.ResourceNotFoundException;
 import com.texttosql.backend.exception.TokenAlreadyUsedException;
 import com.texttosql.backend.exception.TokenExpiredException;
-import com.texttosql.backend.repository.PasswordResetTokenRepository;
-import com.texttosql.backend.repository.VerificationTokenRepository;
+import com.texttosql.backend.repository.TokenRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -21,55 +20,56 @@ import java.util.Base64;
 @RequiredArgsConstructor
 public class TokenService {
 
-    private final VerificationTokenRepository verificationTokenRepository;
-    private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final TokenRepository tokenRepository;
     private final SecureRandom secureRandom = new SecureRandom();
 
     @Transactional
     public String createVerificationToken(UserEntity user) {
         // Invalidate any existing unused tokens
-        verificationTokenRepository.findByUserAndUsedFalse(user)
+        tokenRepository.findByUserAndTypeAndUsedFalse(user, TokenType.VERIFICATION)
                 .ifPresent(token -> {
                     token.setUsed(true);
-                    verificationTokenRepository.save(token);
+                    tokenRepository.save(token);
                 });
 
         String token = generateSecureToken();
-        VerificationTokenEntity verificationToken = VerificationTokenEntity.builder()
+        TokenEntity verificationToken = TokenEntity.builder()
                 .token(token)
                 .user(user)
+                .type(TokenType.VERIFICATION)
                 .expiresAt(LocalDateTime.now().plusHours(24))
                 .used(false)
                 .build();
 
-        verificationTokenRepository.save(verificationToken);
+        tokenRepository.save(verificationToken);
         return token;
     }
 
     @Transactional
     public String createPasswordResetToken(UserEntity user) {
         // Invalidate any existing unused tokens
-        passwordResetTokenRepository.findByUserAndUsedFalse(user)
+        tokenRepository.findByUserAndTypeAndUsedFalse(user, TokenType.PASSWORD)
                 .ifPresent(token -> {
                     token.setUsed(true);
-                    passwordResetTokenRepository.save(token);
+                    tokenRepository.save(token);
                 });
 
         String token = generateSecureToken();
-        PasswordResetTokenEntity resetToken = PasswordResetTokenEntity.builder()
+        TokenEntity resetToken = TokenEntity.builder()
                 .token(token)
                 .user(user)
+                .type(TokenType.PASSWORD)
                 .expiresAt(LocalDateTime.now().plusHours(1))
                 .used(false)
                 .build();
 
-        passwordResetTokenRepository.save(resetToken);
+        tokenRepository.save(resetToken);
         return token;
     }
 
     @Transactional(readOnly = true)
     public UserEntity validateVerificationToken(String token) {
-        VerificationTokenEntity verificationToken = verificationTokenRepository.findByToken(token)
+        TokenEntity verificationToken = tokenRepository.findByTokenAndType(token, TokenType.VERIFICATION)
                 .orElseThrow(() -> new ResourceNotFoundException("Invalid verification token"));
 
         if (verificationToken.getUsed()) {
@@ -85,7 +85,7 @@ public class TokenService {
 
     @Transactional(readOnly = true)
     public UserEntity validatePasswordResetToken(String token) {
-        PasswordResetTokenEntity resetToken = passwordResetTokenRepository.findByToken(token)
+        TokenEntity resetToken = tokenRepository.findByTokenAndType(token, TokenType.PASSWORD)
                 .orElseThrow(() -> new ResourceNotFoundException("Invalid password reset token"));
 
         if (resetToken.getUsed()) {
@@ -101,18 +101,18 @@ public class TokenService {
 
     @Transactional
     public void markVerificationTokenAsUsed(String token) {
-        VerificationTokenEntity verificationToken = verificationTokenRepository.findByToken(token)
+        TokenEntity verificationToken = tokenRepository.findByTokenAndType(token, TokenType.VERIFICATION)
                 .orElseThrow(() -> new ResourceNotFoundException("Token not found"));
         verificationToken.setUsed(true);
-        verificationTokenRepository.save(verificationToken);
+        tokenRepository.save(verificationToken);
     }
 
     @Transactional
     public void markPasswordResetTokenAsUsed(String token) {
-        PasswordResetTokenEntity resetToken = passwordResetTokenRepository.findByToken(token)
+        TokenEntity resetToken = tokenRepository.findByTokenAndType(token, TokenType.PASSWORD)
                 .orElseThrow(() -> new ResourceNotFoundException("Token not found"));
         resetToken.setUsed(true);
-        passwordResetTokenRepository.save(resetToken);
+        tokenRepository.save(resetToken);
     }
 
     // Clean up expired tokens daily at 2 AM
@@ -120,8 +120,8 @@ public class TokenService {
     @Transactional
     public void cleanupExpiredTokens() {
         LocalDateTime now = LocalDateTime.now();
-        verificationTokenRepository.deleteByExpiresAtBefore(now);
-        passwordResetTokenRepository.deleteByExpiresAtBefore(now);
+        tokenRepository.deleteByExpiresAtBeforeAndType(now, TokenType.VERIFICATION);
+        tokenRepository.deleteByExpiresAtBeforeAndType(now, TokenType.PASSWORD);
     }
 
     private String generateSecureToken() {

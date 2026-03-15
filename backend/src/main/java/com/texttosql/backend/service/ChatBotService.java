@@ -4,7 +4,7 @@ import com.texttosql.backend.dto.entity.ChatDto;
 import com.texttosql.backend.dto.entity.MessageDto;
 import com.texttosql.backend.entity.ChatEntity;
 import com.texttosql.backend.security.CustomUserDetails;
-import com.texttosql.backend.util.Feedback;
+import com.texttosql.backend.entity.enums.Feedback;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;

@@ -1,8 +1,8 @@
 package com.texttosql.backend.dto.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.texttosql.backend.util.Feedback;
-import com.texttosql.backend.util.SenderType;
+import com.texttosql.backend.entity.enums.Feedback;
+import com.texttosql.backend.entity.enums.SenderType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;

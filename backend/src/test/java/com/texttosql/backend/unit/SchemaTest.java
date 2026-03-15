@@ -61,7 +61,7 @@ public class SchemaTest {
 
     private CustomUserDetails mockUser;
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
 
     @BeforeEach
     void setUp() {

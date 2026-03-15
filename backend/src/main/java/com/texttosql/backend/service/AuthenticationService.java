@@ -8,7 +8,7 @@ import com.texttosql.backend.exception.EmailNotVerifiedException;
 import com.texttosql.backend.mapper.UserMapper;
 import com.texttosql.backend.repository.UserRepository;
 import com.texttosql.backend.util.JwtUtil;
-import com.texttosql.backend.util.Role;
+import com.texttosql.backend.entity.enums.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -34,12 +34,6 @@ public class AuthenticationService {
 
     @Transactional
     public void register(RegisterRequest registerRequest) {
-
-        String username = registerRequest.username();
-        if (userRepository.existsByUsername(username)) {
-            throw new DuplicatedResourceException("Username already exists.");
-        }
-
         String email = registerRequest.email();
         if (userRepository.existsByEmail(email)) {
             throw new DuplicatedResourceException("Email already exists.");
@@ -102,11 +96,6 @@ public class AuthenticationService {
     @Transactional
     public void updateProfile(String token, UpdateProfileRequest request) {
         UserEntity user = getUserFromToken(token);
-
-        if (!user.getUsername().equals(request.username()) &&
-                userRepository.existsByUsername(request.username())) {
-            throw new DuplicatedResourceException("Username already exists.");
-        }
 
         user.setUsername(request.username());
         userRepository.save(user);

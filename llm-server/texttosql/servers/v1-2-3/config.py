@@ -1,16 +1,15 @@
 import os
-from pathlib import Path
 
 class ServerConfig:
 
     # Server settings
-    HOST = "0.0.0.0"
-    PORT = 8000
+    HOST = os.environ.get("HOST", "0.0.0.0")
+    PORT = int(os.environ.get("PORT", 8000))
     MAX_WORKERS = 1
-    LOG_LEVEL = "INFO"
+    LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
     
     # Model settings
-    MODEL_PATH = "../../models/v3"
+    MODEL_PATH = os.environ.get("MODEL_PATH", "../../models/v3")
     DEVICE = None  # Auto-detect
     
     # Request limits

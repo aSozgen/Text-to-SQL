@@ -1,4 +1,4 @@
-package com.texttosql.backend.util;
+package com.texttosql.backend.entity.enums;
 
 public enum Role {
     ADMIN,

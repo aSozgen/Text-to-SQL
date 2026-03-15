@@ -1,0 +1,319 @@
+package com.texttosql.backend.unit;
+
+import com.texttosql.backend.entity.TokenEntity;
+import com.texttosql.backend.entity.UserEntity;
+import com.texttosql.backend.entity.enums.TokenType;
+import com.texttosql.backend.exception.ResourceNotFoundException;
+import com.texttosql.backend.exception.TokenAlreadyUsedException;
+import com.texttosql.backend.exception.TokenExpiredException;
+import com.texttosql.backend.repository.TokenRepository;
+import com.texttosql.backend.service.TokenService;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+public class TokenServiceTest {
+
+    @Mock
+    private TokenRepository tokenRepository;
+
+    @InjectMocks
+    private TokenService tokenService;
+
+    @Test
+    void createVerificationToken_ShouldReturnToken_WhenUserIsValid() {
+        UUID userId = UUID.randomUUID();
+        UserEntity userEntity = UserEntity.builder()
+                .userId(userId)
+                .username("testuser")
+                .email("test@example.com")
+                .build();
+
+        when(tokenRepository.findByUserAndTypeAndUsedFalse(userEntity, TokenType.VERIFICATION))
+                .thenReturn(Optional.empty());
+        when(tokenRepository.save(any(TokenEntity.class)))
+                .thenAnswer(invocation -> {
+                    TokenEntity tokenEntity = invocation.getArgument(0);
+                    tokenEntity.setTokenId(UUID.randomUUID());
+                    return tokenEntity;
+                });
+
+        String token = tokenService.createVerificationToken(userEntity);
+
+        assertThat(token).isNotNull();
+        assertThat(token).isNotEmpty();
+        verify(tokenRepository).save(any(TokenEntity.class));
+    }
+
+    @Test
+    void validateVerificationToken_ShouldReturnUser_WhenTokenIsValid() {
+        String tokenValue = "valid-verification-token";
+        UUID userId = UUID.randomUUID();
+        UserEntity userEntity = UserEntity.builder()
+                .userId(userId)
+                .username("testuser")
+                .email("test@example.com")
+                .build();
+
+        TokenEntity verificationToken = TokenEntity.builder()
+                .tokenId(UUID.randomUUID())
+                .token(tokenValue)
+                .user(userEntity)
+                .type(TokenType.VERIFICATION)
+                .expiresAt(LocalDateTime.now().plusHours(24))
+                .used(false)
+                .build();
+
+        when(tokenRepository.findByTokenAndType(tokenValue, TokenType.VERIFICATION))
+                .thenReturn(Optional.of(verificationToken));
+
+        UserEntity result = tokenService.validateVerificationToken(tokenValue);
+
+        assertThat(result).isEqualTo(userEntity);
+        verify(tokenRepository).findByTokenAndType(tokenValue, TokenType.VERIFICATION);
+    }
+
+    @Test
+    void validateVerificationToken_ShouldThrowException_WhenTokenExpired() {
+        String tokenValue = "expired-token";
+
+        TokenEntity verificationToken = TokenEntity.builder()
+                .tokenId(UUID.randomUUID())
+                .token(tokenValue)
+                .type(TokenType.VERIFICATION)
+                .expiresAt(LocalDateTime.now().minusHours(1))
+                .used(false)
+                .build();
+
+        when(tokenRepository.findByTokenAndType(tokenValue, TokenType.VERIFICATION))
+                .thenReturn(Optional.of(verificationToken));
+
+        assertThatThrownBy(() -> tokenService.validateVerificationToken(tokenValue))
+                .isInstanceOf(TokenExpiredException.class)
+                .hasMessageContaining("expired");
+    }
+
+    @Test
+    void validateVerificationToken_ShouldThrowException_WhenTokenAlreadyUsed() {
+        String tokenValue = "used-token";
+
+        TokenEntity verificationToken = TokenEntity.builder()
+                .tokenId(UUID.randomUUID())
+                .token(tokenValue)
+                .type(TokenType.VERIFICATION)
+                .expiresAt(LocalDateTime.now().plusHours(24))
+                .used(true)
+                .build();
+
+        when(tokenRepository.findByTokenAndType(tokenValue, TokenType.VERIFICATION))
+                .thenReturn(Optional.of(verificationToken));
+
+        assertThatThrownBy(() -> tokenService.validateVerificationToken(tokenValue))
+                .isInstanceOf(TokenAlreadyUsedException.class)
+                .hasMessageContaining("already been used");
+    }
+
+    @Test
+    void validateVerificationToken_ShouldThrowException_WhenTokenNotFound() {
+        String tokenValue = "nonexistent-token";
+
+        when(tokenRepository.findByTokenAndType(tokenValue, TokenType.VERIFICATION))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> tokenService.validateVerificationToken(tokenValue))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Invalid");
+    }
+
+    @Test
+    void markVerificationTokenAsUsed_ShouldMarkToken() {
+        String tokenValue = "valid-token";
+        UUID userId = UUID.randomUUID();
+        UserEntity userEntity = UserEntity.builder()
+                .userId(userId)
+                .username("testuser")
+                .email("test@example.com")
+                .build();
+
+        TokenEntity verificationToken = TokenEntity.builder()
+                .tokenId(UUID.randomUUID())
+                .token(tokenValue)
+                .user(userEntity)
+                .type(TokenType.VERIFICATION)
+                .expiresAt(LocalDateTime.now().plusHours(24))
+                .used(false)
+                .build();
+
+        when(tokenRepository.findByTokenAndType(tokenValue, TokenType.VERIFICATION))
+                .thenReturn(Optional.of(verificationToken));
+        when(tokenRepository.save(any(TokenEntity.class)))
+                .thenReturn(verificationToken);
+
+        tokenService.markVerificationTokenAsUsed(tokenValue);
+
+        assertThat(verificationToken.getUsed()).isTrue();
+        verify(tokenRepository).save(verificationToken);
+    }
+
+    @Test
+    void validateVerificationToken_ShouldCheckIsExpiredMethod() {
+        String tokenValue = "test-token";
+        UUID userId = UUID.randomUUID();
+        UserEntity userEntity = UserEntity.builder()
+                .userId(userId)
+                .username("testuser")
+                .email("test@example.com")
+                .build();
+
+        TokenEntity verificationToken = TokenEntity.builder()
+                .tokenId(UUID.randomUUID())
+                .token(tokenValue)
+                .user(userEntity)
+                .type(TokenType.VERIFICATION)
+                .expiresAt(LocalDateTime.now().minusHours(1))
+                .used(false)
+                .build();
+
+        assertThat(verificationToken.isExpired()).isTrue();
+    }
+
+    @Test
+    void createPasswordResetToken_ShouldReturnToken_WhenUserIsValid() {
+        UUID userId = UUID.randomUUID();
+        UserEntity userEntity = UserEntity.builder()
+                .userId(userId)
+                .username("testuser")
+                .email("test@example.com")
+                .build();
+
+        when(tokenRepository.findByUserAndTypeAndUsedFalse(userEntity, TokenType.PASSWORD))
+                .thenReturn(Optional.empty());
+        when(tokenRepository.save(any(TokenEntity.class)))
+                .thenAnswer(invocation -> {
+                    TokenEntity token = invocation.getArgument(0);
+                    token.setTokenId(UUID.randomUUID());
+                    return token;
+                });
+
+        String token = tokenService.createPasswordResetToken(userEntity);
+
+        assertThat(token).isNotNull();
+        assertThat(token).isNotEmpty();
+        verify(tokenRepository).save(any(TokenEntity.class));
+    }
+
+    @Test
+    void validatePasswordResetToken_ShouldReturnUser_WhenTokenIsValid() {
+        String tokenValue = "valid-reset-token";
+        UUID userId = UUID.randomUUID();
+        UserEntity userEntity = UserEntity.builder()
+                .userId(userId)
+                .username("testuser")
+                .email("test@example.com")
+                .build();
+
+        TokenEntity resetToken = TokenEntity.builder()
+                .tokenId(UUID.randomUUID())
+                .token(tokenValue)
+                .user(userEntity)
+                .type(TokenType.PASSWORD)
+                .expiresAt(LocalDateTime.now().plusHours(1))
+                .used(false)
+                .build();
+
+        when(tokenRepository.findByTokenAndType(tokenValue, TokenType.PASSWORD))
+                .thenReturn(Optional.of(resetToken));
+
+        UserEntity result = tokenService.validatePasswordResetToken(tokenValue);
+
+        assertThat(result).isEqualTo(userEntity);
+        verify(tokenRepository).findByTokenAndType(tokenValue, TokenType.PASSWORD);
+    }
+
+    @Test
+    void validatePasswordResetToken_ShouldThrowException_WhenTokenExpired() {
+        String tokenValue = "expired-reset-token";
+
+        TokenEntity resetToken = TokenEntity.builder()
+                .tokenId(UUID.randomUUID())
+                .token(tokenValue)
+                .type(TokenType.PASSWORD)
+                .expiresAt(LocalDateTime.now().minusMinutes(30))
+                .used(false)
+                .build();
+
+        when(tokenRepository.findByTokenAndType(tokenValue, TokenType.PASSWORD))
+                .thenReturn(Optional.of(resetToken));
+
+        assertThatThrownBy(() -> tokenService.validatePasswordResetToken(tokenValue))
+                .isInstanceOf(TokenExpiredException.class)
+                .hasMessageContaining("expired");
+    }
+
+    @Test
+    void validatePasswordResetToken_ShouldThrowException_WhenTokenAlreadyUsed() {
+        String tokenValue = "used-reset-token";
+
+        TokenEntity resetToken = TokenEntity.builder()
+                .tokenId(UUID.randomUUID())
+                .token(tokenValue)
+                .type(TokenType.PASSWORD)
+                .expiresAt(LocalDateTime.now().plusHours(1))
+                .used(true)
+                .build();
+
+        when(tokenRepository.findByTokenAndType(tokenValue, TokenType.PASSWORD))
+                .thenReturn(Optional.of(resetToken));
+
+        assertThatThrownBy(() -> tokenService.validatePasswordResetToken(tokenValue))
+                .isInstanceOf(TokenAlreadyUsedException.class)
+                .hasMessageContaining("already been used");
+    }
+
+    @Test
+    void markPasswordResetTokenAsUsed_ShouldMarkToken() {
+        String tokenValue = "valid-reset-token";
+
+        TokenEntity resetToken = TokenEntity.builder()
+                .tokenId(UUID.randomUUID())
+                .token(tokenValue)
+                .type(TokenType.PASSWORD)
+                .expiresAt(LocalDateTime.now().plusHours(1))
+                .used(false)
+                .build();
+
+        when(tokenRepository.findByTokenAndType(tokenValue, TokenType.PASSWORD))
+                .thenReturn(Optional.of(resetToken));
+        when(tokenRepository.save(any(TokenEntity.class)))
+                .thenReturn(resetToken);
+
+        tokenService.markPasswordResetTokenAsUsed(tokenValue);
+
+        assertThat(resetToken.getUsed()).isTrue();
+        verify(tokenRepository).save(resetToken);
+    }
+
+    @Test
+    void validatePasswordResetToken_ShouldThrowException_WhenTokenNotFound() {
+        String tokenValue = "nonexistent-reset-token";
+
+        when(tokenRepository.findByTokenAndType(tokenValue, TokenType.PASSWORD))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> tokenService.validatePasswordResetToken(tokenValue))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Invalid");
+    }
+}

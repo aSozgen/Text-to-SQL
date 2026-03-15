@@ -23,6 +23,6 @@ public class ChatDto {
     @Pattern(regexp = "^[a-zA-Z0-9_ -.]*$", message = "Name contains invalid characters")
     String name;
 
-    @JsonFormat(pattern = "dd.MM.yyyy")
+    @JsonFormat(pattern = "dd.MM.yyyy HH:mm:ss")
     private LocalDateTime createdAt;
 }

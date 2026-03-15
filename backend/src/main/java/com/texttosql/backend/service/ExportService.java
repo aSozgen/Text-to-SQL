@@ -4,7 +4,7 @@ import com.opencsv.CSVWriter;
 import com.texttosql.backend.entity.ChatEntity;
 import com.texttosql.backend.entity.MessageEntity;
 import com.texttosql.backend.repository.MessageRepository;
-import com.texttosql.backend.util.SenderType;
+import com.texttosql.backend.entity.enums.SenderType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
