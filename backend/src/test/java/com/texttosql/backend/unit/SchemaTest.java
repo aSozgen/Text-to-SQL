@@ -75,7 +75,8 @@ public class SchemaTest {
             }
 
             @Override
-            public Object resolveArgument(@NonNull MethodParameter parameter, ModelAndViewContainer mavContainer, @NonNull NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {
+            public Object resolveArgument(@NonNull MethodParameter parameter, ModelAndViewContainer mavContainer,
+                                          @NonNull NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {
                 return mockUser;
             }
         };
@@ -92,14 +93,12 @@ public class SchemaTest {
         UUID databaseId = UUID.randomUUID();
 
         List<Map<String, Object>> dummyJson = List.of(Map.of("table", "users", "columns", List.of()));
-
         SchemaImportRequest request = new SchemaImportRequest();
         request.setName("Imported_DB");
         request.setDescription("Description");
         request.setJsonContent(dummyJson);
 
         DatabaseDto responseDto = new DatabaseDto(databaseId, "Imported_DB", "Description", now);
-
         when(schemaService.importSchema(any(SchemaImportRequest.class), any(CustomUserDetails.class)))
                 .thenReturn(responseDto);
 
@@ -120,13 +119,10 @@ public class SchemaTest {
 
         DatabaseDto dbDto = new DatabaseDto(databaseId, "My_DB", "Test Desc", now);
         Page<DatabaseDto> page = new PageImpl<>(Collections.singletonList(dbDto), PageRequest.of(0, 10), 1);
-
         when(schemaService.getDatabases(any(CustomUserDetails.class), anyInt(), anyInt(), anyString(), anyString()))
                 .thenReturn(page);
 
-        mockMvc.perform(get("/api/v1/schemas/databases")
-                        .param("page", "0")
-                        .param("size", "10"))
+        mockMvc.perform(get("/api/v1/schemas/databases").param("page", "0").param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].databaseId").value(databaseId.toString()))
                 .andExpect(jsonPath("$.content[0].name").value("My_DB"))
@@ -140,9 +136,7 @@ public class SchemaTest {
         UUID databaseId = UUID.randomUUID();
 
         DatabaseDto dbDto = new DatabaseDto(databaseId, "Single_DB", "Desc", now);
-
-        when(schemaService.getDatabase(eq(databaseId), any(CustomUserDetails.class)))
-                .thenReturn(dbDto);
+        when(schemaService.getDatabase(eq(databaseId), any(CustomUserDetails.class))).thenReturn(dbDto);
 
         mockMvc.perform(get("/api/v1/schemas/databases/{id}", databaseId))
                 .andExpect(status().isOk())
@@ -155,7 +149,6 @@ public class SchemaTest {
     @Test
     void getDatabase_ShouldReturnNotFound_WhenNotExists() throws Exception {
         UUID databaseId = UUID.randomUUID();
-
         when(schemaService.getDatabase(eq(databaseId), any(CustomUserDetails.class)))
                 .thenThrow(new ResourceNotFoundException("Database not found."));
 
@@ -171,9 +164,7 @@ public class SchemaTest {
 
         DatabaseDto requestDto = new DatabaseDto(null, "New_DB", "Desc", null);
         DatabaseDto responseDto = new DatabaseDto(databaseId, "New_DB", "Desc", now);
-
-        when(schemaService.createDatabase(any(DatabaseDto.class), any(CustomUserDetails.class)))
-                .thenReturn(responseDto);
+        when(schemaService.createDatabase(any(DatabaseDto.class), any(CustomUserDetails.class))).thenReturn(responseDto);
 
         mockMvc.perform(post("/api/v1/schemas/databases")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -188,7 +179,6 @@ public class SchemaTest {
     @Test
     void createDatabase_ShouldReturnConflict_WhenNameExists() throws Exception {
         DatabaseDto requestDto = new DatabaseDto(null, "Existing_DB", "Desc", null);
-
         when(schemaService.createDatabase(any(DatabaseDto.class), any(CustomUserDetails.class)))
                 .thenThrow(new DuplicatedResourceException("There is already a Database with the same name."));
 
@@ -206,7 +196,6 @@ public class SchemaTest {
 
         DatabaseDto updateDto = new DatabaseDto(databaseId, "Updated_DB", "New Desc", null);
         DatabaseDto responseDto = new DatabaseDto(databaseId, "Updated_DB", "New Desc", now);
-
         when(schemaService.updateDatabase(eq(databaseId), any(DatabaseDto.class), any(CustomUserDetails.class)))
                 .thenReturn(responseDto);
 
@@ -223,9 +212,7 @@ public class SchemaTest {
     @Test
     void updateDatabase_ShouldReturnConflict_WhenNameExists() throws Exception {
         UUID databaseId = UUID.randomUUID();
-
         DatabaseDto updateDto = new DatabaseDto(databaseId, "Existing_Name", "Desc", null);
-
         when(schemaService.updateDatabase(eq(databaseId), any(DatabaseDto.class), any(CustomUserDetails.class)))
                 .thenThrow(new DuplicatedResourceException("There is already a Database with the same name."));
 
@@ -248,7 +235,6 @@ public class SchemaTest {
     @Test
     void deleteDatabase_ShouldReturnNotFound_WhenNotExists() throws Exception {
         UUID databaseId = UUID.randomUUID();
-
         doThrow(new ResourceNotFoundException("Database not found."))
                 .when(schemaService).deleteDatabase(eq(databaseId), any(CustomUserDetails.class));
 
@@ -257,8 +243,6 @@ public class SchemaTest {
                 .andExpect(jsonPath("$.message").value("Database not found."));
     }
 
-    // --- TABLE TESTS ---
-
     @Test
     void getTables_ShouldReturnList() throws Exception {
         LocalDateTime now = LocalDateTime.now();
@@ -266,11 +250,8 @@ public class SchemaTest {
         UUID tableId = UUID.randomUUID();
 
         TableDto tableDto = new TableDto(tableId, databaseId, "Users_Table", "Desc", now);
-        List<TableDto> tables = Collections.singletonList(tableDto);
-
-        // Updated mock: No pagination arguments, returns List
         when(schemaService.getTables(eq(databaseId), any(CustomUserDetails.class)))
-                .thenReturn(tables);
+                .thenReturn(Collections.singletonList(tableDto));
 
         mockMvc.perform(get("/api/v1/schemas/databases/{databaseId}/tables", databaseId))
                 .andExpect(status().isOk())
@@ -288,9 +269,7 @@ public class SchemaTest {
         UUID tableId = UUID.randomUUID();
 
         TableDto tableDto = new TableDto(tableId, databaseId, "My_Table", "Desc", now);
-
-        when(schemaService.getTable(eq(databaseId), eq(tableId), any(CustomUserDetails.class)))
-                .thenReturn(tableDto);
+        when(schemaService.getTable(eq(databaseId), eq(tableId), any(CustomUserDetails.class))).thenReturn(tableDto);
 
         mockMvc.perform(get("/api/v1/schemas/databases/{databaseId}/tables/{tableId}", databaseId, tableId))
                 .andExpect(status().isOk())
@@ -309,7 +288,6 @@ public class SchemaTest {
 
         TableDto requestDto = new TableDto(null, databaseId, "New_Table", "New Desc", null);
         TableDto responseDto = new TableDto(tableId, databaseId, "New_Table", "New Desc", now);
-
         when(schemaService.createTable(eq(databaseId), any(TableDto.class), any(CustomUserDetails.class)))
                 .thenReturn(responseDto);
 
@@ -328,7 +306,6 @@ public class SchemaTest {
     void createTable_ShouldReturnConflict_WhenNameExists() throws Exception {
         UUID databaseId = UUID.randomUUID();
         TableDto requestDto = new TableDto(null, databaseId, "Existing_Table", "Desc", null);
-
         when(schemaService.createTable(eq(databaseId), any(TableDto.class), any(CustomUserDetails.class)))
                 .thenThrow(new DuplicatedResourceException("There is already a Table with the same name."));
 
@@ -347,7 +324,6 @@ public class SchemaTest {
 
         TableDto updateDto = new TableDto(tableId, databaseId, "Updated_Table", "Updated Desc", null);
         TableDto responseDto = new TableDto(tableId, databaseId, "Updated_Table", "Updated Desc", now);
-
         when(schemaService.updateTable(eq(databaseId), eq(tableId), any(TableDto.class), any(CustomUserDetails.class)))
                 .thenReturn(responseDto);
 
@@ -366,7 +342,6 @@ public class SchemaTest {
     void deleteTable_ShouldReturnNotFound_WhenNotExists() throws Exception {
         UUID databaseId = UUID.randomUUID();
         UUID tableId = UUID.randomUUID();
-
         doThrow(new ResourceNotFoundException("Table not found"))
                 .when(schemaService).deleteTable(eq(databaseId), eq(tableId), any(CustomUserDetails.class));
 
@@ -375,8 +350,6 @@ public class SchemaTest {
                 .andExpect(jsonPath("$.message").value("Table not found"));
     }
 
-    // --- COLUMN TESTS ---
-
     @Test
     void getColumns_ShouldReturnList() throws Exception {
         LocalDateTime now = LocalDateTime.now();
@@ -384,12 +357,10 @@ public class SchemaTest {
         UUID tableId = UUID.randomUUID();
         UUID columnId = UUID.randomUUID();
 
-        ColumnDto columnDto = new ColumnDto(columnId, tableId, databaseId, "username", "VARCHAR", false, now);
-        List<ColumnDto> columns = Collections.singletonList(columnDto);
-
-        // Updated mock: No pagination arguments, returns List
+        // null, null → FK yok
+        ColumnDto columnDto = new ColumnDto(columnId, tableId, databaseId, "username", "VARCHAR", false, null, null, now);
         when(schemaService.getColumns(eq(databaseId), eq(tableId), any(CustomUserDetails.class)))
-                .thenReturn(columns);
+                .thenReturn(Collections.singletonList(columnDto));
 
         mockMvc.perform(get("/api/v1/schemas/databases/{databaseId}/tables/{tableId}/columns", databaseId, tableId))
                 .andExpect(status().isOk())
@@ -397,7 +368,7 @@ public class SchemaTest {
                 .andExpect(jsonPath("$[0].tableId").value(tableId.toString()))
                 .andExpect(jsonPath("$[0].name").value("username"))
                 .andExpect(jsonPath("$[0].dataType").value("VARCHAR"))
-                .andExpect(jsonPath("$[0].primaryKey").value(Boolean.FALSE.toString().toLowerCase()))
+                .andExpect(jsonPath("$[0].primaryKey").value(false))
                 .andExpect(jsonPath("$[0].createdAt").value(now.format(formatter)));
     }
 
@@ -408,18 +379,18 @@ public class SchemaTest {
         UUID tableId = UUID.randomUUID();
         UUID columnId = UUID.randomUUID();
 
-        ColumnDto columnDto = new ColumnDto(columnId, tableId, databaseId, "email", "VARCHAR", false, now);
-
+        ColumnDto columnDto = new ColumnDto(columnId, tableId, databaseId, "email", "VARCHAR", false, null, null, now);
         when(schemaService.getColumn(eq(databaseId), eq(tableId), eq(columnId), any(CustomUserDetails.class)))
                 .thenReturn(columnDto);
 
-        mockMvc.perform(get("/api/v1/schemas/databases/{databaseId}/tables/{tableId}/columns/{columnId}", databaseId, tableId, columnId))
+        mockMvc.perform(get("/api/v1/schemas/databases/{databaseId}/tables/{tableId}/columns/{columnId}",
+                        databaseId, tableId, columnId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.columnId").value(columnId.toString()))
                 .andExpect(jsonPath("$.tableId").value(tableId.toString()))
                 .andExpect(jsonPath("$.name").value("email"))
                 .andExpect(jsonPath("$.dataType").value("VARCHAR"))
-                .andExpect(jsonPath("$.primaryKey").value(Boolean.FALSE.toString().toLowerCase()))
+                .andExpect(jsonPath("$.primaryKey").value(false))
                 .andExpect(jsonPath("$.createdAt").value(now.format(formatter)));
     }
 
@@ -430,9 +401,8 @@ public class SchemaTest {
         UUID tableId = UUID.randomUUID();
         UUID columnId = UUID.randomUUID();
 
-        ColumnDto requestDto = new ColumnDto(null, tableId, databaseId, "user_id", "UUID", true, null);
-        ColumnDto responseDto = new ColumnDto(columnId, tableId, databaseId, "user_id", "UUID", true, now);
-
+        ColumnDto requestDto  = new ColumnDto(null, tableId, databaseId, "user_id", "UUID", true, null, null, null);
+        ColumnDto responseDto = new ColumnDto(columnId, tableId, databaseId, "user_id", "UUID", true, null, null, now);
         when(schemaService.createColumn(eq(databaseId), eq(tableId), any(ColumnDto.class), any(CustomUserDetails.class)))
                 .thenReturn(responseDto);
 
@@ -444,7 +414,31 @@ public class SchemaTest {
                 .andExpect(jsonPath("$.tableId").value(tableId.toString()))
                 .andExpect(jsonPath("$.name").value("user_id"))
                 .andExpect(jsonPath("$.dataType").value("UUID"))
-                .andExpect(jsonPath("$.primaryKey").value(Boolean.TRUE.toString().toLowerCase()))
+                .andExpect(jsonPath("$.primaryKey").value(true))
+                .andExpect(jsonPath("$.createdAt").value(now.format(formatter)));
+    }
+
+    @Test
+    void createColumn_WithForeignKey_ShouldReturnCreated() throws Exception {
+        LocalDateTime now = LocalDateTime.now();
+        UUID databaseId = UUID.randomUUID();
+        UUID tableId = UUID.randomUUID();
+        UUID columnId = UUID.randomUUID();
+
+        // FK set: chat_id → chats.chat_id
+        ColumnDto requestDto  = new ColumnDto(null, tableId, databaseId, "chat_id", "UUID", false, "chats", "chat_id", null);
+        ColumnDto responseDto = new ColumnDto(columnId, tableId, databaseId, "chat_id", "UUID", false, "chats", "chat_id", now);
+        when(schemaService.createColumn(eq(databaseId), eq(tableId), any(ColumnDto.class), any(CustomUserDetails.class)))
+                .thenReturn(responseDto);
+
+        mockMvc.perform(post("/api/v1/schemas/databases/{databaseId}/tables/{tableId}/columns", databaseId, tableId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.name").value("chat_id"))
+                .andExpect(jsonPath("$.primaryKey").value(false))
+                .andExpect(jsonPath("$.foreignTable").value("chats"))
+                .andExpect(jsonPath("$.foreignColumn").value("chat_id"))
                 .andExpect(jsonPath("$.createdAt").value(now.format(formatter)));
     }
 
@@ -453,8 +447,7 @@ public class SchemaTest {
         UUID databaseId = UUID.randomUUID();
         UUID tableId = UUID.randomUUID();
 
-        ColumnDto requestDto = new ColumnDto(null, tableId, databaseId, "existing_col", "VARCHAR", false, null);
-
+        ColumnDto requestDto = new ColumnDto(null, tableId, databaseId, "existing_col", "VARCHAR", false, null, null, null);
         when(schemaService.createColumn(eq(databaseId), eq(tableId), any(ColumnDto.class), any(CustomUserDetails.class)))
                 .thenThrow(new DuplicatedResourceException("There is already a Column with the same name."));
 
@@ -472,13 +465,13 @@ public class SchemaTest {
         UUID tableId = UUID.randomUUID();
         UUID columnId = UUID.randomUUID();
 
-        ColumnDto updateDto = new ColumnDto(columnId, tableId, databaseId, "new_col", "INT", false, null);
-        ColumnDto responseDto = new ColumnDto(columnId, tableId, databaseId, "new_col", "INT", false, now);
-
+        ColumnDto updateDto  = new ColumnDto(columnId, tableId, databaseId, "new_col", "INT", false, null, null, null);
+        ColumnDto responseDto = new ColumnDto(columnId, tableId, databaseId, "new_col", "INT", false, null, null, now);
         when(schemaService.updateColumn(eq(databaseId), eq(tableId), eq(columnId), any(ColumnDto.class), any(CustomUserDetails.class)))
                 .thenReturn(responseDto);
 
-        mockMvc.perform(patch("/api/v1/schemas/databases/{databaseId}/tables/{tableId}/columns/{columnId}", databaseId, tableId, columnId)
+        mockMvc.perform(patch("/api/v1/schemas/databases/{databaseId}/tables/{tableId}/columns/{columnId}",
+                        databaseId, tableId, columnId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateDto)))
                 .andExpect(status().isOk())
@@ -486,8 +479,53 @@ public class SchemaTest {
                 .andExpect(jsonPath("$.tableId").value(tableId.toString()))
                 .andExpect(jsonPath("$.name").value("new_col"))
                 .andExpect(jsonPath("$.dataType").value("INT"))
-                .andExpect(jsonPath("$.primaryKey").value(Boolean.FALSE.toString().toLowerCase()))
+                .andExpect(jsonPath("$.primaryKey").value(false))
                 .andExpect(jsonPath("$.createdAt").value(now.format(formatter)));
+    }
+
+    @Test
+    void updateColumn_WithForeignKey_ShouldReturnUpdated() throws Exception {
+        LocalDateTime now = LocalDateTime.now();
+        UUID databaseId = UUID.randomUUID();
+        UUID tableId = UUID.randomUUID();
+        UUID columnId = UUID.randomUUID();
+
+        ColumnDto updateDto  = new ColumnDto(columnId, tableId, databaseId, "user_id", "UUID", false, "users", "user_id", null);
+        ColumnDto responseDto = new ColumnDto(columnId, tableId, databaseId, "user_id", "UUID", false, "users", "user_id", now);
+        when(schemaService.updateColumn(eq(databaseId), eq(tableId), eq(columnId), any(ColumnDto.class), any(CustomUserDetails.class)))
+                .thenReturn(responseDto);
+
+        mockMvc.perform(patch("/api/v1/schemas/databases/{databaseId}/tables/{tableId}/columns/{columnId}",
+                        databaseId, tableId, columnId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("user_id"))
+                .andExpect(jsonPath("$.primaryKey").value(false))
+                .andExpect(jsonPath("$.foreignTable").value("users"))
+                .andExpect(jsonPath("$.foreignColumn").value("user_id"))
+                .andExpect(jsonPath("$.createdAt").value(now.format(formatter)));
+    }
+
+    @Test
+    void updateColumn_ClearForeignKey_ShouldReturnUpdated() throws Exception {
+        LocalDateTime now = LocalDateTime.now();
+        UUID databaseId = UUID.randomUUID();
+        UUID tableId = UUID.randomUUID();
+        UUID columnId = UUID.randomUUID();
+
+        ColumnDto updateDto  = new ColumnDto(columnId, tableId, databaseId, "user_id", "UUID", false, null, null, null);
+        ColumnDto responseDto = new ColumnDto(columnId, tableId, databaseId, "user_id", "UUID", false, null, null, now);
+        when(schemaService.updateColumn(eq(databaseId), eq(tableId), eq(columnId), any(ColumnDto.class), any(CustomUserDetails.class)))
+                .thenReturn(responseDto);
+
+        mockMvc.perform(patch("/api/v1/schemas/databases/{databaseId}/tables/{tableId}/columns/{columnId}",
+                        databaseId, tableId, columnId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.foreignTable").doesNotExist())
+                .andExpect(jsonPath("$.foreignColumn").doesNotExist());
     }
 
     @Test
@@ -499,7 +537,8 @@ public class SchemaTest {
         doThrow(new ResourceNotFoundException("Column not found."))
                 .when(schemaService).deleteColumn(eq(databaseId), eq(tableId), eq(columnId), any(CustomUserDetails.class));
 
-        mockMvc.perform(delete("/api/v1/schemas/databases/{databaseId}/tables/{tableId}/columns/{columnId}", databaseId, tableId, columnId))
+        mockMvc.perform(delete("/api/v1/schemas/databases/{databaseId}/tables/{tableId}/columns/{columnId}",
+                        databaseId, tableId, columnId))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Column not found."));
     }

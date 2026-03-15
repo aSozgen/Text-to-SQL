@@ -243,6 +243,16 @@
       opacity: 0.3;
     }
   }
+
+  &.fk {
+    border-color: rgba(56, 139, 253, 0.4);
+    background: rgba(56, 139, 253, 0.08);
+  }
+
+  .fk-ref {
+    font-size: 0.78rem;
+    font-style: italic;
+  }
 }
 
 /* TOGGLE ICON */

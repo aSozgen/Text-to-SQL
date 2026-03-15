@@ -74,15 +74,21 @@ public class SchemaVersionService {
         String dataType = column.getDataType();
         String columnName = column.getName().toLowerCase();
 
-        if (dataType == null) {
-            dataType = "unknown";
-        }
+        if (dataType == null) dataType = "unknown";
+
+        StringBuilder sb = new StringBuilder();
 
         if (column.isPrimaryKey()) {
-            return String.format("%s (%s) [PK]", columnName, dataType.toUpperCase());
+            sb.append(String.format("%s (%s) [PK]", columnName, dataType.toUpperCase()));
         } else {
-            return String.format("%s (%s)", columnName, dataType.toLowerCase());
+            sb.append(String.format("%s (%s)", columnName, dataType.toLowerCase()));
         }
+
+        if (column.getForeignTable() != null && column.getForeignColumn() != null) {
+            sb.append(String.format(" [FK -> %s.%s]", column.getForeignTable(), column.getForeignColumn()));
+        }
+
+        return sb.toString();
     }
 
     @Transactional

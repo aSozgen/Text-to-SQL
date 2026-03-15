@@ -58,6 +58,12 @@ public class SchemaService {
 
                     columnDto.setName(String.valueOf(columnData.get("column_name")));
                     columnDto.setDataType(String.valueOf(columnData.get("data_type")));
+                    columnDto.setPrimaryKey(Boolean.parseBoolean(String.valueOf(columnData.get("is_primary_key"))));
+
+                    Object ft = columnData.get("foreign_table");
+                    Object fc = columnData.get("foreign_column");
+                    columnDto.setForeignTable(ft != null && !ft.equals("null") ? String.valueOf(ft) : null);
+                    columnDto.setForeignColumn(fc != null && !fc.equals("null") ? String.valueOf(fc) : null);
 
                     createColumn(databaseId, savedTable.getTableId(), columnDto, userDetails);
                 }

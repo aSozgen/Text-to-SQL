@@ -47,6 +47,8 @@ public class ColumnService {
         columnEntity.setName(columnDto.getName());
         columnEntity.setDataType(columnDto.getDataType());
         columnEntity.setPrimaryKey(columnDto.isPrimaryKey());
+        columnEntity.setForeignTable(columnDto.getForeignTable());
+        columnEntity.setForeignColumn(columnDto.getForeignColumn());
 
         ColumnEntity savedColumnEntity = columnRepository.save(columnEntity);
         columnDto.setColumnId(savedColumnEntity.getColumnId());
@@ -70,16 +72,23 @@ public class ColumnService {
         String oldName = oldEntity.getName();
         String oldDataType = oldEntity.getDataType();
         boolean oldPrimaryKey = oldEntity.isPrimaryKey();
+        String oldForeignTable = oldEntity.getForeignTable();
+        String oldForeignColumn = oldEntity.getForeignColumn();
+
         oldEntity.setName(columnDto.getName());
         oldEntity.setDataType(columnDto.getDataType());
         oldEntity.setPrimaryKey(columnDto.isPrimaryKey());
+        oldEntity.setForeignTable(columnDto.getForeignTable());
+        oldEntity.setForeignColumn(columnDto.getForeignColumn());
 
         columnRepository.save(oldEntity);
         columnDto.setColumnId(oldEntity.getColumnId());
 
         // If the current SchemaVersion is not used in any message, don't create a new SchemaVersion just update the existing one
-        // Else create a new SchemaVersion iff Column name/datatype/primaryKey has changed (Column description doesn't matter)
-        if (!oldName.equalsIgnoreCase(columnDto.getName()) || !oldDataType.equalsIgnoreCase(columnDto.getDataType()) || oldPrimaryKey != columnDto.isPrimaryKey()) {
+        // Else create a new SchemaVersion iff Column name/datatype/primaryKey/foreigns has changed (Column description doesn't matter)
+        if (!oldName.equalsIgnoreCase(columnDto.getName()) || !oldDataType.equalsIgnoreCase(columnDto.getDataType())
+                || oldPrimaryKey != columnDto.isPrimaryKey() || !oldForeignTable.equalsIgnoreCase(columnDto.getForeignTable())
+                || !oldForeignColumn.equalsIgnoreCase(columnDto.getForeignColumn())) {
             versionService.createOrUpdateSchemaSnapshot(databaseEntity, versionUsedInMessages);
         }
 

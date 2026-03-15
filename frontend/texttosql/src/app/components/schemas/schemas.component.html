@@ -12,12 +12,15 @@
                [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" (keyup.enter)="onSearch()">
       </div>
     </div>
-
     <div class="d-flex gap-2">
-      <button class="btn btn-secondary" (click)="openImportModal()" [class.guest-disabled]="isGuest()" [title]="isGuest() ? 'Please log in to perform this action' : 'Import JSON'">
+      <button class="btn btn-secondary" (click)="openImportModal()"
+              [class.guest-disabled]="isGuest()"
+              [title]="isGuest() ? 'Please log in to perform this action' : 'Import JSON'">
         <i class="fas fa-file-import me-2"></i>Import
       </button>
-      <button class="btn btn-primary" (click)="openCreateDatabase()" [class.guest-disabled]="isGuest()" [title]="isGuest() ? 'Please log in to perform this action' : 'Create Database'">
+      <button class="btn btn-primary" (click)="openCreateDatabase()"
+              [class.guest-disabled]="isGuest()"
+              [title]="isGuest() ? 'Please log in to perform this action' : 'Create Database'">
         <i class="fas fa-plus me-2"></i>New Database
       </button>
     </div>
@@ -40,72 +43,157 @@
       </thead>
       <tbody>
         @for (db of databases(); track db.databaseId; let i = $index) {
-          <tr class="db-row" [id]="'db-' + db.databaseId" [class.highlight-row]="highlightedId() === 'db-' + db.databaseId" [class.expanded]="expandedDbIds().has(db.databaseId!)" [class.row-odd]="i % 2 !== 0">
+          <tr class="db-row"
+              [id]="'db-' + db.databaseId"
+              [class.highlight-row]="highlightedId() === 'db-' + db.databaseId"
+              [class.expanded]="expandedDbIds().has(db.databaseId!)"
+              [class.row-odd]="i % 2 !== 0">
             <td class="text-center align-middle">
               <button class="btn-icon" (click)="toggleDatabase(db.databaseId)" title="Toggle Details">
                 <i class="fas fa-chevron-right transition-icon" [class.rotated]="expandedDbIds().has(db.databaseId!)"></i>
               </button>
             </td>
-            <td class="align-middle fw-bold text-white"><i class="fas fa-database text-primary me-2"></i> {{ db.name }}</td>
-            <td class="align-middle text-secondary-light small text-truncate" style="max-width: 200px;">{{ db.description || '-' }}</td>
+            <td class="align-middle fw-bold text-white">
+              <i class="fas fa-database text-primary me-2"></i> {{ db.name }}
+            </td>
+            <td class="align-middle text-secondary-light small text-truncate" style="max-width: 200px;">
+              {{ db.description || '-' }}
+            </td>
             <td class="align-middle text-secondary-light small">{{ db.createdAt }}</td>
             <td class="align-middle text-end pe-4">
               <div class="action-buttons">
-                <button class="btn-text-action me-3" [class.guest-disabled]="isGuest()" [title]="isGuest() ? 'Please log in' : 'Add Table'" (click)="openCreateTable(db.databaseId!)"><i class="fas fa-plus"></i> Add Table</button>
-                <button class="action-icon-btn edit-btn" [class.guest-disabled]="isGuest()" [title]="isGuest() ? 'Please log in' : 'Edit DB'" (click)="openEditDatabase(db)"><i class="fas fa-pencil-alt text-warning"></i></button>
-                <button class="action-icon-btn delete-btn" [class.guest-disabled]="isGuest()" [title]="isGuest() ? 'Please log in' : 'Delete DB'" (click)="openDeleteModal('DB', db.databaseId!, db.name)"><i class="fas fa-trash-alt text-danger"></i></button>
+                <button class="btn-text-action me-3"
+                        [class.guest-disabled]="isGuest()"
+                        [title]="isGuest() ? 'Please log in' : 'Add Table'"
+                        (click)="openCreateTable(db.databaseId!)">
+                  <i class="fas fa-plus"></i> Add Table
+                </button>
+                <button class="action-icon-btn edit-btn"
+                        [class.guest-disabled]="isGuest()"
+                        [title]="isGuest() ? 'Please log in' : 'Edit DB'"
+                        (click)="openEditDatabase(db)">
+                  <i class="fas fa-pencil-alt text-warning"></i>
+                </button>
+                <button class="action-icon-btn delete-btn"
+                        [class.guest-disabled]="isGuest()"
+                        [title]="isGuest() ? 'Please log in' : 'Delete DB'"
+                        (click)="openDeleteModal('DB', db.databaseId!, db.name)">
+                  <i class="fas fa-trash-alt text-danger"></i>
+                </button>
               </div>
             </td>
           </tr>
+
           @if (expandedDbIds().has(db.databaseId!)) {
             <tr class="detail-row db-detail">
               <td colspan="5" class="p-0 border-0">
                 <div class="nested-container">
                   @if (loadingTables().has(db.databaseId!)) {
-                    <div class="p-3 text-center text-secondary-light"><span class="spinner-border spinner-border-sm"></span> Loading tables...</div>
+                    <div class="p-3 text-center text-secondary-light">
+                      <span class="spinner-border spinner-border-sm"></span> Loading tables...
+                    </div>
                   } @else if (!tablesMap().get(db.databaseId!)?.length) {
                     <div class="p-4 text-center text-secondary-light">
                       <p class="mb-2 small">No tables found.</p>
-                      <button class="btn btn-sm btn-outline-success" [class.guest-disabled]="isGuest()" [title]="isGuest() ? 'Please log in' : 'Create Table'" (click)="openCreateTable(db.databaseId!)">Create First Table</button>
+                      <button class="btn btn-sm btn-outline-success"
+                              [class.guest-disabled]="isGuest()"
+                              [title]="isGuest() ? 'Please log in' : 'Create Table'"
+                              (click)="openCreateTable(db.databaseId!)">
+                        Create First Table
+                      </button>
                     </div>
                   } @else {
                     <table class="table table-dark table-borderless mb-0 nested-table">
                       <tbody>
                         @for (table of tablesMap().get(db.databaseId!); track table.tableId; let j = $index) {
-                          <tr class="table-row" [id]="'table-' + table.tableId" [class.highlight-row]="highlightedId() === 'table-' + table.tableId" [class.nested-odd]="j % 2 !== 0">
+                          <tr class="table-row"
+                              [id]="'table-' + table.tableId"
+                              [class.highlight-row]="highlightedId() === 'table-' + table.tableId"
+                              [class.nested-odd]="j % 2 !== 0">
                             <td style="width: 50px;" class="ps-4">
                               <button class="btn-icon btn-sm" (click)="toggleTable(db.databaseId, table.tableId)">
                                 <i class="fas fa-chevron-right transition-icon" [class.rotated]="expandedTableIds().has(table.tableId!)"></i>
                               </button>
                             </td>
-                            <td style="width: 25%;" class="text-info fw-semibold align-middle"><i class="fas fa-table me-2 opacity-50"></i> {{ table.name }}</td>
-                            <td style="width: 30%;" class="text-secondary-light small align-middle">{{ table.description || '-' }}</td>
-                            <td style="width: 20%;" class="text-secondary-light small align-middle">{{ table.createdAt || '-' }}</td>
+                            <td style="width: 25%;" class="text-info fw-semibold align-middle">
+                              <i class="fas fa-table me-2 opacity-50"></i> {{ table.name }}
+                            </td>
+                            <td style="width: 30%;" class="text-secondary-light small align-middle">
+                              {{ table.description || '-' }}
+                            </td>
+                            <td style="width: 20%;" class="text-secondary-light small align-middle">
+                              {{ table.createdAt || '-' }}
+                            </td>
                             <td class="text-end pe-4 align-middle">
                               <div class="action-buttons">
-                                <button class="btn-text-action me-3" [class.guest-disabled]="isGuest()" [title]="isGuest() ? 'Please log in' : 'Add Column'" (click)="openCreateColumn(db.databaseId!, table.tableId!)"><i class="fas fa-plus"></i> Add Column</button>
-                                <button class="action-icon-btn edit-btn" [class.guest-disabled]="isGuest()" [title]="isGuest() ? 'Please log in' : 'Edit Table'" (click)="openEditTable(table, db.databaseId!)"><i class="fas fa-pencil-alt text-warning"></i></button>
-                                <button class="action-icon-btn delete-btn" [class.guest-disabled]="isGuest()" [title]="isGuest() ? 'Please log in' : 'Delete Table'" (click)="openDeleteModal('TABLE', table.tableId!, table.name, db.databaseId)"><i class="fas fa-trash-alt text-danger"></i></button>
+                                <button class="btn-text-action me-3"
+                                        [class.guest-disabled]="isGuest()"
+                                        [title]="isGuest() ? 'Please log in' : 'Add Column'"
+                                        (click)="openCreateColumn(db.databaseId!, table.tableId!)">
+                                  <i class="fas fa-plus"></i> Add Column
+                                </button>
+                                <button class="action-icon-btn edit-btn"
+                                        [class.guest-disabled]="isGuest()"
+                                        [title]="isGuest() ? 'Please log in' : 'Edit Table'"
+                                        (click)="openEditTable(table, db.databaseId!)">
+                                  <i class="fas fa-pencil-alt text-warning"></i>
+                                </button>
+                                <button class="action-icon-btn delete-btn"
+                                        [class.guest-disabled]="isGuest()"
+                                        [title]="isGuest() ? 'Please log in' : 'Delete Table'"
+                                        (click)="openDeleteModal('TABLE', table.tableId!, table.name, db.databaseId)">
+                                  <i class="fas fa-trash-alt text-danger"></i>
+                                </button>
                               </div>
                             </td>
                           </tr>
+
                           @if (expandedTableIds().has(table.tableId!)) {
                             <tr class="detail-row table-detail">
                               <td colspan="5" class="p-0">
                                 <div class="column-list p-3 ps-5">
                                   @if (loadingColumns().has(table.tableId!)) {
-                                    <div class="text-secondary-light small"><span class="spinner-border spinner-border-sm"></span></div>
+                                    <div class="text-secondary-light small">
+                                      <span class="spinner-border spinner-border-sm"></span>
+                                    </div>
                                   } @else {
                                     <h6 class="text-uppercase text-secondary-light xsmall fw-bold mb-2 ps-2">Columns</h6>
                                     <div class="d-flex flex-wrap gap-2">
                                       @for (col of columnsMap().get(table.tableId!); track col.columnId) {
-                                        <span class="column-badge" [id]="'col-' + col.columnId" [class.pk]="col.primaryKey" [class.highlight-badge]="highlightedId() === 'col-' + col.columnId">
-                                          @if(col.primaryKey) { <i class="fas fa-key text-warning me-2" title="Primary Key"></i> } @else { <i class="fas fa-columns text-muted me-2 opacity-25"></i> }
-                                          {{ col.name }} <span class="text-secondary-light opacity-75 ms-1">({{ col.dataType }})</span>
+                                        <span class="column-badge"
+                                              [id]="'col-' + col.columnId"
+                                              [class.pk]="col.primaryKey"
+                                              [class.fk]="col.foreignTable"
+                                              [class.highlight-badge]="highlightedId() === 'col-' + col.columnId">
+
+                                          @if (col.primaryKey) {
+                                            <i class="fas fa-key text-warning me-2" title="Primary Key"></i>
+                                          } @else if (col.foreignTable) {
+                                            <i class="fas fa-link text-info me-2"
+                                               [title]="'FK → ' + col.foreignTable + '.' + col.foreignColumn"></i>
+                                          } @else {
+                                            <i class="fas fa-columns text-muted me-2 opacity-25"></i>
+                                          }
+
+                                          {{ col.name }}
+                                          <span class="text-secondary-light opacity-75 ms-1">({{ col.dataType }})</span>
+
+                                          @if (col.foreignTable) {
+                                            <span class="fk-ref ms-1 text-info opacity-75">
+                                              → {{ col.foreignTable }}.{{ col.foreignColumn }}
+                                            </span>
+                                          }
+
                                           <div class="vr mx-2 bg-secondary opacity-25"></div>
                                           <div class="d-flex gap-2">
-                                              <i class="fas fa-pencil-alt action-icon hover-warn text-warning" [class.guest-disabled]="isGuest()" [title]="isGuest() ? 'Please log in' : 'Edit Column'" (click)="openEditColumn(col, db.databaseId!, table.tableId!)"></i>
-                                              <i class="fas fa-times action-icon hover-danger text-danger" [class.guest-disabled]="isGuest()" [title]="isGuest() ? 'Please log in' : 'Delete Column'" (click)="openDeleteModal('COLUMN', col.columnId!, col.name, table.tableId!, db.databaseId!)"></i>
+                                            <i class="fas fa-pencil-alt action-icon hover-warn text-warning"
+                                               [class.guest-disabled]="isGuest()"
+                                               [title]="isGuest() ? 'Please log in' : 'Edit Column'"
+                                               (click)="openEditColumn(col, db.databaseId!, table.tableId!)"></i>
+                                            <i class="fas fa-times action-icon hover-danger text-danger"
+                                               [class.guest-disabled]="isGuest()"
+                                               [title]="isGuest() ? 'Please log in' : 'Delete Column'"
+                                               (click)="openDeleteModal('COLUMN', col.columnId!, col.name, table.tableId!, db.databaseId!)"></i>
                                           </div>
                                         </span>
                                       }
@@ -132,7 +220,8 @@
         <div class="d-flex align-items-center gap-3">
           <div class="d-flex align-items-center gap-2">
             <label for="pageSize" class="text-secondary-light small mb-0">Rows:</label>
-            <select id="pageSize" class="form-select form-select-sm custom-select" style="width: 70px;" [ngModel]="size()" (ngModelChange)="onSizeChange($event)">
+            <select id="pageSize" class="form-select form-select-sm custom-select" style="width: 70px;"
+                    [ngModel]="size()" (ngModelChange)="onSizeChange($event)">
               <option [ngValue]="5">5</option>
               <option [ngValue]="10">10</option>
               <option [ngValue]="20">20</option>
@@ -147,55 +236,133 @@
           </div>
         </div>
         <div class="d-flex gap-2">
-          <button class="pagination-btn" [disabled]="page() === 0" (click)="onPageChange(0)" title="First Page"><i class="fas fa-angle-double-left"></i></button>
-          <button class="pagination-btn" [disabled]="page() === 0" (click)="onPageChange(page() - 1)" title="Previous Page"><i class="fas fa-chevron-left"></i></button>
-          <button class="pagination-btn" [disabled]="page() >= totalPages() - 1" (click)="onPageChange(page() + 1)" title="Next Page"><i class="fas fa-chevron-right"></i></button>
-          <button class="pagination-btn" [disabled]="page() >= totalPages() - 1" (click)="onPageChange(totalPages() - 1)" title="Last Page"><i class="fas fa-angle-double-right"></i></button>
+          <button class="pagination-btn" [disabled]="page() === 0" (click)="onPageChange(0)" title="First Page">
+            <i class="fas fa-angle-double-left"></i>
+          </button>
+          <button class="pagination-btn" [disabled]="page() === 0" (click)="onPageChange(page() - 1)" title="Previous Page">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <button class="pagination-btn" [disabled]="page() >= totalPages() - 1" (click)="onPageChange(page() + 1)" title="Next Page">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+          <button class="pagination-btn" [disabled]="page() >= totalPages() - 1" (click)="onPageChange(totalPages() - 1)" title="Last Page">
+            <i class="fas fa-angle-double-right"></i>
+          </button>
         </div>
       </div>
     }
   </div>
 </div>
 
+<!-- ═══════════════════════════════════════ MAIN MODAL ═══════════════════════════════════════ -->
 @if (showModal()) {
   <div class="modal-backdrop fade show"></div>
   <div class="modal fade show d-block" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title fw-bold text-white">{{ modalMode().replace('_', ' ') }} </h5>
+          <h5 class="modal-title fw-bold text-white">{{ modalMode().replace('_', ' ') }}</h5>
           <button type="button" class="btn-close btn-close-white" (click)="closeModal()"></button>
         </div>
 
         <div class="modal-body">
           <form>
 
-            @if(modalMode() !== 'IMPORT') {
+            <!-- ── NON-IMPORT FORMS ─────────────────────────────────── -->
+            @if (modalMode() !== 'IMPORT') {
+
+              <!-- Name field (always shown for non-import) -->
               <div class="mb-3">
                 <label class="form-label">Name <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" [(ngModel)]="formData.name" name="name"
+                <input type="text" class="form-control"
+                       [(ngModel)]="formData.name" name="name"
                        [placeholder]="modalMode().includes('DB') ? 'e.g. E_Commerce_DB' : (modalMode().includes('TABLE') ? 'e.g. t_users' : 'e.g. user_id')"
-                       [maxlength]="modalMode().includes('COLUMN') ? 50 : 64" autocomplete="off">
+                       [maxlength]="modalMode().includes('COLUMN') ? 50 : 64"
+                       autocomplete="off">
                 <div class="form-text text-secondary opacity-75 small mt-1">
-                  @if(modalMode().includes('COLUMN')) { 1-50 chars. Alphanumeric, '-', '_' only. } @else { 2-64 chars. Alphanumeric, '-', '_' only. }
+                  @if (modalMode().includes('COLUMN')) { 1-50 chars. Alphanumeric, '-', '_' only. }
+                  @else { 2-64 chars. Alphanumeric, '-', '_' only. }
                 </div>
               </div>
 
-              @if(modalMode().includes('DB') || modalMode().includes('TABLE')) {
+              <!-- Description (DB and TABLE only) -->
+              @if (modalMode().includes('DB') || modalMode().includes('TABLE')) {
                 <div class="mb-3">
                   <label class="form-label">Description</label>
-                  <textarea class="form-control" [(ngModel)]="formData.description" name="description" placeholder="Optional description..." maxlength="255" rows="2"></textarea>
-                  <div class="text-end text-secondary opacity-50 xsmall mt-1">{{ (formData.description || '').length }} / 255</div>
+                  <textarea class="form-control"
+                            [(ngModel)]="formData.description" name="description"
+                            placeholder="Optional description..." maxlength="255" rows="2"></textarea>
+                  <div class="text-end text-secondary opacity-50 xsmall mt-1">
+                    {{ (formData.description || '').length }} / 255
+                  </div>
                 </div>
+              }
+
+              <!-- COLUMN-specific fields -->
+              @if (modalMode().includes('COLUMN')) {
+
+                <!-- Data Type + Primary Key -->
+                <div class="row">
+                  <div class="col-md-8 mb-3">
+                    <label class="form-label">Data Type <span class="text-danger">*</span></label>
+                    <select class="form-select custom-select" [(ngModel)]="formData.dataType" name="dataType">
+                      @for (type of dataTypes; track type) {
+                        <option [value]="type">{{ type }}</option>
+                      }
+                    </select>
+                  </div>
+                  <div class="col-md-4 mb-3 d-flex align-items-end">
+                    <div class="form-check mb-2">
+                      <input class="form-check-input" type="checkbox" id="pkCheck"
+                             [(ngModel)]="formData.primaryKey" name="pk">
+                      <label class="form-check-label text-white" for="pkCheck">Primary Key</label>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Foreign Key -->
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label">
+                      <i class="fas fa-link text-info me-1"></i>
+                      Foreign Table
+                      <span class="text-secondary opacity-50 small ms-1">(optional)</span>
+                    </label>
+                    <select class="form-select custom-select"
+                            [(ngModel)]="formData.foreignTable"
+                            name="foreignTable"
+                            (ngModelChange)="onForeignTableChange($event)">
+                      <option value="">— None —</option>
+                      @for (name of availableTableNames(); track name) {
+                        <option [value]="name">{{ name }}</option>
+                      }
+                    </select>
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label">Foreign Column</label>
+                    <select class="form-select custom-select"
+                            [(ngModel)]="formData.foreignColumn"
+                            name="foreignColumn"
+                            [disabled]="!formData.foreignTable">
+                      <option value="">— None —</option>
+                      @for (col of availableForeignColumns(); track col) {
+                        <option [value]="col">{{ col }}</option>
+                      }
+                    </select>
+                  </div>
+                </div>
+
               }
             }
 
-            @if(modalMode() === 'IMPORT') {
+            <!-- ── IMPORT WIZARD ────────────────────────────────────── -->
+            @if (modalMode() === 'IMPORT') {
 
               @if (importStep() === 1) {
                 <div class="step-container">
-                  <h4 class="text-white mb-4 fw-bold"><span class="badge bg-primary me-2">Step 1</span>Select Database</h4>
-
+                  <h4 class="text-white mb-4 fw-bold">
+                    <span class="badge bg-primary me-2">Step 1</span>Select Database
+                  </h4>
                   <div class="btn-group w-100 mb-3" role="group">
                     <input type="radio" class="btn-check" name="dbtype" id="db-pg" autocomplete="off"
                            [checked]="selectedDb() === 'POSTGRESQL'" (change)="selectedDb.set('POSTGRESQL')">
@@ -213,22 +380,25 @@
                            [checked]="selectedDb() === 'ORACLE'" (change)="selectedDb.set('ORACLE')">
                     <label class="btn btn-outline-secondary" for="db-ora">Oracle</label>
                   </div>
-
                   <div class="alert border-secondary d-flex align-items-center mt-4"
-                       style="background-color: rgba(255, 255, 255, 0.05);">
+                       style="background-color: rgba(255,255,255,0.05);">
                     <i class="fas fa-info-circle text-info fs-4 me-3"></i>
-                    <small class="text-secondary-light">Please select your database type. We will generate a special query for you in the next step.</small>
+                    <small class="text-secondary-light">
+                      Please select your database type. We will generate a special query for you in the next step.
+                    </small>
                   </div>
-
                 </div>
               }
 
               @if (importStep() === 2) {
                 <div class="step-container">
-                  <h4 class="text-white mb-4 fw-bold"><span class="badge bg-primary me-2">Step 2</span>Run Query</h4>
-
+                  <h4 class="text-white mb-4 fw-bold">
+                    <span class="badge bg-primary me-2">Step 2</span>Run Query
+                  </h4>
                   <div class="mb-3">
-                    <label class="form-label text-secondary-light small">Copy and run this query in your database tool:</label>
+                    <label class="form-label text-secondary-light small">
+                      Copy and run this query in your database tool:
+                    </label>
                     <div class="position-relative">
                       <textarea class="form-control font-monospace bg-dark text-info border-secondary"
                                 rows="6" readonly>{{ currentQuery() }}</textarea>
@@ -248,46 +418,32 @@
 
               @if (importStep() === 3) {
                 <div class="step-container">
-                  <h4 class="text-white mb-4 fw-bold"><span class="badge bg-primary me-2">Step 3</span>Import</h4>
-
+                  <h4 class="text-white mb-4 fw-bold">
+                    <span class="badge bg-primary me-2">Step 3</span>Import
+                  </h4>
                   <div class="mb-3">
                     <label class="form-label">Database Name <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" [(ngModel)]="formData.name" name="name"
+                    <input type="text" class="form-control"
+                           [(ngModel)]="formData.name" name="importName"
                            placeholder="e.g. My_Production_DB" maxlength="64" autocomplete="off">
                   </div>
-
                   <div class="mb-3">
                     <label class="form-label">Description</label>
-                    <textarea class="form-control" [(ngModel)]="formData.description" name="description" placeholder="Optional description..." maxlength="255" rows="2"></textarea>
+                    <textarea class="form-control"
+                              [(ngModel)]="formData.description" name="importDesc"
+                              placeholder="Optional description..." maxlength="255" rows="2"></textarea>
                   </div>
-
                   <div class="mb-3">
                     <label class="form-label">Query Result (JSON) <span class="text-danger">*</span></label>
                     <textarea class="form-control font-monospace"
                               rows="5"
                               [(ngModel)]="formData.jsonContent"
                               name="json"
-                              placeholder='Paste the JSON result here...'></textarea>
+                              placeholder="Paste the JSON result here..."></textarea>
                   </div>
                 </div>
               }
-            }
 
-            @if(modalMode().includes('COLUMN')) {
-              <div class="row">
-                <div class="col-md-8 mb-3">
-                  <label class="form-label">Data Type <span class="text-danger">*</span></label>
-                  <select class="form-select custom-select" [(ngModel)]="formData.dataType" name="dataType">
-                    @for(type of dataTypes; track type) { <option [value]="type">{{ type }}</option> }
-                  </select>
-                </div>
-                <div class="col-md-4 mb-3 d-flex align-items-end">
-                  <div class="form-check mb-2">
-                    <input class="form-check-input" type="checkbox" id="pkCheck" [(ngModel)]="formData.primaryKey" name="pk">
-                    <label class="form-check-label text-white" for="pkCheck">Primary Key</label>
-                  </div>
-                </div>
-              </div>
             }
 
           </form>
@@ -296,13 +452,13 @@
         <div class="modal-footer">
           <button class="btn btn-secondary" (click)="closeModal()">Cancel</button>
 
-          @if(modalMode() === 'IMPORT') {
-            @if(importStep() === 1) {
+          @if (modalMode() === 'IMPORT') {
+            @if (importStep() === 1) {
               <button class="btn btn-primary" (click)="importStep.set(2)">
                 Next <i class="fas fa-arrow-right ms-2"></i>
               </button>
             }
-            @if(importStep() === 2) {
+            @if (importStep() === 2) {
               <button class="btn btn-outline-secondary text-white" (click)="importStep.set(1)">
                 <i class="fas fa-arrow-left me-2"></i> Back
               </button>
@@ -310,7 +466,7 @@
                 Next <i class="fas fa-arrow-right ms-2"></i>
               </button>
             }
-            @if(importStep() === 3) {
+            @if (importStep() === 3) {
               <button class="btn btn-outline-secondary text-white" (click)="importStep.set(2)">
                 <i class="fas fa-arrow-left me-2"></i> Back
               </button>
@@ -318,22 +474,26 @@
             }
           }
 
-          @if(modalMode() !== 'IMPORT') {
+          @if (modalMode() !== 'IMPORT') {
             <button class="btn btn-primary" (click)="submitModal()">Save</button>
           }
         </div>
+
       </div>
     </div>
   </div>
 }
 
+<!-- ═══════════════════════════════════════ DELETE MODAL ══════════════════════════════════════ -->
 @if (showDeleteModal()) {
   <div class="modal-backdrop fade show" style="z-index: 1060;"></div>
   <div class="modal fade show d-block" tabindex="-1" style="z-index: 1070;">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content border-danger">
         <div class="modal-header border-bottom border-secondary">
-          <h5 class="modal-title fw-bold text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Confirm Delete</h5>
+          <h5 class="modal-title fw-bold text-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i>Confirm Delete
+          </h5>
           <button type="button" class="btn-close btn-close-white" (click)="closeDeleteModal()"></button>
         </div>
         <div class="modal-body text-center p-4">
@@ -355,7 +515,9 @@
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content border-warning">
         <div class="modal-header border-bottom border-secondary">
-          <h5 class="modal-title fw-bold text-warning"><i class="fas fa-exclamation-circle me-2"></i>Warning</h5>
+          <h5 class="modal-title fw-bold text-warning">
+            <i class="fas fa-exclamation-circle me-2"></i>Warning
+          </h5>
           <button type="button" class="btn-close btn-close-white" (click)="closeErrorModal()"></button>
         </div>
         <div class="modal-body text-center p-4">

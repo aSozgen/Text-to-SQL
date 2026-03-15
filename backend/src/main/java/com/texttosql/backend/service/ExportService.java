@@ -1,5 +1,7 @@
 package com.texttosql.backend.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.opencsv.CSVWriter;
 import com.texttosql.backend.entity.ChatEntity;
 import com.texttosql.backend.entity.MessageEntity;
@@ -12,7 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.StringWriter;
 import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -20,35 +24,48 @@ import java.util.List;
 public class ExportService {
 
     private final MessageRepository messageRepository;
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter DATE_FORMATTER =
+            DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+
+    private List<Map<String, String>> buildRows(ChatEntity chat) {
+        List<MessageEntity> messages =
+                messageRepository.findByChatAndActiveTrueOrderByCreatedAtAsc(chat);
+
+        return messages.stream().map(msg -> {
+            boolean isLlm = msg.getSenderType() == SenderType.LLM;
+            Map<String, String> row = new LinkedHashMap<>();
+            row.put("timestamp",  msg.getCreatedAt().format(DATE_FORMATTER));
+            row.put("sender",     isLlm ? "LLM" : "User");
+            row.put("content",    msg.getContent());
+            row.put("confidence", isLlm && msg.getConfidence() != null
+                    ? String.format(java.util.Locale.US, "%.2f%%", msg.getConfidence()) : "");
+            row.put("feedback",   isLlm && msg.getFeedback() != null
+                    ? String.valueOf(msg.getFeedback()) : "");
+            return row;
+        }).toList();
+    }
 
     @Transactional(readOnly = true)
     public String exportChatToCsv(ChatEntity chat) {
         try {
+            List<Map<String, String>> rows = buildRows(chat);
             StringWriter stringWriter = new StringWriter();
             CSVWriter csvWriter = new CSVWriter(stringWriter);
 
-            // Write header
-            String[] header = {"Timestamp", "Sender", "Message", "Confidence", "Feedback"};
-            csvWriter.writeNext(header);
+            csvWriter.writeNext(new String[]{"Timestamp", "Sender", "Content", "Confidence", "Feedback"});
 
-            // Get all messages
-            List<MessageEntity> messages = messageRepository.findByChatAndActiveTrueOrderByCreatedAtAsc(chat);
-
-            // Write data
-            for (MessageEntity message : messages) {
-                String[] data = {
-                        message.getCreatedAt().format(DATE_FORMATTER),
-                        message.getSenderType() == SenderType.USER ? "User" : "LLM",
-                        message.getContent(),
-                        message.getConfidence() != null ? String.format("%.2f%%", message.getConfidence()) : "",
-                        message.getFeedback() != null ? message.getFeedback().toString() : ""
-                };
-                csvWriter.writeNext(data);
+            for (Map<String, String> row : rows) {
+                csvWriter.writeNext(new String[]{
+                        row.get("timestamp"),
+                        row.get("sender"),
+                        row.get("content"),
+                        row.get("confidence"),
+                        row.get("feedback")
+                });
             }
 
             csvWriter.close();
-            log.info("Exported chat {} to CSV - {} messages", chat.getChatId(), messages.size());
+            log.info("Exported chat {} to CSV – {} messages", chat.getChatId(), rows.size());
             return stringWriter.toString();
 
         } catch (Exception e) {
@@ -59,82 +76,53 @@ public class ExportService {
 
     @Transactional(readOnly = true)
     public String exportChatToMarkdown(ChatEntity chat) {
-        StringBuilder markdown = new StringBuilder();
-        markdown.append("# ").append(chat.getName()).append("\n\n");
-        markdown.append("**Created:** ").append(chat.getCreatedAt().format(DATE_FORMATTER)).append("\n\n");
-        markdown.append("---\n\n");
+        List<Map<String, String>> rows = buildRows(chat);
+        StringBuilder md = new StringBuilder();
 
-        List<MessageEntity> messages = messageRepository.findByChatAndActiveTrueOrderByCreatedAtAsc(chat);
+        md.append("# ").append(chat.getName()).append("\n\n");
+        md.append("**Created:** ").append(chat.getCreatedAt().format(DATE_FORMATTER)).append("\n\n");
+        md.append("---\n\n");
 
-        for (MessageEntity message : messages) {
-            if (message.getSenderType() == SenderType.USER) {
-                markdown.append("## 👤 User\n\n");
-                markdown.append(message.getContent()).append("\n\n");
+        for (Map<String, String> row : rows) {
+            boolean isLlm = "LLM".equals(row.get("sender"));
+
+            if (isLlm) {
+                md.append("## 🤖 AI Assistant");
+                if (!row.get("confidence").isEmpty())
+                    md.append(" (Confidence: ").append(row.get("confidence")).append(")");
+                md.append("\n\n```sql\n").append(row.get("content")).append("\n```\n\n");
+                if (!row.get("feedback").isEmpty())
+                    md.append("**Feedback:** ").append(row.get("feedback")).append("\n\n");
             } else {
-                markdown.append("## 🤖 AI Assistant");
-                if (message.getConfidence() != null) {
-                    markdown.append(" (Confidence: ").append(String.format("%.1f%%", message.getConfidence())).append(")");
-                }
-                markdown.append("\n\n");
-                markdown.append("```sql\n");
-                markdown.append(message.getContent()).append("\n");
-                markdown.append("```\n\n");
-
-                if (message.getFeedback() != null) {
-                    markdown.append("**Feedback:** ").append(message.getFeedback()).append("\n\n");
-                }
+                md.append("## 👤 User\n\n");
+                md.append(row.get("content")).append("\n\n");
             }
-            markdown.append("---\n\n");
+
+            md.append("*").append(row.get("timestamp")).append("*\n\n---\n\n");
         }
 
-        log.info("Exported chat {} to Markdown - {} messages", chat.getChatId(), messages.size());
-        return markdown.toString();
+        log.info("Exported chat {} to Markdown – {} messages", chat.getChatId(), rows.size());
+        return md.toString();
     }
 
     @Transactional(readOnly = true)
     public String exportChatToJson(ChatEntity chat) {
-        List<MessageEntity> messages = messageRepository.findByChatAndActiveTrueOrderByCreatedAtAsc(chat);
+        try {
+            List<Map<String, String>> rows = buildRows(chat);
 
-        StringBuilder json = new StringBuilder();
-        json.append("{\n");
-        json.append("  \"chatId\": \"").append(chat.getChatId()).append("\",\n");
-        json.append("  \"title\": \"").append(escapeJson(chat.getName())).append("\",\n");
-        json.append("  \"createdAt\": \"").append(chat.getCreatedAt().toString()).append("\",\n");
-        json.append("  \"messages\": [\n");
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("chatId",    chat.getChatId());
+            payload.put("title",     chat.getName());
+            payload.put("createdAt", chat.getCreatedAt().format(DATE_FORMATTER));
+            payload.put("messages",  rows);
 
-        for (int i = 0; i < messages.size(); i++) {
-            MessageEntity message = messages.get(i);
-            json.append("    {\n");
-            json.append("      \"timestamp\": \"").append(message.getCreatedAt().toString()).append("\",\n");
-            json.append("      \"sender\": \"").append(message.getSenderType()).append("\",\n");
-            json.append("      \"content\": \"").append(escapeJson(message.getContent())).append("\",\n");
-            if (message.getConfidence() != null) {
-                json.append("      \"confidence\": ").append(message.getConfidence()).append(",\n");
-            }
-            if (message.getFeedback() != null) {
-                json.append("      \"feedback\": \"").append(message.getFeedback()).append("\",\n");
-            }
-            json.append("      \"active\": ").append(message.getActive()).append("\n");
-            json.append("    }");
-            if (i < messages.size() - 1) {
-                json.append(",");
-            }
-            json.append("\n");
+            ObjectMapper mapper = new ObjectMapper()
+                    .enable(SerializationFeature.INDENT_OUTPUT);
+
+            return mapper.writeValueAsString(payload);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to export chat", e);
         }
-
-        json.append("  ]\n");
-        json.append("}\n");
-
-        log.info("Exported chat {} to JSON - {} messages", chat.getChatId(), messages.size());
-        return json.toString();
-    }
-
-    private String escapeJson(String value) {
-        if (value == null) return "";
-        return value.replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-                .replace("\t", "\\t");
     }
 }

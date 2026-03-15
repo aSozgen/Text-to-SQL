@@ -9,4 +9,6 @@ export interface ColumnDto {
   name: string;
   primaryKey?: boolean;
   tableId?: string;
+  foreignTable?: string;
+  foreignColumn?: string;
 }

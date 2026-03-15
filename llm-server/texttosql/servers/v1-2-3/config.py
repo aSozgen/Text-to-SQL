@@ -9,7 +9,7 @@ class ServerConfig:
     LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
     
     # Model settings
-    MODEL_PATH = os.environ.get("MODEL_PATH", "../../models/v3")
+    MODEL_PATH = os.environ.get("MODEL_PATH", "/app/models/v3")
     DEVICE = None  # Auto-detect
     
     # Request limits

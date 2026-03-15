@@ -30,7 +30,16 @@ public class ColumnDto {
     @NotBlank(message = "Data type is required")
     @Size(max = 50, message = "Data type usually shouldn't be that long")
     String dataType;
+
     private boolean isPrimaryKey;
+
+    @Size(max = 64)
+    @Pattern(regexp = "^[a-zA-Z0-9_-]*$", message = "Name contains invalid characters")
+    private String foreignTable;
+
+    @Size(max = 64)
+    @Pattern(regexp = "^[a-zA-Z0-9_-]*$", message = "Name contains invalid characters")
+    private String foreignColumn;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd.MM.yyyy HH:mm:ss", timezone = "Europe/Istanbul")
     private LocalDateTime createdAt;

@@ -35,9 +35,15 @@ public class ColumnEntity {
     @Builder.Default
     private boolean isPrimaryKey = false;
 
+    @Column(name = "foreign_table")
+    private String foreignTable;
+
+    @Column(name = "foreign_column")
+    private String foreignColumn;
+
     @Column(nullable = false)
     @Builder.Default
-    private Boolean active = true;
+    private boolean active = true;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

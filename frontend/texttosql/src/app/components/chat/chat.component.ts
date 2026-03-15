@@ -624,9 +624,15 @@ export class ChatComponent implements OnInit {
     try {
       const response = await this.api.invoke(fn, { chatID: chatId });
 
-      const blob = response instanceof Blob
-        ? response
-        : new Blob([response as string], { type: mime });
+      let blob: Blob;
+      if (response instanceof Blob) {
+        const text = await response.text();
+        blob = new Blob([text], { type: mime });
+      } else if (typeof response === 'string') {
+        blob = new Blob([response], { type: mime });
+      } else {
+        blob = new Blob([JSON.stringify(response, null, 2)], { type: mime });
+      }
 
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');

@@ -86,7 +86,7 @@ public class SearchTest {
 
         DatabaseDto databaseDto = new DatabaseDto(dbId, "UserDB", "Description", now);
         TableDto tableDto = new TableDto(tableId, dbId, "Users", "Description", now);
-        ColumnDto columnDto = new ColumnDto(columnId, tableId, dbId, "username", "VARCHAR", false, now);
+        ColumnDto columnDto = new ColumnDto(columnId, tableId, dbId, "username", "VARCHAR", false, null, null, now);
 
         SchemaSearchResponse response = SchemaSearchResponse.builder()
                 .databases(Collections.singletonList(databaseDto))

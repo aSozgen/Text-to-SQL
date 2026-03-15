@@ -11,7 +11,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
     ports:
-      - "${POSTGRES_PORT}"
+      - "${POSTGRES_PORT:-5432:5432}"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -30,16 +30,19 @@ services:
 
   llm:
     build:
-      context: llm-server/texttosql/servers/v1-2-3
-      dockerfile: Dockerfile
+      context: llm-server/texttosql
+      dockerfile: servers/v1-2-3/Dockerfile
     container_name: texttosql-llm
     restart: unless-stopped
     ports:
       - "${LLM_PORT:-8000}:8000"
+    volumes:
+      - ./llm-server/texttosql/models/v3:/app/models/v3:ro
     environment:
       HOST: 0.0.0.0
       PORT: 8000
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      MODEL_PATH: /app/models/v3
     networks:
       - app-network
     healthcheck:
@@ -47,12 +50,12 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 60s
+      start_period: 120s
     deploy:
       resources:
         limits:
           cpus: '2'
-          memory: 2G
+          memory: 4G
 
   backend:
     build:
@@ -68,18 +71,16 @@ services:
       llm:
         condition: service_started
     ports:
-      - "${BACKEND_PORT}"
+      - "${BACKEND_PORT:-8080}:8080"
     environment:
       # Database
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/texttosql
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
-      SPRING_JPA_HIBERNATE_DDL_AUTO: ${HIBERNATE_DDL_AUTO}
+      POSTGRES_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       # LLM Service
-      LLM_SERVICE_URL: http://llm:8000
+      LLM_URL: http://llm:8000
       # Frontend
-      ANGULAR_FRONTEND_URL: ${FRONTEND_URL}
-      APP_FRONTEND_URL: ${FRONTEND_URL}
+      FRONTEND_URL: ${FRONTEND_URL}
       # JWT
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION: ${JWT_EXPIRATION}
@@ -89,9 +90,7 @@ services:
       MAIL_USERNAME: ${MAIL_USERNAME}
       MAIL_PASSWORD: ${MAIL_PASSWORD}
       # Logging
-      LOGGING_LEVEL_ROOT: ${LOG_LEVEL}
-      # Server
-      SERVER_PORT: 8080
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
     networks:
       - app-network
     healthcheck:
