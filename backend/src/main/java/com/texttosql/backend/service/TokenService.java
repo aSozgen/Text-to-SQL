@@ -8,13 +8,16 @@ import com.texttosql.backend.exception.TokenAlreadyUsedException;
 import com.texttosql.backend.exception.TokenExpiredException;
 import com.texttosql.backend.repository.TokenRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.Date;
 
 @Service
 @RequiredArgsConstructor
@@ -23,8 +26,13 @@ public class TokenService {
     private final TokenRepository tokenRepository;
     private final SecureRandom secureRandom = new SecureRandom();
 
+    @Value( "${token.email-verification.expiration}")
+    private Duration emailVerificationExpiryTime;
+    @Value( "${token.password-reset.expiration}")
+    private Duration passwordResetExpiryTime;
+
     @Transactional
-    public String createVerificationToken(UserEntity user) {
+    public String createEmailVerificationToken(UserEntity user) {
         // Invalidate any existing unused tokens
         tokenRepository.findByUserAndTypeAndUsedFalse(user, TokenType.VERIFICATION)
                 .ifPresent(token -> {
@@ -37,7 +45,7 @@ public class TokenService {
                 .token(token)
                 .user(user)
                 .type(TokenType.VERIFICATION)
-                .expiresAt(LocalDateTime.now().plusHours(24))
+                .expiresAt(LocalDateTime.now().plus(emailVerificationExpiryTime))
                 .used(false)
                 .build();
 
@@ -59,7 +67,7 @@ public class TokenService {
                 .token(token)
                 .user(user)
                 .type(TokenType.PASSWORD)
-                .expiresAt(LocalDateTime.now().plusHours(1))
+                .expiresAt(LocalDateTime.now().plus(passwordResetExpiryTime))
                 .used(false)
                 .build();
 

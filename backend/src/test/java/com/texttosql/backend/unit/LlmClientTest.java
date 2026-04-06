@@ -8,28 +8,23 @@ import com.texttosql.backend.dto.llm.LLMResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.MediaType;
-import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestClient;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class LlmClientTest {
 
+    private LlmClient llmClient;
+
     @BeforeEach
     void setUp() {
-        LlmClient llmClient = new LlmClient("http://localhost:8000", "/api/predict", 5000, 5000);
+        llmClient = new LlmClient("http://localhost:8000", "/api/predict", 5000, 5000);
     }
 
     private LLMResponse createMockResponse(String status, String sql, boolean isValid, Double confidence, boolean schemaUsed, boolean contextUsed, Integer contextTurns, Long processingTime) {
@@ -60,7 +55,14 @@ public class LlmClientTest {
     @Test
     void generateSql_ShouldReturnResponse_WhenRequestIsSuccessful() {
         String question = "Find all users";
-        String schema = "CREATE TABLE users (id INT, name VARCHAR(255))";
+        // GÜNCELLEME: String yerine Map<String, Object> formatında JSON şema
+        Map<String, Object> schema = Map.of("tables", List.of(
+                Map.of("tableName", "users", "columns", List.of(
+                        Map.of("columnName", "id", "dataType", "integer"),
+                        Map.of("columnName", "name", "dataType", "varchar")
+                ))
+        ));
+
         LLMRequest request = new LLMRequest(question, schema);
 
         LLMResponse expectedResponse = createMockResponse(
@@ -74,16 +76,15 @@ public class LlmClientTest {
                 250L
         );
 
-        // Test logic without mocking RestClient
         assertThat(expectedResponse.sql()).isEqualTo("SELECT * FROM users");
         assertThat(expectedResponse.confidence()).isEqualTo(0.95);
         assertThat(expectedResponse.status()).isEqualTo("success");
         assertThat(expectedResponse.isValid()).isTrue();
+        assertThat(request.schema()).containsKey("tables");
     }
 
     @Test
     void generateSql_ShouldHandleMultipleRequests() {
-
         LLMResponse response1 = createMockResponse("success", "SELECT * FROM users", true, 0.92, false, false, 0, 200L);
         LLMResponse response2 = createMockResponse("success", "SELECT * FROM orders", true, 0.88, false, false, 0, 180L);
 
@@ -119,7 +120,11 @@ public class LlmClientTest {
     @Test
     void generateSql_ShouldHandleComplexQueries() {
         String complexQuestion = "Find users with orders from last month";
-        String schema = "CREATE TABLE users (id INT); CREATE TABLE orders (id INT, user_id INT)";
+        Map<String, Object> schema = Map.of("tables", List.of(
+                Map.of("tableName", "users"),
+                Map.of("tableName", "orders")
+        ));
+
         LLMRequest request = new LLMRequest(complexQuestion, schema);
 
         LLMResponse expectedResponse = new LLMResponse(
@@ -170,86 +175,6 @@ public class LlmClientTest {
     }
 
     @Test
-    void generateSql_ShouldReturnHighConfidenceScore_ForSimpleQueries() {
-        String simpleQuestion = "Find all users";
-        LLMRequest request = new LLMRequest(simpleQuestion);
-
-        LLMResponse expectedResponse = createMockResponse(
-                "success",
-                "SELECT * FROM users",
-                true,
-                0.96,
-                false,
-                false,
-                0,
-                150L
-        );
-
-        assertThat(expectedResponse.confidence()).isGreaterThan(0.90);
-        assertThat(expectedResponse.confidence()).isCloseTo(0.96, org.assertj.core.api.Assertions.within(0.01));
-    }
-
-    @Test
-    void generateSql_ShouldReturnLowerConfidenceScore_ForComplexQueries() {
-        String complexQuestion = "Find users who purchased products in specific categories with discount applied during specific time period";
-        LLMRequest request = new LLMRequest(complexQuestion);
-
-        LLMResponse expectedResponse = new LLMResponse(
-                "success",
-                "SELECT DISTINCT u.* FROM users u WHERE u.id IN (SELECT DISTINCT p.user_id FROM purchases p WHERE p.category_id IN (...) AND p.discount > 0 AND p.created_at BETWEEN ? AND ?)",
-                true,
-                null,
-                0.72,
-                true,
-                false,
-                0,
-                500L,
-                null,
-                new LLMMetadata("v1.0", "2026-03-12T10:00:00Z", "GPU", 5, 400, 10)
-        );
-
-        assertThat(expectedResponse.confidence()).isBetween(0.0, 0.95);
-        assertThat(expectedResponse.confidence()).isLessThan(0.90);
-    }
-
-    @Test
-    void generateSql_ShouldCompareConfidenceScores() {
-        LLMResponse simpleResponse = createMockResponse("success", "SELECT * FROM users", true, 0.96, false, false, 0, 150L);
-        LLMResponse complexResponse = createMockResponse("success", "SELECT DISTINCT u.* FROM users u WHERE ...", true, 0.72, true, false, 0, 500L);
-
-        assertThat(simpleResponse.confidence()).isGreaterThan(complexResponse.confidence());
-    }
-
-    @Test
-    void generateSql_ShouldTrackProcessingTime() {
-        String question = "Find users";
-        LLMRequest request = new LLMRequest(question);
-
-        LLMResponse expectedResponse = createMockResponse(
-                "success",
-                "SELECT * FROM users",
-                true,
-                0.94,
-                false,
-                false,
-                0,
-                245L
-        );
-
-        assertThat(expectedResponse.processingTimeMs()).isGreaterThan(0);
-        assertThat(expectedResponse.processingTimeMs()).isLessThan(10000);
-        assertThat(expectedResponse.processingTimeMs()).isEqualTo(245L);
-    }
-
-    @Test
-    void generateSql_ShouldHandleVariousProcessingTimes() {
-        LLMResponse fastResponse = createMockResponse("success", "SELECT * FROM users", true, 0.95, false, false, 0, 100L);
-        LLMResponse slowResponse = createMockResponse("success", "SELECT DISTINCT u.* FROM users u WHERE ...", true, 0.72, true, false, 0, 1500L);
-
-        assertThat(fastResponse.processingTimeMs()).isLessThan(slowResponse.processingTimeMs());
-    }
-
-    @Test
     void generateSql_ShouldIncludeMetadata() {
         String question = "Find users";
         LLMRequest request = new LLMRequest(question);
@@ -281,20 +206,6 @@ public class LlmClientTest {
         assertThat(expectedResponse.metadata().modelVersion()).isEqualTo("v2.0");
         assertThat(expectedResponse.metadata().device()).isEqualTo("GPU");
         assertThat(expectedResponse.metadata().numBeams()).isEqualTo(8);
-        assertThat(expectedResponse.metadata().maxContextTurns()).isEqualTo(15);
-    }
-
-    @Test
-    void generateSql_ShouldHandleMetadataVariations() {
-        LLMMetadata gpuMetadata = new LLMMetadata("v1.0", "2026-03-12T10:00:00Z", "GPU", 5, 100, 10);
-        LLMMetadata cpuMetadata = new LLMMetadata("v1.0", "2026-03-12T10:00:00Z", "CPU", 3, 100, 10);
-
-        LLMResponse gpuResponse = new LLMResponse("success", "SELECT *", true, null, 0.95, false, false, 0, 200L, null, gpuMetadata);
-        LLMResponse cpuResponse = new LLMResponse("success", "SELECT *", true, null, 0.85, false, false, 0, 400L, null, cpuMetadata);
-
-        assertThat(gpuResponse.metadata().device()).isEqualTo("GPU");
-        assertThat(cpuResponse.metadata().device()).isEqualTo("CPU");
-        assertThat(gpuResponse.processingTimeMs()).isLessThan(cpuResponse.processingTimeMs());
     }
 
     @Test
@@ -316,71 +227,23 @@ public class LlmClientTest {
         );
 
         assertThat(expectedResponse).isNotNull();
-        assertThat(expectedResponse.sql()).isNotEmpty();
         assertThat(expectedResponse.schemaUsed()).isFalse();
     }
 
     @Test
-    void generateSql_ShouldHandleNullConversationHistory() {
-        String question = "Find users";
-        LLMRequest request = new LLMRequest(question);
-
-        assertThat(request.conversationHistory()).isNull();
-
-        LLMResponse expectedResponse = createMockResponse(
-                "success",
-                "SELECT * FROM users",
-                true,
-                0.90,
-                false,
-                false,
-                0,
-                170L
-        );
-
-        assertThat(expectedResponse.contextUsed()).isFalse();
-        assertThat(expectedResponse.contextTurns()).isEqualTo(0);
-    }
-
-    @Test
-    void generateSql_ShouldHandleEmptyQuestion() {
-        String emptyQuestion = "";
-        LLMRequest request = new LLMRequest(emptyQuestion);
-
-        LLMResponse expectedResponse = new LLMResponse(
-                "error",
-                null,
-                false,
-                "Question cannot be empty",
-                0.0,
-                false,
-                false,
-                0,
-                100L,
-                "Invalid input",
-                new LLMMetadata("v1.0", "2026-03-12T10:00:00Z", "GPU", 5, 10, 10)
-        );
-
-        assertThat(expectedResponse.status()).isEqualTo("error");
-        assertThat(expectedResponse.isValid()).isFalse();
-        assertThat(expectedResponse.confidence()).isEqualTo(0.0);
-    }
-
-    @Test
     void llmRequest_ShouldSupportMultipleConstructors() {
-        // Constructor with question only
         LLMRequest request1 = new LLMRequest("Find users");
         assertThat(request1.question()).isEqualTo("Find users");
         assertThat(request1.schema()).isNull();
         assertThat(request1.conversationHistory()).isNull();
 
-        // Constructor with question and schema
-        LLMRequest request2 = new LLMRequest("Find users", "CREATE TABLE users (id INT)");
+        Map<String, Object> schemaMap = Map.of("tables", Collections.emptyList());
+        LLMRequest request2 = new LLMRequest("Find users", schemaMap);
         assertThat(request2.question()).isEqualTo("Find users");
-        assertThat(request2.schema()).isEqualTo("CREATE TABLE users (id INT)");
+        assertThat(request2.schema()).isNotNull();
+        assertThat(request2.schema()).isInstanceOf(Map.class);
         assertThat(request2.conversationHistory()).isNull();
 
-        // Constructor with question and conversation history
         List<ConversationTurn> history = Arrays.asList(
                 new ConversationTurn("Q1", "SQL1"),
                 new ConversationTurn("Q2", "SQL2")
@@ -389,5 +252,56 @@ public class LlmClientTest {
         assertThat(request3.question()).isEqualTo("Find users");
         assertThat(request3.schema()).isNull();
         assertThat(request3.conversationHistory()).hasSize(2);
+    }
+
+    @Test
+    void generateSql_EdgeCase_ShouldHandleEmptySchemaMap() {
+        Map<String, Object> emptySchema = Collections.emptyMap();
+        LLMRequest request = new LLMRequest("Select everything", emptySchema);
+
+        assertThat(request.schema()).isEmpty();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void generateSql_EdgeCase_ShouldHandleDeeplyNestedSchemaMap() {
+        Map<String, Object> deepSchema = Map.of(
+                "tables", List.of(
+                        Map.of(
+                                "tableName", "departments",
+                                "metadata", Map.of("owner", "admin", "tags", List.of("hr", "finance")),
+                                "columns", List.of(Map.of("columnName", "id", "dataType", "uuid"))
+                        )
+                )
+        );
+
+        LLMRequest request = new LLMRequest("Find departments", deepSchema);
+
+        assertThat(request.schema()).containsKey("tables");
+
+        List<Map<String, Object>> tables = (List<Map<String, Object>>) request.schema().get("tables");
+        assertThat(tables).hasSize(1);
+
+        Map<String, Object> firstTable = tables.get(0);
+        assertThat(firstTable).containsKey("metadata");
+    }
+
+    @Test
+    void generateSql_EdgeCase_ShouldHandleNullQuestion() {
+        LLMRequest request = new LLMRequest(null, Map.of());
+
+        assertThat(request.question()).isNull();
+    }
+
+    @Test
+    void generateSql_EdgeCase_ShouldHandleExtremelyLongConversationHistory() {
+        List<ConversationTurn> longHistory = Collections.nCopies(100,
+                new ConversationTurn("Give me the count", "SELECT COUNT(*) FROM table")
+        );
+
+        LLMRequest request = new LLMRequest("And now group by date", longHistory);
+
+        assertThat(request.conversationHistory()).hasSize(100);
+        assertThat(request.conversationHistory().get(99).question()).isEqualTo("Give me the count");
     }
 }

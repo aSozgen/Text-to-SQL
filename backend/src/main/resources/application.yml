@@ -32,7 +32,7 @@ spring:
     name: backend
 
   datasource:
-    url: ${POSTGRES_URL}
+    url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/texttosql}
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -94,6 +94,12 @@ spring:
 jwt:
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION}
+
+token:
+  email-verification:
+    expiration: 1d
+  password-reset:
+    expiration: 1h
 
 logging:
   level:

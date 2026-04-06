@@ -3,10 +3,11 @@ package com.texttosql.backend.dto.llm;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
+import java.util.Map;
 
 public record LLMRequest(
         String question,
-        String schema,
+        Map<String, Object> schema,
         @JsonProperty("conversation_history")
         List<ConversationTurn> conversationHistory
 ) {
@@ -14,7 +15,7 @@ public record LLMRequest(
         this(question, null, null);
     }
 
-    public LLMRequest(String question, String schema) {
+    public LLMRequest(String question, Map<String, Object> schema) {
         this(question, schema, null);
     }
 

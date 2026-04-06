@@ -4,9 +4,10 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
-import java.sql.Types;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 @Entity
@@ -31,10 +32,9 @@ public class SchemaVersionEntity {
     @Builder.Default
     private int versionNumber = 0;
 
-    @Lob
-    @JdbcTypeCode(Types.LONGVARCHAR)
-    @Column(name = "schema_structure", nullable = false, columnDefinition = "TEXT")
-    private String schemaStructure;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "schema_structure",nullable = false, columnDefinition = "jsonb")
+    private Map<String, Object> schemaStructure;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

@@ -51,7 +51,7 @@ public class AuthenticationService {
         userRepository.save(newUser);
 
         // Send verification email
-        String token = tokenService.createVerificationToken(newUser);
+        String token = tokenService.createEmailVerificationToken(newUser);
         emailService.sendVerificationEmail(newUser.getEmail(), token);
     }
 
@@ -64,8 +64,9 @@ public class AuthenticationService {
                 )
         );
 
-        UserEntity user = userRepository.findByEmailAndActiveTrue(loginRequest.email()).
-                orElseThrow(() -> new UsernameNotFoundException("User not found."));
+        UserEntity user = userRepository.findByEmailAndActiveTrue(loginRequest.email())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found."));
+
 
         if (!user.getEmailVerified()) {
             throw new EmailNotVerifiedException("Email not verified. Please check your email for verification link.");
@@ -137,7 +138,7 @@ public class AuthenticationService {
             throw new DuplicatedResourceException("Email is already verified");
         }
 
-        String token = tokenService.createVerificationToken(user);
+        String token = tokenService.createEmailVerificationToken(user);
         emailService.sendVerificationEmail(user.getEmail(), token);
     }
 

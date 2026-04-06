@@ -13,7 +13,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -28,7 +30,8 @@ public class SchemaVersionService {
 
     @Transactional(readOnly = true)
     public SchemaVersionEntity getSchemaVersion(UUID databaseId) throws ResourceNotFoundException {
-        DatabaseEntity entity = databaseRepository.findById(databaseId).orElseThrow(() -> new ResourceNotFoundException("Database not found."));
+        DatabaseEntity entity = databaseRepository.findById(databaseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Database not found."));
         return versionRepository.findByDatabaseAndVersionNumber(entity, entity.getCurrentVersion())
                 .orElseThrow(() -> new ResourceNotFoundException("Schema not found."));
     }
@@ -42,53 +45,47 @@ public class SchemaVersionService {
     @Transactional
     public void updateSchemaVersion(DatabaseEntity entity) {
         SchemaVersionEntity schemaVersionEntity = getSchemaVersion(entity.getDatabaseId());
-        String schemaStructure = getSchemaStructure(entity.getDatabaseId());
+        Map<String, Object> schemaStructure = getSchemaStructure(entity.getDatabaseId());
         schemaVersionEntity.setSchemaStructure(schemaStructure);
         versionRepository.save(schemaVersionEntity);
     }
 
-    public String getSchemaStructure(UUID databaseId) {
-        DatabaseEntity entity = databaseRepository.findById(databaseId).orElseThrow(() -> new ResourceNotFoundException("Database not found."));
+    public Map<String, Object> getSchemaStructure(UUID databaseId) {
+        DatabaseEntity entity = databaseRepository.findById(databaseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Database not found."));
+
         List<TableEntity> tables = tableRepository.findByDatabaseAndActiveTrueOrderByCreatedAtDesc(entity);
-        StringBuilder schemaBuilder = new StringBuilder();
 
-        for (int i = 0; i < tables.size(); i++) {
-            TableEntity table = tables.get(i);
-            schemaBuilder.append(table.getName()).append(": ");
+        Map<String, Object> tablesMap = new HashMap<>();
+
+        for (TableEntity table : tables) {
+            Map<String, Object> tableDetails = new HashMap<>();
+
             List<ColumnEntity> columns = columnRepository.findByTableAndActiveTrueOrderByCreatedAtDesc(table);
+            List<Map<String, Object>> columnsList = columns.stream().map(column -> {
+                Map<String, Object> colMap = new HashMap<>();
+                colMap.put("columnName", column.getName());
+                colMap.put("dataType", column.getDataType() != null ? column.getDataType() : "unknown");
+                colMap.put("isPrimaryKey", column.isPrimaryKey());
 
-            String columnsString = columns.stream()
-                    .map(this::formatColumnString)
-                    .collect(Collectors.joining(", "));
+                if (column.getForeignTable() != null && !column.getForeignTable().isEmpty() &&
+                        column.getForeignColumn() != null && !column.getForeignColumn().isEmpty()) {
+                    colMap.put("foreignTable", column.getForeignTable());
+                    colMap.put("foreignColumn", column.getForeignColumn());
+                }
 
-            schemaBuilder.append(columnsString);
-            if (i != tables.size() - 1) {
-                schemaBuilder.append(" | ");
-            }
+                return colMap;
+            }).collect(Collectors.toList());
+
+            tableDetails.put("columns", columnsList);
+
+            tablesMap.put(table.getName(), tableDetails);
         }
 
-        return schemaBuilder.toString().trim();
-    }
+        Map<String, Object> schemaStructure = new HashMap<>();
+        schemaStructure.put("tables", tablesMap);
 
-    private String formatColumnString(ColumnEntity column) {
-        String dataType = column.getDataType();
-        String columnName = column.getName().toLowerCase();
-
-        if (dataType == null) dataType = "unknown";
-
-        StringBuilder sb = new StringBuilder();
-
-        if (column.isPrimaryKey()) {
-            sb.append(String.format("%s (%s) [PK]", columnName, dataType.toUpperCase()));
-        } else {
-            sb.append(String.format("%s (%s)", columnName, dataType.toLowerCase()));
-        }
-
-        if (column.getForeignTable() != null && column.getForeignColumn() != null) {
-            sb.append(String.format(" [FK -> %s.%s]", column.getForeignTable(), column.getForeignColumn()));
-        }
-
-        return sb.toString();
+        return schemaStructure;
     }
 
     @Transactional
