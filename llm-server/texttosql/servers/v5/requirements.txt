@@ -1,0 +1,8 @@
+Flask==3.0.0
+requests==2.31.0
+uvicorn[standard]==0.24.0
+fastapi==0.104.1
+huggingface_hub==0.24.6
+sqlglot==20.0.0
+python-multipart==0.0.6
+sentencepiece==0.1.99

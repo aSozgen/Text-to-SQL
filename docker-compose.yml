@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:15-alpine
@@ -27,26 +25,26 @@ services:
         limits:
           cpus: '1'
           memory: 512M
-
   llm:
     build:
       context: llm-server/texttosql
-      dockerfile: servers/v1-2-3/Dockerfile
+      dockerfile: servers/v5/Dockerfile
     container_name: texttosql-llm
     restart: unless-stopped
+    depends_on:
+      - ollama-init
     ports:
       - "${LLM_PORT:-8000}:8000"
-    volumes:
-      - ./llm-server/texttosql/models/v3:/app/models/v3:ro
     environment:
       HOST: 0.0.0.0
       PORT: 8000
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
-      MODEL_PATH: /app/models/v3
+      OLLAMA_BASE_URL: http://ollama:11434
+      MODEL_NAME: "${MODEL_PATH:-hf.co/abdlkdr/QueryGen_Qwen2.5_Coder}"
     networks:
       - app-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -54,9 +52,36 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '2'
-          memory: 4G
-
+          cpus: '1'
+          memory: 512M
+  ollama:
+    image: ollama/ollama:latest
+    container_name: texttosql-ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama  # İndirilen model silinmesin diye diske kaydedilir
+    networks:
+      - app-network
+    # GPU KULLANIMI İÇİN ŞART OLAN KISIM:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+  ollama-init:
+    image: curlimages/curl:latest
+    container_name: texttosql-ollama-init
+    depends_on:
+      - ollama
+    networks:
+      - app-network
+    # Ollama'nın açılmasını 10 saniye bekler, sonra Hugging Face'deki modelini indirip kurmasını emreder.
+    command: >
+      sh -c "sleep 10 && curl -X POST http://ollama:11434/api/pull -d '{\"model\": \"hf.co/abdlkdr/QueryGen_Qwen2.5_Coder\"}'"
   backend:
     build:
       context: ./backend
@@ -78,7 +103,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       # LLM Service
-      LLM_URL: http://llm:8000
+      LLM_URL: ${LLM_URL}
       # Frontend
       FRONTEND_URL: ${FRONTEND_URL}
       # JWT
@@ -117,3 +142,5 @@ volumes:
     name: texttosql-postgres-data
   backend_logs:
     name: texttosql-backend-logs
+  ollama_data:
+    name: textosql-ollama-data
