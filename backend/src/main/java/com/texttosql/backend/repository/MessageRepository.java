@@ -51,4 +51,6 @@ public interface MessageRepository extends JpaRepository<MessageEntity, UUID> {
     long countAllByChatAndActiveTrue(ChatEntity chat);
 
     long countAllByFeedback(Feedback feedback);
+
+    long countAllByChatAndActiveTrueAndSenderType(ChatEntity chat, SenderType senderType);
 }

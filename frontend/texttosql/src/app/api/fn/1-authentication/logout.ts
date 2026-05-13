@@ -7,14 +7,14 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
-import { EmailRequest } from '../../models/email-request';
+import { RefreshTokenRequest } from '../../models/refresh-token-request';
 
-export interface ResendVerification$Params {
-      body: EmailRequest
+export interface Logout$Params {
+      body: RefreshTokenRequest
 }
 
-export function resendVerification(http: HttpClient, rootUrl: string, params: ResendVerification$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
-  const rb = new RequestBuilder(rootUrl, resendVerification.PATH, 'post');
+export function logout(http: HttpClient, rootUrl: string, params: Logout$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+  const rb = new RequestBuilder(rootUrl, logout.PATH, 'post');
   if (params) {
     rb.body(params.body, 'application/json');
   }
@@ -29,4 +29,4 @@ export function resendVerification(http: HttpClient, rootUrl: string, params: Re
   );
 }
 
-resendVerification.PATH = '/api/v1/auth/resend-verification';
+logout.PATH = '/api/v1/auth/logout';

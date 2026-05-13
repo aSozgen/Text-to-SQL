@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -23,6 +23,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.junit.jupiter.api.BeforeEach;
+import java.time.Duration;
+
 @ExtendWith(MockitoExtension.class)
 public class TokenServiceTest {
 
@@ -31,6 +35,13 @@ public class TokenServiceTest {
 
     @InjectMocks
     private TokenService tokenService;
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(tokenService, "emailVerificationExpiryTime", Duration.ofDays(1));
+        ReflectionTestUtils.setField(tokenService, "passwordResetExpiryTime", Duration.ofHours(1));
+        ReflectionTestUtils.setField(tokenService, "refreshTokenExpiryTime", Duration.ofDays(30));
+    }
 
     @Test
     void createVerificationToken_ShouldReturnToken_WhenUserIsValid() {
@@ -41,8 +52,6 @@ public class TokenServiceTest {
                 .email("test@example.com")
                 .build();
 
-        when(tokenRepository.findByUserAndTypeAndUsedFalse(userEntity, TokenType.VERIFICATION))
-                .thenReturn(Optional.empty());
         when(tokenRepository.save(any(TokenEntity.class)))
                 .thenAnswer(invocation -> {
                     TokenEntity tokenEntity = invocation.getArgument(0);
@@ -50,7 +59,7 @@ public class TokenServiceTest {
                     return tokenEntity;
                 });
 
-        String token = tokenService.createVerificationToken(userEntity);
+        String token = tokenService.createEmailVerificationToken(userEntity);
 
         assertThat(token).isNotNull();
         assertThat(token).isNotEmpty();
@@ -79,7 +88,7 @@ public class TokenServiceTest {
         when(tokenRepository.findByTokenAndType(tokenValue, TokenType.VERIFICATION))
                 .thenReturn(Optional.of(verificationToken));
 
-        UserEntity result = tokenService.validateVerificationToken(tokenValue);
+        UserEntity result = tokenService.validateToken(tokenValue, TokenType.VERIFICATION);
 
         assertThat(result).isEqualTo(userEntity);
         verify(tokenRepository).findByTokenAndType(tokenValue, TokenType.VERIFICATION);
@@ -100,7 +109,7 @@ public class TokenServiceTest {
         when(tokenRepository.findByTokenAndType(tokenValue, TokenType.VERIFICATION))
                 .thenReturn(Optional.of(verificationToken));
 
-        assertThatThrownBy(() -> tokenService.validateVerificationToken(tokenValue))
+        assertThatThrownBy(() -> tokenService.validateToken(tokenValue, TokenType.VERIFICATION))
                 .isInstanceOf(TokenExpiredException.class)
                 .hasMessageContaining("expired");
     }
@@ -120,7 +129,7 @@ public class TokenServiceTest {
         when(tokenRepository.findByTokenAndType(tokenValue, TokenType.VERIFICATION))
                 .thenReturn(Optional.of(verificationToken));
 
-        assertThatThrownBy(() -> tokenService.validateVerificationToken(tokenValue))
+        assertThatThrownBy(() -> tokenService.validateToken(tokenValue, TokenType.VERIFICATION))
                 .isInstanceOf(TokenAlreadyUsedException.class)
                 .hasMessageContaining("already been used");
     }
@@ -132,13 +141,13 @@ public class TokenServiceTest {
         when(tokenRepository.findByTokenAndType(tokenValue, TokenType.VERIFICATION))
                 .thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> tokenService.validateVerificationToken(tokenValue))
+        assertThatThrownBy(() -> tokenService.validateToken(tokenValue, TokenType.VERIFICATION))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Invalid");
     }
 
     @Test
-    void markVerificationTokenAsUsed_ShouldMarkToken() {
+    void markVerificationTokenAsUsed_ShouldMarkTokenAsUsed() {
         String tokenValue = "valid-token";
         UUID userId = UUID.randomUUID();
         UserEntity userEntity = UserEntity.builder()
@@ -161,7 +170,7 @@ public class TokenServiceTest {
         when(tokenRepository.save(any(TokenEntity.class)))
                 .thenReturn(verificationToken);
 
-        tokenService.markVerificationTokenAsUsed(tokenValue);
+        tokenService.markTokenAsUsed(tokenValue, TokenType.VERIFICATION);
 
         assertThat(verificationToken.getUsed()).isTrue();
         verify(tokenRepository).save(verificationToken);
@@ -198,8 +207,6 @@ public class TokenServiceTest {
                 .email("test@example.com")
                 .build();
 
-        when(tokenRepository.findByUserAndTypeAndUsedFalse(userEntity, TokenType.PASSWORD))
-                .thenReturn(Optional.empty());
         when(tokenRepository.save(any(TokenEntity.class)))
                 .thenAnswer(invocation -> {
                     TokenEntity token = invocation.getArgument(0);
@@ -236,7 +243,7 @@ public class TokenServiceTest {
         when(tokenRepository.findByTokenAndType(tokenValue, TokenType.PASSWORD))
                 .thenReturn(Optional.of(resetToken));
 
-        UserEntity result = tokenService.validatePasswordResetToken(tokenValue);
+        UserEntity result = tokenService.validateToken(tokenValue, TokenType.PASSWORD);
 
         assertThat(result).isEqualTo(userEntity);
         verify(tokenRepository).findByTokenAndType(tokenValue, TokenType.PASSWORD);
@@ -257,7 +264,7 @@ public class TokenServiceTest {
         when(tokenRepository.findByTokenAndType(tokenValue, TokenType.PASSWORD))
                 .thenReturn(Optional.of(resetToken));
 
-        assertThatThrownBy(() -> tokenService.validatePasswordResetToken(tokenValue))
+        assertThatThrownBy(() -> tokenService.validateToken(tokenValue, TokenType.PASSWORD))
                 .isInstanceOf(TokenExpiredException.class)
                 .hasMessageContaining("expired");
     }
@@ -277,13 +284,13 @@ public class TokenServiceTest {
         when(tokenRepository.findByTokenAndType(tokenValue, TokenType.PASSWORD))
                 .thenReturn(Optional.of(resetToken));
 
-        assertThatThrownBy(() -> tokenService.validatePasswordResetToken(tokenValue))
+        assertThatThrownBy(() -> tokenService.validateToken(tokenValue, TokenType.PASSWORD))
                 .isInstanceOf(TokenAlreadyUsedException.class)
                 .hasMessageContaining("already been used");
     }
 
     @Test
-    void markPasswordResetTokenAsUsed_ShouldMarkToken() {
+    void markPasswordResetTokenAsUsed_ShouldMarkTokenAsUsed() {
         String tokenValue = "valid-reset-token";
 
         TokenEntity resetToken = TokenEntity.builder()
@@ -299,7 +306,7 @@ public class TokenServiceTest {
         when(tokenRepository.save(any(TokenEntity.class)))
                 .thenReturn(resetToken);
 
-        tokenService.markPasswordResetTokenAsUsed(tokenValue);
+        tokenService.markTokenAsUsed(tokenValue, TokenType.PASSWORD);
 
         assertThat(resetToken.getUsed()).isTrue();
         verify(tokenRepository).save(resetToken);
@@ -312,8 +319,59 @@ public class TokenServiceTest {
         when(tokenRepository.findByTokenAndType(tokenValue, TokenType.PASSWORD))
                 .thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> tokenService.validatePasswordResetToken(tokenValue))
+        assertThatThrownBy(() -> tokenService.validateToken(tokenValue, TokenType.PASSWORD))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Invalid");
+    }
+
+    @Test
+    void createRefreshToken_ShouldReturnToken_WhenUserIsValid() {
+        UUID userId = UUID.randomUUID();
+        UserEntity userEntity = UserEntity.builder()
+                .userId(userId)
+                .username("testuser")
+                .email("test@example.com")
+                .build();
+
+        when(tokenRepository.save(any(TokenEntity.class)))
+                .thenAnswer(invocation -> {
+                    TokenEntity token = invocation.getArgument(0);
+                    token.setTokenId(UUID.randomUUID());
+                    return token;
+                });
+
+        String token = tokenService.createRefreshToken(userEntity);
+
+        assertThat(token).isNotNull();
+        assertThat(token).isNotEmpty();
+        verify(tokenRepository).save(any(TokenEntity.class));
+    }
+
+    @Test
+    void validateRefreshToken_ShouldReturnUser_WhenTokenIsValid() {
+        String tokenValue = "valid-refresh-token";
+        UUID userId = UUID.randomUUID();
+        UserEntity userEntity = UserEntity.builder()
+                .userId(userId)
+                .username("testuser")
+                .email("test@example.com")
+                .build();
+
+        TokenEntity refreshToken = TokenEntity.builder()
+                .tokenId(UUID.randomUUID())
+                .token(tokenValue)
+                .user(userEntity)
+                .type(TokenType.REFRESH)
+                .expiresAt(LocalDateTime.now().plusDays(30))
+                .used(false)
+                .build();
+
+        when(tokenRepository.findByTokenAndType(tokenValue, TokenType.REFRESH))
+                .thenReturn(Optional.of(refreshToken));
+
+        UserEntity result = tokenService.validateToken(tokenValue, TokenType.REFRESH);
+
+        assertThat(result).isEqualTo(userEntity);
+        verify(tokenRepository).findByTokenAndType(tokenValue, TokenType.REFRESH);
     }
 }

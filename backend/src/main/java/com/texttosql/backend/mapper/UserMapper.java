@@ -8,7 +8,7 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface UserMapper {
 
-    CustomUserDetails toDto(UserEntity entity);
+    CustomUserDetails toDetails(UserEntity entity);
 
     UserEntity toEntity(CustomUserDetails dto);
 }

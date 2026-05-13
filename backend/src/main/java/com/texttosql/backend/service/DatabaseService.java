@@ -1,9 +1,13 @@
 package com.texttosql.backend.service;
 
 import com.texttosql.backend.dto.entity.DatabaseDto;
+import com.texttosql.backend.dto.entity.TableDto;
+import com.texttosql.backend.dto.search.SchemaSearchResponse;
 import com.texttosql.backend.entity.*;
+import com.texttosql.backend.entity.enums.Role;
 import com.texttosql.backend.exception.DuplicatedResourceException;
 import com.texttosql.backend.exception.ResourceNotFoundException;
+import com.texttosql.backend.mapper.ColumnMapper;
 import com.texttosql.backend.mapper.DatabaseMapper;
 import com.texttosql.backend.mapper.UserMapper;
 import com.texttosql.backend.repository.ColumnRepository;
@@ -15,10 +19,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,8 +35,8 @@ public class DatabaseService {
     private final DatabaseRepository databaseRepository;
     private final TableRepository tableRepository;
     private final ColumnRepository columnRepository;
-    private final DatabaseMapper databaseMapper;
     private final UserMapper userMapper;
+    private final DatabaseMapper databaseMapper;
     private final SchemaVersionService versionService;
 
     @Transactional(readOnly = true)
@@ -49,6 +55,10 @@ public class DatabaseService {
 
     @Transactional
     public DatabaseDto createDatabase(DatabaseDto databaseDTO, CustomUserDetails userDetails) {
+        if (userDetails.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_GUEST"))) {
+            throw new AccessDeniedException("Guests cannot create databases.");
+        }
+
         if (databaseRepository.existsByNameIgnoreCaseAndUserAndActiveTrue(databaseDTO.getName(), userMapper.toEntity(userDetails))) {
             throw new DuplicatedResourceException("There is already a Database with the same name.");
         }
@@ -72,6 +82,10 @@ public class DatabaseService {
 
     @Transactional
     public DatabaseDto updateDatabase(UUID databaseId, DatabaseDto databaseDTO, CustomUserDetails userDetails, boolean versionUsedInMessages) {
+        if (userDetails.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_GUEST"))) {
+            throw new AccessDeniedException("Guests cannot update databases.");
+        }
+
         DatabaseEntity entity = getCurrentDatabaseEntity(databaseId, userMapper.toEntity(userDetails));
 
         if (databaseRepository.existsByNameIgnoreCaseAndUserAndActiveTrue(databaseDTO.getName(), userMapper.toEntity(userDetails))
@@ -96,6 +110,10 @@ public class DatabaseService {
 
     @Transactional
     public void deleteDatabase(UUID databaseId, CustomUserDetails userDetails) {
+        if (userDetails.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_GUEST"))) {
+            throw new AccessDeniedException("Guests cannot delete databases.");
+        }
+
         DatabaseEntity databaseEntity = getCurrentDatabaseEntity(databaseId, userMapper.toEntity(userDetails));
 
         List<TableEntity> tables = tableRepository.findByDatabaseAndActiveTrueOrderByCreatedAtDesc(databaseEntity);
@@ -121,4 +139,10 @@ public class DatabaseService {
                 .orElseThrow(() -> new ResourceNotFoundException("Database not found."));
     }
 
+    public List<DatabaseDto> getTemplateDatabases() {
+        return databaseRepository.findByIsTemplateTrueAndActiveTrue()
+                .stream()
+                .map(databaseMapper::toDto)
+                .toList();
+    }
 }

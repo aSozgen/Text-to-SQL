@@ -59,7 +59,6 @@ public class ChatBotTest {
 
     private CustomUserDetails mockUser;
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
 
     @BeforeEach
@@ -104,7 +103,7 @@ public class ChatBotTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.chatId").value(newChatId.toString()))
                 .andExpect(jsonPath("$.name").value("New Chat"))
-                .andExpect(jsonPath("$.createdAt").value(now.format(dateFormatter)));
+                .andExpect(jsonPath("$.createdAt").value(now.format(dateTimeFormatter)));
     }
 
     @Test
@@ -138,7 +137,7 @@ public class ChatBotTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].chatId").value(chatId.toString()))
                 .andExpect(jsonPath("$.content[0].name").value("Test Chat"))
-                .andExpect(jsonPath("$.content[0].createdAt").value(now.format(dateFormatter)));
+                .andExpect(jsonPath("$.content[0].createdAt").value(now.format(dateTimeFormatter)));
 
     }
 
@@ -156,7 +155,7 @@ public class ChatBotTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.chatId").value(chatId.toString()))
                 .andExpect(jsonPath("$.name").value("Single Chat"))
-                .andExpect(jsonPath("$.createdAt").value(now.format(dateFormatter)));
+                .andExpect(jsonPath("$.createdAt").value(now.format(dateTimeFormatter)));
     }
 
     @Test
@@ -176,7 +175,7 @@ public class ChatBotTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.chatId").value(chatId.toString()))
                 .andExpect(jsonPath("$.name").value("Updated Name"))
-                .andExpect(jsonPath("$.createdAt").value(now.format(dateFormatter)));
+                .andExpect(jsonPath("$.createdAt").value(now.format(dateTimeFormatter)));
     }
 
     @Test

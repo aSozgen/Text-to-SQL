@@ -7,9 +7,11 @@ import com.texttosql.backend.dto.SchemaImportRequest;
 import com.texttosql.backend.dto.entity.ColumnDto;
 import com.texttosql.backend.dto.entity.DatabaseDto;
 import com.texttosql.backend.dto.entity.TableDto;
+import com.texttosql.backend.dto.search.SchemaSearchResponse;
 import com.texttosql.backend.exception.DuplicatedResourceException;
 import com.texttosql.backend.exception.GlobalExceptionHandler;
 import com.texttosql.backend.exception.ResourceNotFoundException;
+import com.texttosql.backend.exception.SchemaImportException;
 import com.texttosql.backend.security.CustomUserDetails;
 import com.texttosql.backend.service.SchemaService;
 import org.jspecify.annotations.NonNull;
@@ -25,6 +27,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -35,15 +38,14 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -110,6 +112,68 @@ public class SchemaTest {
                 .andExpect(jsonPath("$.name").value("Imported_DB"))
                 .andExpect(jsonPath("$.description").value("Description"))
                 .andExpect(jsonPath("$.createdAt").value(now.format(formatter)));
+
+        verify(schemaService).importSchema(any(SchemaImportRequest.class), any(CustomUserDetails.class));
+    }
+
+    @Test
+    void importDatabase_ShouldReturnBadRequest_WhenImportFails() throws Exception {
+        List<Map<String, Object>> dummyJson = List.of(Map.of("table", "users", "columns", List.of()));
+
+        SchemaImportRequest request = new SchemaImportRequest();
+        request.setName("Invalid_Import");
+        request.setDescription("Description");
+        request.setJsonContent(dummyJson);
+
+        when(schemaService.importSchema(any(SchemaImportRequest.class), any(CustomUserDetails.class)))
+                .thenThrow(new SchemaImportException("Invalid JSON structure"));
+
+        mockMvc.perform(post("/api/v1/schemas/import")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Schema import failed: Invalid JSON structure"));
+    }
+
+    @Test
+    void getTemplates_ShouldReturnSchemaSearchResponse() throws Exception {
+        LocalDateTime now = LocalDateTime.now();
+        UUID templateId = UUID.randomUUID();
+        DatabaseDto dbDto = new DatabaseDto(templateId, "Template_DB", "Description", now);
+
+        SchemaSearchResponse response = SchemaSearchResponse.builder()
+                .databases(List.of(dbDto))
+                .tables(new ArrayList<>())
+                .columns(new ArrayList<>())
+                .build();
+
+        when(schemaService.getTemplateSchemas()).thenReturn(response);
+
+        mockMvc.perform(get("/api/v1/schemas/templates"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.databases[0].databaseId").value(templateId.toString()))
+                .andExpect(jsonPath("$.databases[0].name").value("Template_DB"))
+                .andExpect(jsonPath("$.databases[0].description").value("Description"))
+                .andExpect(jsonPath("$.databases[0].createdAt").value(now.format(formatter)));
+
+        verify(schemaService).getTemplateSchemas();
+    }
+
+    @Test
+    void getTemplates_ShouldReturnEmptyResponse_WhenNoTemplates() throws Exception {
+        SchemaSearchResponse emptyResponse = SchemaSearchResponse.builder()
+                .databases(Collections.emptyList())
+                .tables(Collections.emptyList())
+                .columns(Collections.emptyList())
+                .build();
+
+        when(schemaService.getTemplateSchemas()).thenReturn(emptyResponse);
+
+        mockMvc.perform(get("/api/v1/schemas/templates"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.databases").isEmpty())
+                .andExpect(jsonPath("$.tables").isEmpty())
+                .andExpect(jsonPath("$.columns").isEmpty());
     }
 
     @Test
@@ -122,12 +186,28 @@ public class SchemaTest {
         when(schemaService.getDatabases(any(CustomUserDetails.class), anyInt(), anyInt(), anyString(), anyString()))
                 .thenReturn(page);
 
-        mockMvc.perform(get("/api/v1/schemas/databases").param("page", "0").param("size", "10"))
+        mockMvc.perform(get("/api/v1/schemas/databases")
+                        .param("page", "0")
+                        .param("size", "10")
+                        .param("sort", "createdAt")
+                        .param("direction", "desc"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].databaseId").value(databaseId.toString()))
                 .andExpect(jsonPath("$.content[0].name").value("My_DB"))
                 .andExpect(jsonPath("$.content[0].description").value("Test Desc"))
                 .andExpect(jsonPath("$.content[0].createdAt").value(now.format(formatter)));
+    }
+
+    @Test
+    void getDatabases_ShouldReturnEmptyPage_WhenNoneExists() throws Exception {
+        Page<DatabaseDto> emptyPage = new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 10), 0);
+        when(schemaService.getDatabases(any(CustomUserDetails.class), anyInt(), anyInt(), anyString(), anyString()))
+                .thenReturn(emptyPage);
+
+        mockMvc.perform(get("/api/v1/schemas/databases").param("page", "0").param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isEmpty())
+                .andExpect(jsonPath("$.totalElements").value(0));
     }
 
     @Test
@@ -177,6 +257,19 @@ public class SchemaTest {
     }
 
     @Test
+    void createDatabase_ShouldReturnForbidden_WhenUserIsGuest() throws Exception {
+        DatabaseDto requestDto = new DatabaseDto(null, "New_DB", "Desc", null);
+        when(schemaService.createDatabase(any(DatabaseDto.class), any(CustomUserDetails.class)))
+                .thenThrow(new AccessDeniedException("Guests cannot create databases."));
+
+        mockMvc.perform(post("/api/v1/schemas/databases")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("Guests cannot create databases."));
+    }
+
+    @Test
     void createDatabase_ShouldReturnConflict_WhenNameExists() throws Exception {
         DatabaseDto requestDto = new DatabaseDto(null, "Existing_DB", "Desc", null);
         when(schemaService.createDatabase(any(DatabaseDto.class), any(CustomUserDetails.class)))
@@ -210,6 +303,21 @@ public class SchemaTest {
     }
 
     @Test
+    void updateDatabase_ShouldReturnForbidden_WhenUserIsGuest() throws Exception {
+        UUID databaseId = UUID.randomUUID();
+        DatabaseDto updateDto = new DatabaseDto(databaseId, "Updated_DB", "New Desc", null);
+
+        when(schemaService.updateDatabase(eq(databaseId), any(DatabaseDto.class), any(CustomUserDetails.class)))
+                .thenThrow(new AccessDeniedException("Guests cannot update databases."));
+
+        mockMvc.perform(patch("/api/v1/schemas/databases/{id}", databaseId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateDto)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("Guests cannot update databases."));
+    }
+
+    @Test
     void updateDatabase_ShouldReturnConflict_WhenNameExists() throws Exception {
         UUID databaseId = UUID.randomUUID();
         DatabaseDto updateDto = new DatabaseDto(databaseId, "Existing_Name", "Desc", null);
@@ -230,6 +338,17 @@ public class SchemaTest {
 
         mockMvc.perform(delete("/api/v1/schemas/databases/{id}", databaseId))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void deleteDatabase_ShouldReturnForbidden_WhenUserIsGuest() throws Exception {
+        UUID databaseId = UUID.randomUUID();
+        doThrow(new AccessDeniedException("Guests cannot delete databases."))
+                .when(schemaService).deleteDatabase(eq(databaseId), any(CustomUserDetails.class));
+
+        mockMvc.perform(delete("/api/v1/schemas/databases/{id}", databaseId))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("Guests cannot delete databases."));
     }
 
     @Test
@@ -336,6 +455,17 @@ public class SchemaTest {
                 .andExpect(jsonPath("$.name").value("Updated_Table"))
                 .andExpect(jsonPath("$.description").value("Updated Desc"))
                 .andExpect(jsonPath("$.createdAt").value(now.format(formatter)));
+    }
+
+    @Test
+    void deleteTable_ShouldReturnNoContent() throws Exception {
+        UUID databaseId = UUID.randomUUID();
+        UUID tableId = UUID.randomUUID();
+
+        doNothing().when(schemaService).deleteTable(eq(databaseId), eq(tableId), any(CustomUserDetails.class));
+
+        mockMvc.perform(delete("/api/v1/schemas/databases/{databaseId}/tables/{tableId}", databaseId, tableId))
+                .andExpect(status().isNoContent());
     }
 
     @Test
@@ -526,6 +656,19 @@ public class SchemaTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.foreignTable").doesNotExist())
                 .andExpect(jsonPath("$.foreignColumn").doesNotExist());
+    }
+
+    @Test
+    void deleteColumn_ShouldReturnNoContent() throws Exception {
+        UUID databaseId = UUID.randomUUID();
+        UUID tableId = UUID.randomUUID();
+        UUID columnId = UUID.randomUUID();
+
+        doNothing().when(schemaService).deleteColumn(eq(databaseId), eq(tableId), eq(columnId), any(CustomUserDetails.class));
+
+        mockMvc.perform(delete("/api/v1/schemas/databases/{databaseId}/tables/{tableId}/columns/{columnId}",
+                        databaseId, tableId, columnId))
+                .andExpect(status().isNoContent());
     }
 
     @Test

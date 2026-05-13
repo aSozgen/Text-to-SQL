@@ -13,8 +13,14 @@ export type { ResendVerification$Params as ResendVerification$Params } from './f
 export { resendVerification as resendVerification } from './fn/1-authentication/resend-verification';
 export type { Register$Params as Register$Params } from './fn/1-authentication/register';
 export { register as register } from './fn/1-authentication/register';
+export type { RefreshToken$Params as RefreshToken$Params } from './fn/1-authentication/refresh-token';
+export { refreshToken as refreshToken } from './fn/1-authentication/refresh-token';
+export type { Logout$Params as Logout$Params } from './fn/1-authentication/logout';
+export { logout as logout } from './fn/1-authentication/logout';
 export type { Login$Params as Login$Params } from './fn/1-authentication/login';
 export { login as login } from './fn/1-authentication/login';
+export type { GetGuestToken$Params as GetGuestToken$Params } from './fn/1-authentication/get-guest-token';
+export { getGuestToken as getGuestToken } from './fn/1-authentication/get-guest-token';
 export type { ForgotPassword$Params as ForgotPassword$Params } from './fn/1-authentication/forgot-password';
 export { forgotPassword as forgotPassword } from './fn/1-authentication/forgot-password';
 export type { ChangePassword$Params as ChangePassword$Params } from './fn/1-authentication/change-password';
@@ -57,6 +63,8 @@ export type { DeleteColumn$Params as DeleteColumn$Params } from './fn/2-schema-m
 export { deleteColumn as deleteColumn } from './fn/2-schema-management/delete-column';
 export type { UpdateColumn$Params as UpdateColumn$Params } from './fn/2-schema-management/update-column';
 export { updateColumn as updateColumn } from './fn/2-schema-management/update-column';
+export type { GetTemplates$Params as GetTemplates$Params } from './fn/2-schema-management/get-templates';
+export { getTemplates as getTemplates } from './fn/2-schema-management/get-templates';
 export type { GetChats$Params as GetChats$Params } from './fn/3-chat-bot/get-chats';
 export { getChats as getChats } from './fn/3-chat-bot/get-chats';
 export type { CreateChat$Params as CreateChat$Params } from './fn/3-chat-bot/create-chat';

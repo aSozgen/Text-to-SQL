@@ -3,6 +3,7 @@ package com.texttosql.backend.service;
 import com.texttosql.backend.dto.entity.ChatDto;
 import com.texttosql.backend.entity.ChatEntity;
 import com.texttosql.backend.entity.MessageEntity;
+import com.texttosql.backend.entity.UserEntity;
 import com.texttosql.backend.exception.DuplicatedResourceException;
 import com.texttosql.backend.exception.ResourceNotFoundException;
 import com.texttosql.backend.mapper.ChatMapper;
@@ -26,6 +27,7 @@ import java.util.UUID;
 @Validated
 @RequiredArgsConstructor
 public class ChatService {
+
     private final ChatRepository chatRepository;
     private final ChatMapper chatMapper;
     private final UserMapper userMapper;
@@ -35,24 +37,25 @@ public class ChatService {
     public Page<ChatDto> getChats(CustomUserDetails userDetails, int page, int size, String sort, String direction) {
         Sort.Direction sortDirection = direction.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
-        Page<ChatEntity> chatEntities = chatRepository.findByUserAndActiveTrue(userMapper.toEntity(userDetails), pageable);
-        return chatEntities.map(chatMapper::toDto);
+        return chatRepository.findByUserAndActiveTrue(userMapper.toEntity(userDetails), pageable)
+                .map(chatMapper::toDto);
     }
 
     @Transactional(readOnly = true)
     public ChatDto getChat(UUID chatId, CustomUserDetails userDetails) {
-        ChatEntity chatEntity = getCurrentChatEntity(chatId, userDetails);
-        return chatMapper.toDto(chatEntity);
+        return chatMapper.toDto(getCurrentChatEntity(chatId, userDetails));
     }
 
+    @Transactional
     public ChatDto createChat(ChatDto chatDto, CustomUserDetails userDetails) {
+        UserEntity userEntity = userMapper.toEntity(userDetails);
 
-        if (chatRepository.existsByNameIgnoreCaseAndUserAndActiveTrue(chatDto.getName(), userMapper.toEntity(userDetails))) {
+        if (chatRepository.existsByNameIgnoreCaseAndUserAndActiveTrue(chatDto.getName(), userEntity)) {
             throw new DuplicatedResourceException("There is already a Chat with the same name.");
         }
 
         ChatEntity chatEntity = new ChatEntity();
-        chatEntity.setUser(userMapper.toEntity(userDetails));
+        chatEntity.setUser(userEntity);
         chatEntity.setName(chatDto.getName());
 
         ChatEntity savedChatEntity = chatRepository.save(chatEntity);
@@ -60,6 +63,7 @@ public class ChatService {
         return chatDto;
     }
 
+    @Transactional
     public ChatDto updateChat(UUID chatID, ChatDto chatDto, CustomUserDetails userDetails) {
         ChatEntity chatEntity = getCurrentChatEntity(chatID, userDetails);
 

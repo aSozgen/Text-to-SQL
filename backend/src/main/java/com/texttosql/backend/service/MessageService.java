@@ -8,11 +8,11 @@ import com.texttosql.backend.dto.llm.LLMResponse;
 import com.texttosql.backend.entity.ChatEntity;
 import com.texttosql.backend.entity.MessageEntity;
 import com.texttosql.backend.entity.SchemaVersionEntity;
+import com.texttosql.backend.entity.enums.Feedback;
+import com.texttosql.backend.entity.enums.SenderType;
 import com.texttosql.backend.exception.ResourceNotFoundException;
 import com.texttosql.backend.mapper.MessageMapper;
 import com.texttosql.backend.repository.MessageRepository;
-import com.texttosql.backend.entity.enums.Feedback;
-import com.texttosql.backend.entity.enums.SenderType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -41,20 +41,19 @@ public class MessageService {
     @Transactional(readOnly = true)
     public Page<MessageDto> getMessages(ChatEntity chat, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<MessageEntity> entities = messageRepository.findByChatAndActiveTrueOrderByCreatedAtAsc(chat, pageable);
-        return entities.map(messageMapper::toDto);
+        return messageRepository.findByChatAndActiveTrueOrderByCreatedAtAsc(chat, pageable)
+                .map(messageMapper::toDto);
     }
 
     @Transactional(readOnly = true)
     public List<ConversationTurn> getHistoryForLlm(ChatEntity chat, SchemaVersionEntity schemaVersion) {
         int maxMessages = conversationTurns * 2;
-
         Pageable pageable = PageRequest.of(0, maxMessages);
-        List<MessageEntity> messages = messageRepository.findByChatAndSchemaVersionAndActiveTrueOrderByCreatedAtDesc(chat, schemaVersion, pageable);
 
-        if (messages.isEmpty()) {
-            return null;
-        }
+        List<MessageEntity> messages = messageRepository
+                .findByChatAndSchemaVersionAndActiveTrueOrderByCreatedAtDesc(chat, schemaVersion, pageable);
+
+        if (messages.isEmpty()) return null;
 
         Collections.reverse(messages);
 
@@ -89,6 +88,7 @@ public class MessageService {
         );
 
         LLMResponse response = llmClient.generateSql(request);
+
         MessageEntity userMessage = MessageEntity.builder()
                 .chat(chat)
                 .schemaVersion(schemaVersion)
@@ -137,9 +137,7 @@ public class MessageService {
         }
 
         message.setFeedback(feedback);
-        MessageEntity savedMessage = messageRepository.save(message);
-
-        return messageMapper.toDto(savedMessage);
+        return messageMapper.toDto(messageRepository.save(message));
     }
 
     @Transactional

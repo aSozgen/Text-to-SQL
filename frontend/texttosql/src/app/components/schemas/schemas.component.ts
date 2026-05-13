@@ -307,9 +307,36 @@ WHERE ac.OWNER = SYS_CONTEXT('USERENV','CURRENT_USER');`
     this.highlightedId.set(null);
 
     if (this.isGuest()) {
-      if (!this.loadFromLocal()) this.saveToLocal();
-      this.totalElements.set(this.databases().length);
-      this.isLoading.set(false);
+      try {
+        const templates = await this.schemaService.loadTemplates();
+        this.databases.set(templates.databases || []);
+        
+        const tMap = new Map<string, TableDto[]>();
+        (templates.tables || []).forEach(t => {
+          if (t.databaseId) {
+            const list = tMap.get(t.databaseId) || [];
+            list.push(t);
+            tMap.set(t.databaseId, list);
+          }
+        });
+        this.tablesMap.set(tMap);
+        
+        const cMap = new Map<string, ColumnDto[]>();
+        (templates.columns || []).forEach(c => {
+          if (c.tableId) {
+            const list = cMap.get(c.tableId) || [];
+            list.push(c);
+            cMap.set(c.tableId, list);
+          }
+        });
+        this.columnsMap.set(cMap);
+
+        this.totalElements.set(this.databases().length);
+      } catch (e) {
+        console.error('Failed to load templates', e);
+      } finally {
+        this.isLoading.set(false);
+      }
       return;
     }
 
@@ -439,8 +466,6 @@ WHERE ac.OWNER = SYS_CONTEXT('USERENV','CURRENT_USER');`
 
   async loadTablesForDb(dbId: string) {
     if (this.isGuest()) {
-      const map = this.tablesMap();
-      if (!map.has(dbId)) { map.set(dbId, []); this.tablesMap.set(new Map(map)); }
       return;
     }
     const loading = new Set(this.loadingTables());
@@ -474,8 +499,6 @@ WHERE ac.OWNER = SYS_CONTEXT('USERENV','CURRENT_USER');`
 
   async loadColumnsForTable(dbId: string, tableId: string) {
     if (this.isGuest()) {
-      const map = this.columnsMap();
-      if (!map.has(tableId)) { map.set(tableId, []); this.columnsMap.set(new Map(map)); }
       return;
     }
     const loading = new Set(this.loadingColumns());
@@ -626,13 +649,7 @@ WHERE ac.OWNER = SYS_CONTEXT('USERENV','CURRENT_USER');`
     const mode = this.modalMode();
 
     if (this.isGuest()) {
-      const id = crypto.randomUUID();
-      const now = new Date().toLocaleDateString();
-      if (mode === 'CREATE_DB') {
-        this.databases.update(dbs => [...dbs, { databaseId: id, name: this.formData.name, description: this.formData.description, createdAt: now }]);
-        this.totalElements.update(n => n + 1);
-      }
-      this.saveToLocal(); this.closeModal(); this.isLoading.set(false); return;
+      this.closeModal(); this.isLoading.set(false); return;
     }
 
     try {
@@ -707,7 +724,7 @@ WHERE ac.OWNER = SYS_CONTEXT('USERENV','CURRENT_USER');`
     if (!this.deleteTarget) return;
     const { type, id, pid, gpid } = this.deleteTarget;
     this.isLoading.set(true);
-    if (this.isGuest()) { this.saveToLocal(); this.closeDeleteModal(); this.isLoading.set(false); return; }
+    if (this.isGuest()) { this.closeDeleteModal(); this.isLoading.set(false); return; }
     try {
       if (type === 'DB') {
         await this.api.invoke(deleteDatabase, { databaseId: id });
@@ -725,27 +742,5 @@ WHERE ac.OWNER = SYS_CONTEXT('USERENV','CURRENT_USER');`
     } finally {
       this.isLoading.set(false);
     }
-  }
-
-  private saveToLocal() {
-    if (!this.isGuest()) return;
-    const data = {
-      dbs: this.databases(),
-      tables: Array.from(this.tablesMap().entries()),
-      columns: Array.from(this.columnsMap().entries())
-    };
-    localStorage.setItem('guest_schema_data_v2', JSON.stringify(data));
-  }
-
-  private loadFromLocal() {
-    const raw = localStorage.getItem('guest_schema_data_v2');
-    if (raw) {
-      const data = JSON.parse(raw);
-      this.databases.set(data.dbs || []);
-      this.tablesMap.set(new Map(data.tables));
-      this.columnsMap.set(new Map(data.columns));
-      return true;
-    }
-    return false;
   }
 }

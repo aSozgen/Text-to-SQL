@@ -22,6 +22,6 @@ public class CustomUserDetailsService implements UserDetailsService {
         UserEntity user = userRepository.findByEmailAndActiveTrue(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found."));
 
-        return userMapper.toDto(user);
+        return userMapper.toDetails(user);
     }
 }

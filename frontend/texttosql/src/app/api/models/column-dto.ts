@@ -6,9 +6,9 @@ export interface ColumnDto {
   createdAt?: string;
   dataType: string;
   databaseId?: string;
+  foreignColumn?: string;
+  foreignTable?: string;
   name: string;
   primaryKey?: boolean;
   tableId?: string;
-  foreignTable?: string;
-  foreignColumn?: string;
 }

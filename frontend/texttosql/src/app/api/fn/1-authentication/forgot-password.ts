@@ -7,10 +7,10 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
-import { ForgotPasswordRequest } from '../../models/forgot-password-request';
+import { EmailRequest } from '../../models/email-request';
 
 export interface ForgotPassword$Params {
-      body: ForgotPasswordRequest
+      body: EmailRequest
 }
 
 export function forgotPassword(http: HttpClient, rootUrl: string, params: ForgotPassword$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {

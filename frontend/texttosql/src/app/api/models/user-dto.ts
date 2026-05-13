@@ -3,6 +3,6 @@
 
 export interface UserDto {
   email: string;
-  role?: 'ADMIN' | 'USER' | 'UNKNOWN';
+  role?: 'ADMIN' | 'USER' | 'GUEST' | 'UNKNOWN';
   username: string;
 }

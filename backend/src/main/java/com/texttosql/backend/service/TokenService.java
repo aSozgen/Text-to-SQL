@@ -17,7 +17,7 @@ import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Base64;
-import java.util.Date;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -30,24 +30,16 @@ public class TokenService {
     private Duration emailVerificationExpiryTime;
     @Value( "${token.password-reset.expiration}")
     private Duration passwordResetExpiryTime;
+    @Value( "${token.jwt.refresh.expiration}")
+    private Duration refreshTokenExpiryTime;
 
     @Transactional
     public String createEmailVerificationToken(UserEntity user) {
         // Invalidate any existing unused tokens
-        tokenRepository.findByUserAndTypeAndUsedFalse(user, TokenType.VERIFICATION)
-                .ifPresent(token -> {
-                    token.setUsed(true);
-                    tokenRepository.save(token);
-                });
+        invalidateToken(user, TokenType.VERIFICATION);
 
-        String token = generateSecureToken();
-        TokenEntity verificationToken = TokenEntity.builder()
-                .token(token)
-                .user(user)
-                .type(TokenType.VERIFICATION)
-                .expiresAt(LocalDateTime.now().plus(emailVerificationExpiryTime))
-                .used(false)
-                .build();
+        TokenEntity verificationToken = new TokenEntity();
+        String token = createToken(verificationToken, user, TokenType.VERIFICATION, emailVerificationExpiryTime);
 
         tokenRepository.save(verificationToken);
         return token;
@@ -56,80 +48,69 @@ public class TokenService {
     @Transactional
     public String createPasswordResetToken(UserEntity user) {
         // Invalidate any existing unused tokens
-        tokenRepository.findByUserAndTypeAndUsedFalse(user, TokenType.PASSWORD)
-                .ifPresent(token -> {
-                    token.setUsed(true);
-                    tokenRepository.save(token);
-                });
+        invalidateToken(user, TokenType.PASSWORD);
 
-        String token = generateSecureToken();
-        TokenEntity resetToken = TokenEntity.builder()
-                .token(token)
-                .user(user)
-                .type(TokenType.PASSWORD)
-                .expiresAt(LocalDateTime.now().plus(passwordResetExpiryTime))
-                .used(false)
-                .build();
+        TokenEntity resetToken = new TokenEntity();
+        String token = createToken(resetToken, user, TokenType.PASSWORD, passwordResetExpiryTime);
 
         tokenRepository.save(resetToken);
         return token;
     }
 
-    @Transactional(readOnly = true)
-    public UserEntity validateVerificationToken(String token) {
-        TokenEntity verificationToken = tokenRepository.findByTokenAndType(token, TokenType.VERIFICATION)
-                .orElseThrow(() -> new ResourceNotFoundException("Invalid verification token"));
+    @Transactional
+    public String createRefreshToken(UserEntity user) {
+        TokenEntity refreshToken = new TokenEntity();
+        String token = createToken(refreshToken, user, TokenType.REFRESH, refreshTokenExpiryTime);
 
-        if (verificationToken.getUsed()) {
-            throw new TokenAlreadyUsedException("Verification token has already been used.");
-        }
+        tokenRepository.save(refreshToken);
+        return token;
+    }
 
-        if (verificationToken.isExpired()) {
-            throw new TokenExpiredException("Verification token has expired.");
-        }
-
-        return verificationToken.getUser();
+    private String createToken(TokenEntity tokenEntity, UserEntity user, TokenType type, Duration expiryTime) {
+        String token = generateSecureToken();
+        tokenEntity.setToken(token);
+        tokenEntity.setUser(user);
+        tokenEntity.setType(type);
+        tokenEntity.setExpiresAt(LocalDateTime.now().plus(expiryTime));
+        tokenEntity.setUsed(false);
+        return token;
     }
 
     @Transactional(readOnly = true)
-    public UserEntity validatePasswordResetToken(String token) {
-        TokenEntity resetToken = tokenRepository.findByTokenAndType(token, TokenType.PASSWORD)
-                .orElseThrow(() -> new ResourceNotFoundException("Invalid password reset token"));
+    public UserEntity validateToken(String token, TokenType type) {
+        TokenEntity tokenEntity = tokenRepository.findByTokenAndType(token, type)
+                .orElseThrow(() -> new ResourceNotFoundException("Invalid token."));
 
-        if (resetToken.getUsed()) {
-            throw new TokenAlreadyUsedException("Password reset token has already been used.");
+        if (tokenEntity.getUsed()) {
+            throw new TokenAlreadyUsedException("Token has already been used.");
         }
 
-        if (resetToken.isExpired()) {
-            throw new TokenExpiredException("Password reset token has expired.");
+        if (tokenEntity.isExpired()) {
+            throw new TokenExpiredException("Token has expired.");
         }
 
-        return resetToken.getUser();
+        return tokenEntity.getUser();
     }
 
     @Transactional
-    public void markVerificationTokenAsUsed(String token) {
-        TokenEntity verificationToken = tokenRepository.findByTokenAndType(token, TokenType.VERIFICATION)
+    public void markTokenAsUsed(String token, TokenType type) {
+        TokenEntity tokenEntity = tokenRepository.findByTokenAndType(token, type)
                 .orElseThrow(() -> new ResourceNotFoundException("Token not found"));
-        verificationToken.setUsed(true);
-        tokenRepository.save(verificationToken);
+        tokenEntity.setUsed(true);
+        tokenRepository.save(tokenEntity);
     }
 
-    @Transactional
-    public void markPasswordResetTokenAsUsed(String token) {
-        TokenEntity resetToken = tokenRepository.findByTokenAndType(token, TokenType.PASSWORD)
-                .orElseThrow(() -> new ResourceNotFoundException("Token not found"));
-        resetToken.setUsed(true);
-        tokenRepository.save(resetToken);
+    private void invalidateToken(UserEntity user, TokenType type) {
+        List<TokenEntity> tokens = tokenRepository.findAllByUserAndTypeAndUsedFalse(user, type);
+        tokens.forEach(t -> t.setUsed(true));
+        tokenRepository.saveAll(tokens);
     }
 
     // Clean up expired tokens daily at 2 AM
     @Scheduled(cron = "0 0 2 * * *")
     @Transactional
     public void cleanupExpiredTokens() {
-        LocalDateTime now = LocalDateTime.now();
-        tokenRepository.deleteByExpiresAtBeforeAndType(now, TokenType.VERIFICATION);
-        tokenRepository.deleteByExpiresAtBeforeAndType(now, TokenType.PASSWORD);
+        tokenRepository.deleteByExpiresAtBefore(LocalDateTime.now());
     }
 
     private String generateSecureToken() {

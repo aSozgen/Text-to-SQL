@@ -18,12 +18,21 @@ public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
 
+    @PostMapping("/guest-token")
+    public ResponseEntity<AuthenticationResponse> getGuestToken() {
+        return ResponseEntity.ok(authenticationService.generateGuestToken());
+    }
+
     @PostMapping("/register")
     public ResponseEntity<Void> register(
-            @Valid
-            @RequestBody RegisterRequest registerRequest
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @Valid @RequestBody RegisterRequest registerRequest
     ) {
-        authenticationService.register(registerRequest);
+        String token = null;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+        }
+        authenticationService.register(registerRequest, token);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
@@ -33,6 +42,21 @@ public class AuthenticationController {
             @RequestBody LoginRequest loginRequest
     ) {
         return ResponseEntity.ok(authenticationService.login(loginRequest));
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<AuthenticationResponse> refreshToken(
+            @Valid @RequestBody RefreshTokenRequest request
+    ) {
+        return ResponseEntity.ok(authenticationService.refreshToken(request));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(
+            @Valid @RequestBody RefreshTokenRequest request
+    ) {
+        authenticationService.logout(request);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/validate")
@@ -98,7 +122,7 @@ public class AuthenticationController {
 
     @PostMapping("/resend-verification")
     public ResponseEntity<Void> resendVerification(
-            @Valid @RequestBody ResendVerificationRequest request
+            @Valid @RequestBody EmailRequest request
     ) {
         authenticationService.resendVerificationEmail(request);
         return ResponseEntity.ok().build();
@@ -106,7 +130,7 @@ public class AuthenticationController {
 
     @PostMapping("/forgot-password")
     public ResponseEntity<Void> forgotPassword(
-            @Valid @RequestBody ForgotPasswordRequest request
+            @Valid @RequestBody EmailRequest request
     ) {
         authenticationService.forgotPassword(request);
         return ResponseEntity.ok().build();

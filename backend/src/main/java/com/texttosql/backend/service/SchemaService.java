@@ -4,16 +4,25 @@ import com.texttosql.backend.dto.SchemaImportRequest;
 import com.texttosql.backend.dto.entity.ColumnDto;
 import com.texttosql.backend.dto.entity.DatabaseDto;
 import com.texttosql.backend.dto.entity.TableDto;
-import com.texttosql.backend.entity.DatabaseEntity;
-import com.texttosql.backend.entity.TableEntity;
+import com.texttosql.backend.dto.search.SchemaSearchResponse;
+import com.texttosql.backend.entity.*;
 import com.texttosql.backend.exception.SchemaImportException;
+import com.texttosql.backend.mapper.ColumnMapper;
+import com.texttosql.backend.mapper.DatabaseMapper;
+import com.texttosql.backend.mapper.TableMapper;
 import com.texttosql.backend.mapper.UserMapper;
+import com.texttosql.backend.repository.ColumnRepository;
+import com.texttosql.backend.repository.DatabaseRepository;
+import com.texttosql.backend.repository.SchemaVersionRepository;
+import com.texttosql.backend.repository.TableRepository;
 import com.texttosql.backend.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.Cacheable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -27,7 +36,14 @@ public class SchemaService {
     private final TableService tableService;
     private final ColumnService columnService;
     private final MessageService messageService;
+    private final SchemaVersionService versionService;
     private final UserMapper userMapper;
+    private final DatabaseMapper databaseMapper;
+    private final TableMapper tableMapper;
+    private final DatabaseRepository databaseRepository;
+    private final TableRepository tableRepository;
+    private final ColumnRepository columnRepository;
+    private final SchemaVersionRepository schemaVersionRepository;
 
     @Transactional
     public DatabaseDto importSchema(SchemaImportRequest request, CustomUserDetails userDetails) {
@@ -74,6 +90,84 @@ public class SchemaService {
         } catch (Exception e) {
             throw new SchemaImportException("Schema import failed: " + e.getMessage(), e);
         }
+    }
+
+    @Transactional
+    public void copyTemplatesToUser(CustomUserDetails userDetails) {
+        List<DatabaseEntity> templates = databaseRepository.findByIsTemplateTrueAndActiveTrue();
+        if (templates.isEmpty()) return;
+
+        UserEntity user = userMapper.toEntity(userDetails);
+
+        for (DatabaseEntity template : templates) {
+            // 1. Copy Database
+            DatabaseEntity newDb = DatabaseEntity.builder()
+                    .user(user)
+                    .name(template.getName())
+                    .description(template.getDescription())
+                    .isTemplate(false)
+                    .active(true)
+                    .currentVersion(0)
+                    .build();
+            DatabaseEntity savedDb = databaseRepository.save(newDb);
+
+            // 2. Copy Tables
+            List<TableEntity> templateTables = tableRepository.findByDatabaseAndActiveTrueOrderByCreatedAtDesc(template);
+            for (TableEntity tTable : templateTables) {
+                TableEntity newTable = TableEntity.builder()
+                        .database(savedDb)
+                        .name(tTable.getName())
+                        .description(tTable.getDescription())
+                        .active(true)
+                        .build();
+                TableEntity savedTable = tableRepository.save(newTable);
+
+                // 3. Copy Columns
+                List<ColumnEntity> templateColumns = columnRepository.findByTableAndActiveTrueOrderByCreatedAtDesc(tTable);
+                List<ColumnEntity> newColumns = templateColumns.stream()
+                        .map(tc -> ColumnEntity.builder()
+                                .table(savedTable)
+                                .name(tc.getName())
+                                .dataType(tc.getDataType())
+                                .isPrimaryKey(tc.isPrimaryKey())
+                                .foreignTable(tc.getForeignTable())
+                                .foreignColumn(tc.getForeignColumn())
+                                .active(true)
+                                .build())
+                        .collect(Collectors.toList());
+                columnRepository.saveAll(newColumns);
+            }
+
+            // Create an initial SchemaVersion
+            SchemaVersionEntity schemaVersion = SchemaVersionEntity.builder()
+                    .database(savedDb)
+                    .build();
+            versionService.createSchemaVersion(schemaVersion);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    @Cacheable("templateSchemas")
+    public SchemaSearchResponse getTemplateSchemas() {
+        List<DatabaseDto> databases = databaseService.getTemplateDatabases();
+        List<TableDto> tables = new ArrayList<>();
+        List<ColumnDto> columns = new ArrayList<>();
+
+        if (databases.isEmpty()) return SchemaSearchResponse.builder().build();
+
+        databases.forEach(d -> {
+            tables.addAll(tableService.getTables(databaseMapper.toEntity(d)));
+        });
+
+        tables.forEach(t -> {
+            columns.addAll(columnService.getColumns(tableMapper.toEntity(t)));
+        });
+
+        return SchemaSearchResponse.builder()
+                .databases(databases)
+                .tables(tables)
+                .columns(columns)
+                .build();
     }
 
     private boolean isVersionUsedInMessages(UUID databaseId, CustomUserDetails userDetails) {

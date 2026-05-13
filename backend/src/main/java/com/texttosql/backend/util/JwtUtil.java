@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,18 +20,18 @@ import java.util.function.Function;
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret}")
+    @Value("${token.jwt.secret}")
     private String SECRET;
 
-    @Value("${jwt.expiration}")
-    private Long expiration;
+    @Value("${token.jwt.refresh.expiration}")
+    private Duration expiration;
 
     private SecretKey getSigningKey() {
         byte[] keyBytes = SECRET.getBytes(StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String extractUsername(String token) {
+    public String extractEmail(String token) {
         try {
             return extractClaim(token, Claims::getSubject);
         } catch (JwtException | IllegalArgumentException e) {
@@ -68,7 +69,7 @@ public class JwtUtil {
                 .claims(claims)
                 .subject(userDetails.getUsername())
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .expiration(new Date(System.currentTimeMillis() + expiration.toMillis()))
                 .signWith(getSigningKey())
                 .compact();
 
@@ -76,7 +77,7 @@ public class JwtUtil {
 
     public boolean validateToken(String token, UserDetails userDetails) {
         try {
-            final String username = extractUsername(token);
+            final String username = extractEmail(token);
             return (username != null && username.equals(userDetails.getUsername()) && !isTokenExpired(token));
         } catch (JwtException | IllegalArgumentException e) {
             return false;

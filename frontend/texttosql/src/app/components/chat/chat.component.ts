@@ -112,8 +112,8 @@ export class ChatComponent implements OnInit {
     effect(() => {
       const isGuest = this.isGuest();
       untracked(() => {
+        this.loadDatabases();
         if (!isGuest) {
-          this.loadDatabases();
           this.loadChats(0, true);
         }
         this.checkScreenSize();
@@ -227,8 +227,13 @@ export class ChatComponent implements OnInit {
   // --- Data Loading Methods ---
   async loadDatabases(): Promise<void> {
     try {
-      const params = { page: this.page(), size: this.size(), sort: this.sort(), direction: this.direction() };
-      this.databases.set(await this.schemaService.loadDatabases(null));
+      if (this.isGuest()) {
+        const templates = await this.schemaService.loadTemplates();
+        this.databases.set(templates.databases || []);
+      } else {
+        const params = { page: this.page(), size: this.size(), sort: this.sort(), direction: this.direction() };
+        this.databases.set(await this.schemaService.loadDatabases(null));
+      }
     } catch (e) {
       console.error('Failed to load databases', e);
     }
@@ -236,7 +241,12 @@ export class ChatComponent implements OnInit {
 
   async loadTables(dbId: string): Promise<void> {
     try {
-      this.tables.set(await this.schemaService.loadTables(dbId));
+      if (this.isGuest()) {
+        const templates = await this.schemaService.loadTemplates();
+        this.tables.set((templates.tables || []).filter(t => t.databaseId === dbId));
+      } else {
+        this.tables.set(await this.schemaService.loadTables(dbId));
+      }
     } catch (e) {
       console.error('Failed to load tables', e);
     }
@@ -244,7 +254,12 @@ export class ChatComponent implements OnInit {
 
   async loadColumns(dbId: string, tableId: string): Promise<void> {
     try {
-      this.activeColumns.set(await this.schemaService.loadColumns(dbId, tableId));
+      if (this.isGuest()) {
+        const templates = await this.schemaService.loadTemplates();
+        this.activeColumns.set((templates.columns || []).filter(c => c.tableId === tableId));
+      } else {
+        this.activeColumns.set(await this.schemaService.loadColumns(dbId, tableId));
+      }
     } catch (e) {
       console.error('Failed to load columns', e);
     }
@@ -390,6 +405,16 @@ export class ChatComponent implements OnInit {
 
     this.isSending.set(true);
     let chatId = this.selectedChatId();
+
+    if (this.isGuest()) {
+      try {
+        await this.authService.createGuestSession();
+      } catch {
+        this.showError('Failed to initialize guest session.');
+        this.isSending.set(false);
+        return;
+      }
+    }
 
     // Auto-create chat if none selected
     if (!chatId) {

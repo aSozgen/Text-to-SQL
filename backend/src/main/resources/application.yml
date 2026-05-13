@@ -10,8 +10,8 @@ llm:
   service:
     url: ${LLM_URL}
     endpoint: /predict
-    read-timeout: 60000
-    connection-timeout: 50000
+    read-timeout: 5000
+    connection-timeout: 3000
     conversation-turn: 2
 
 app:
@@ -91,15 +91,21 @@ spring:
     caffeine:
       spec: maximumSize=1000,expireAfterWrite=30m
 
-jwt:
-  secret: ${JWT_SECRET}
-  expiration: ${JWT_EXPIRATION}
-
 token:
   email-verification:
-    expiration: 1d
+    expiration: 30m
   password-reset:
-    expiration: 1h
+    expiration: 5m
+  jwt:
+    secret: ${JWT_SECRET}
+    refresh:
+      expiration: ${JWT_REFRESH_EXPIRATION}
+    access:
+      expiration: ${JWT_ACCESS_EXPIRATION}
+
+guest:
+  email:
+    domain: "@texttosql.local.com"
 
 logging:
   level:

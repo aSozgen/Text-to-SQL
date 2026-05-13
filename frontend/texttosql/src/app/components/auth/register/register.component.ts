@@ -47,6 +47,11 @@ export class RegisterComponent {
     try {
       const request: RegisterRequest = this.registerForm.value;
       await this.api.invoke(register, { body: request });
+      
+      // Clear guest session after successful registration & migration
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      
       this.registeredEmail = this.registerForm.value.email;
       this.registerSuccess = true;
     } catch (error: any) {

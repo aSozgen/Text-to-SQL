@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -16,6 +17,8 @@ public interface DatabaseRepository extends JpaRepository<DatabaseEntity, UUID> 
     Optional<DatabaseEntity> findByUserAndDatabaseIdAndActiveTrue(UserEntity user, UUID databaseId);
 
     Page<DatabaseEntity> findByUserAndActiveTrue(UserEntity user, Pageable pageable);
+
+    List<DatabaseEntity> findByIsTemplateTrueAndActiveTrue();
 
     boolean existsByNameIgnoreCaseAndUserAndActiveTrue(String username, UserEntity user);
 

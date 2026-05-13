@@ -1,31 +1,62 @@
-import { HttpInterceptorFn } from '@angular/common/http';
+import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { tap } from 'rxjs/operators';
+import { catchError, switchMap, filter, take } from 'rxjs/operators';
+import { throwError, BehaviorSubject, from } from 'rxjs';
 import { AuthService } from '../auth.service';
-import {environment} from '../../../environments/environment';
+import { environment } from '../../../environments/environment';
 
 const PUBLIC_PATHS: string[] = environment.PUBLIC_PATHS;
+
+let isRefreshing = false;
+const refreshTokenSubject: BehaviorSubject<string | null> = new BehaviorSubject<string | null>(null);
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService: AuthService = inject(AuthService);
   const isPublic: boolean = PUBLIC_PATHS.some(path => req.url.includes(path));
 
-  if (isPublic) {
-    return next(req);
+  const token: string | null = localStorage.getItem('token');
+  let request = req;
+  if (token) {
+    request = req.clone({ setHeaders: { Authorization: `Bearer ${token}` } });
   }
 
-  const token : string | null = localStorage.getItem('token');
-  const request = token
-    ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
-    : req;
-
   return next(request).pipe(
-    tap({
-      error: (err) => {
-        if (err.status === 401 && token) {
-          authService.logout();
+    catchError((error: HttpErrorResponse) => {
+      // If it's a public path, we don't try to refresh (e.g., login failure)
+      if (isPublic) {
+        return throwError(() => error);
+      }
+
+      if (error.status === 401 && token) {
+        if (!isRefreshing) {
+          isRefreshing = true;
+          refreshTokenSubject.next(null);
+
+          return from(authService.doRefreshToken()).pipe(
+            switchMap((newToken: string | null) => {
+              isRefreshing = false;
+              if (newToken) {
+                refreshTokenSubject.next(newToken);
+                return next(req.clone({ setHeaders: { Authorization: `Bearer ${newToken}` } }));
+              }
+              return throwError(() => error);
+            }),
+            catchError((err) => {
+              isRefreshing = false;
+              return throwError(() => err);
+            })
+          );
+        } else {
+          return refreshTokenSubject.pipe(
+            filter(token => token != null),
+            take(1),
+            switchMap(jwt => {
+              return next(req.clone({ setHeaders: { Authorization: `Bearer ${jwt}` } }));
+            })
+          );
         }
       }
+      return throwError(() => error);
     })
   );
 };

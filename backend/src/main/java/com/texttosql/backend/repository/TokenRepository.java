@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,5 +15,6 @@ import java.util.UUID;
 public interface TokenRepository extends JpaRepository<TokenEntity, UUID> {
     Optional<TokenEntity> findByTokenAndType(String token, TokenType tokenType);
     Optional<TokenEntity> findByUserAndTypeAndUsedFalse(UserEntity user, TokenType tokenType);
-    void deleteByExpiresAtBeforeAndType(LocalDateTime dateTime, TokenType tokenType);
+    void deleteByExpiresAtBefore(LocalDateTime now);
+    List<TokenEntity> findAllByUserAndTypeAndUsedFalse(UserEntity user, TokenType type);
 }

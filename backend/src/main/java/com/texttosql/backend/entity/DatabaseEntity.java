@@ -38,6 +38,10 @@ public class DatabaseEntity {
     @Builder.Default
     private Boolean active = true;
 
+    @Column(name = "is_template", nullable = false)
+    @Builder.Default
+    private Boolean isTemplate = false;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

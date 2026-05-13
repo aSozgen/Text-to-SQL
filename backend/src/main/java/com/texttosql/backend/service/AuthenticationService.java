@@ -3,6 +3,7 @@ package com.texttosql.backend.service;
 import com.texttosql.backend.dto.auth.*;
 import com.texttosql.backend.dto.entity.UserDto;
 import com.texttosql.backend.entity.UserEntity;
+import com.texttosql.backend.entity.enums.TokenType;
 import com.texttosql.backend.exception.DuplicatedResourceException;
 import com.texttosql.backend.exception.EmailNotVerifiedException;
 import com.texttosql.backend.mapper.UserMapper;
@@ -10,6 +11,7 @@ import com.texttosql.backend.repository.UserRepository;
 import com.texttosql.backend.util.JwtUtil;
 import com.texttosql.backend.entity.enums.Role;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,6 +20,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
+
+import java.util.UUID;
 
 @Service
 @Validated
@@ -31,31 +35,75 @@ public class AuthenticationService {
     private final UserMapper userMapper;
     private final TokenService tokenService;
     private final EmailService emailService;
+    private final SchemaService schemaService;
+    @Value("${guest.email.domain}")
+    private String guestEmailDomain;
 
     @Transactional
-    public void register(RegisterRequest registerRequest) {
+    public AuthenticationResponse generateGuestToken() {
+        String uuid = UUID.randomUUID().toString();
+        String prefix = uuid.substring(0, 8);
+        String guestEmail = "guest_" + prefix + guestEmailDomain;
+        String randomPassword = UUID.randomUUID().toString();
+
+        UserEntity guestUser = UserEntity.builder()
+                .username("Guest")
+                .email(guestEmail)
+                .password(passwordEncoder.encode(randomPassword))
+                .role(Role.GUEST)
+                .active(true)
+                .emailVerified(true)
+                .build();
+
+        userRepository.save(guestUser);
+
+        String jwtToken = jwtUtil.generateToken(userMapper.toDetails(guestUser));
+        String refreshToken = tokenService.createRefreshToken(guestUser);
+        return new AuthenticationResponse(jwtToken, refreshToken);
+    }
+
+    @Transactional
+    public void register(RegisterRequest registerRequest, String guestToken) {
         String email = registerRequest.email();
         if (userRepository.existsByEmail(email)) {
             throw new DuplicatedResourceException("Email already exists.");
         }
 
-        UserEntity newUser = UserEntity.builder()
-                .username(registerRequest.username())
-                .email(registerRequest.email())
-                .password(passwordEncoder.encode(registerRequest.password()))
-                .role(Role.USER)
-                .active(true)
-                .emailVerified(false)
-                .build();
+        UserEntity user;
 
-        userRepository.save(newUser);
+        if (guestToken != null && jwtUtil.validateToken(guestToken)) {
+            String guestEmail = jwtUtil.extractEmail(guestToken);
+            user = userRepository.findByEmailAndActiveTrue(guestEmail)
+                    .orElseThrow(() -> new EmailNotVerifiedException("Guest user not found."));
+
+            if (user.getRole() != Role.GUEST) {
+                 throw new IllegalArgumentException("Token does not belong to a guest user.");
+            }
+
+            user.setUsername(registerRequest.username());
+            user.setEmail(registerRequest.email());
+            user.setPassword(passwordEncoder.encode(registerRequest.password()));
+            user.setRole(Role.USER);
+            user.setEmailVerified(false);
+        } else {
+            user = UserEntity.builder()
+                    .username(registerRequest.username())
+                    .email(registerRequest.email())
+                    .password(passwordEncoder.encode(registerRequest.password()))
+                    .role(Role.USER)
+                    .active(true)
+                    .emailVerified(false)
+                    .build();
+        }
+
+        userRepository.save(user);
 
         // Send verification email
-        String token = tokenService.createEmailVerificationToken(newUser);
-        emailService.sendVerificationEmail(newUser.getEmail(), token);
+        String token = tokenService.createEmailVerificationToken(user);
+        emailService.sendVerificationEmail(user.getEmail(), token);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public AuthenticationResponse login(LoginRequest loginRequest) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -72,9 +120,10 @@ public class AuthenticationService {
             throw new EmailNotVerifiedException("Email not verified. Please check your email for verification link.");
         }
 
-        String jwtToken = jwtUtil.generateToken(userMapper.toDto(user));
+        String jwtToken = jwtUtil.generateToken(userMapper.toDetails(user));
+        String refreshToken = tokenService.createRefreshToken(user);
 
-        return new AuthenticationResponse(jwtToken);
+        return new AuthenticationResponse(jwtToken, refreshToken);
     }
 
     @Transactional(readOnly = true)
@@ -84,7 +133,7 @@ public class AuthenticationService {
             throw new BadCredentialsException("Invalid or expired token.");
         }
 
-        return new AuthenticationResponse(token);
+        return new AuthenticationResponse(token, null);
     }
 
     @Transactional(readOnly = true)
@@ -123,14 +172,17 @@ public class AuthenticationService {
 
     @Transactional
     public void verifyEmail(String token) {
-        UserEntity user = tokenService.validateVerificationToken(token);
+        UserEntity user = tokenService.validateToken(token, TokenType.VERIFICATION);
         user.setEmailVerified(true);
         userRepository.save(user);
-        tokenService.markVerificationTokenAsUsed(token);
+        tokenService.markTokenAsUsed(token, TokenType.VERIFICATION);
+
+        // Copy templates
+        schemaService.copyTemplatesToUser(userMapper.toDetails(user));
     }
 
     @Transactional
-    public void resendVerificationEmail(ResendVerificationRequest request) {
+    public void resendVerificationEmail(EmailRequest request) {
         UserEntity user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
@@ -143,7 +195,7 @@ public class AuthenticationService {
     }
 
     @Transactional
-    public void forgotPassword(ForgotPasswordRequest request) {
+    public void forgotPassword(EmailRequest request) {
         UserEntity user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
@@ -153,14 +205,33 @@ public class AuthenticationService {
 
     @Transactional
     public void resetPassword(ResetPasswordRequest request) {
-        UserEntity user = tokenService.validatePasswordResetToken(request.token());
+        UserEntity user = tokenService.validateToken(request.token(), TokenType.PASSWORD);
         user.setPassword(passwordEncoder.encode(request.newPassword()));
         userRepository.save(user);
-        tokenService.markPasswordResetTokenAsUsed(request.token());
+        tokenService.markTokenAsUsed(request.token(), TokenType.PASSWORD);
+    }
+
+    @Transactional
+    public AuthenticationResponse refreshToken(RefreshTokenRequest request) {
+        UserEntity user = tokenService.validateToken(request.refreshToken(), TokenType.REFRESH);
+
+        // Revoke the old refresh token
+        tokenService.markTokenAsUsed(request.refreshToken(), TokenType.REFRESH);
+
+        // Generate new tokens
+        String jwtToken = jwtUtil.generateToken(userMapper.toDetails(user));
+        String newRefreshToken = tokenService.createRefreshToken(user);
+
+        return new AuthenticationResponse(jwtToken, newRefreshToken);
+    }
+
+    @Transactional
+    public void logout(RefreshTokenRequest request) {
+        tokenService.markTokenAsUsed(request.refreshToken(), TokenType.REFRESH);
     }
 
     private UserEntity getUserFromToken(String token) {
-        String email = jwtUtil.extractUsername(token);
+        String email = jwtUtil.extractEmail(token);
 
         return userRepository.findByEmailAndActiveTrue(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found."));

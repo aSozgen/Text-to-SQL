@@ -4,6 +4,7 @@ import com.texttosql.backend.dto.SchemaImportRequest;
 import com.texttosql.backend.dto.entity.ColumnDto;
 import com.texttosql.backend.dto.entity.DatabaseDto;
 import com.texttosql.backend.dto.entity.TableDto;
+import com.texttosql.backend.dto.search.SchemaSearchResponse;
 import com.texttosql.backend.security.CustomUserDetails;
 import com.texttosql.backend.service.SchemaService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -31,6 +32,11 @@ public class SchemaController {
                                                       @AuthenticationPrincipal CustomUserDetails userDetails) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(schemaService.importSchema(request, userDetails));
+    }
+
+    @GetMapping("/templates")
+    public ResponseEntity<SchemaSearchResponse> getTemplates() {
+        return ResponseEntity.ok(schemaService.getTemplateSchemas());
     }
 
     @GetMapping("/databases")
