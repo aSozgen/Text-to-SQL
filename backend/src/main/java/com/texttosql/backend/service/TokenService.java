@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.List;
 
@@ -31,7 +32,7 @@ public class TokenService {
     @Value( "${token.password-reset.expiration}")
     private Duration passwordResetExpiryTime;
     @Value( "${token.jwt.refresh.expiration}")
-    private Duration refreshTokenExpiryTime;
+    private Long refreshTokenExpiryTime;
 
     @Transactional
     public String createEmailVerificationToken(UserEntity user) {
@@ -60,7 +61,7 @@ public class TokenService {
     @Transactional
     public String createRefreshToken(UserEntity user) {
         TokenEntity refreshToken = new TokenEntity();
-        String token = createToken(refreshToken, user, TokenType.REFRESH, refreshTokenExpiryTime);
+        String token = createToken(refreshToken, user, TokenType.REFRESH, Duration.of(refreshTokenExpiryTime, ChronoUnit.MILLIS));
 
         tokenRepository.save(refreshToken);
         return token;

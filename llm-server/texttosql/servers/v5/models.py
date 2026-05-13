@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field, validator
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union
+import json
 
 class ConversationTurn(BaseModel):
     """Single turn in conversation history"""
@@ -17,7 +18,10 @@ class PredictRequest(BaseModel):
     """Request model matching your dialog format"""
     question: str = Field(..., description="Current natural language query", min_length=1)
     database_id: Optional[str] = Field(None, description="Database ID (if schema lookup needed)")
-    db_schema: Optional[str] = Field(None, description="Database schema string", alias="schema")
+
+    # DİKKAT: Hem String hem de Dictionary(JSON) kabul etmesi için Union eklendi
+    db_schema: Optional[Union[str, Dict[str, Any]]] = Field(None, description="Database schema string or object", alias="schema")
+
     conversation_history: Optional[List[ConversationTurn]] = Field(
         None,
         description="Previous conversation turns (max 2 for optimal performance)",
@@ -35,6 +39,13 @@ class PredictRequest(BaseModel):
             raise ValueError("Question cannot be empty")
         return v.strip()
 
+    @validator('db_schema')
+    def parse_schema(cls, v):
+        # Eğer Java tarafından schema JSON/Dictionary olarak gelirse, onu String'e çevirir
+        if isinstance(v, dict):
+            return json.dumps(v, ensure_ascii=False)
+        return v
+
     @validator('conversation_history')
     def limit_history(cls, v):
         if v and len(v) > 2:
@@ -49,7 +60,7 @@ class PredictResponse(BaseModel):
     validation_error: Optional[str] = None
     confidence: Optional[float] = None
     schema_used: bool = False
-    context_used: bool = False  # Must always be bool, never None
+    context_used: bool = False
     context_turns: int = 0
     processing_time_ms: int
     error: Optional[str] = None
@@ -59,12 +70,18 @@ class BatchQuery(BaseModel):
     """Single query in batch"""
     question: str
     database_id: Optional[str] = None
-    db_schema: Optional[str] = Field(None, alias="schema")
+    db_schema: Optional[Union[str, Dict[str, Any]]] = Field(None, alias="schema")
     conversation_history: Optional[List[ConversationTurn]] = None
     include_schema: bool = True
 
     class Config:
         populate_by_name = True
+
+    @validator('db_schema')
+    def parse_schema(cls, v):
+        if isinstance(v, dict):
+            return json.dumps(v, ensure_ascii=False)
+        return v
 
 class BatchPredictRequest(BaseModel):
     """Batch request"""

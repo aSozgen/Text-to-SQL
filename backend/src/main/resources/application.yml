@@ -10,8 +10,8 @@ llm:
   service:
     url: ${LLM_URL}
     endpoint: /predict
-    read-timeout: 5000
-    connection-timeout: 3000
+    read-timeout: 60000
+    connection-timeout: 30000
     conversation-turn: 2
 
 app:

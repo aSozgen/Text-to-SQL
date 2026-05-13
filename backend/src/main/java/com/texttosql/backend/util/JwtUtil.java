@@ -24,7 +24,7 @@ public class JwtUtil {
     private String SECRET;
 
     @Value("${token.jwt.refresh.expiration}")
-    private Duration expiration;
+    private Long expiration;
 
     private SecretKey getSigningKey() {
         byte[] keyBytes = SECRET.getBytes(StandardCharsets.UTF_8);
@@ -69,7 +69,7 @@ public class JwtUtil {
                 .claims(claims)
                 .subject(userDetails.getUsername())
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + expiration.toMillis()))
+                .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey())
                 .compact();
 
