@@ -40,7 +40,7 @@ public class TokenServiceTest {
     void setUp() {
         ReflectionTestUtils.setField(tokenService, "emailVerificationExpiryTime", Duration.ofDays(1));
         ReflectionTestUtils.setField(tokenService, "passwordResetExpiryTime", Duration.ofHours(1));
-        ReflectionTestUtils.setField(tokenService, "refreshTokenExpiryTime", Duration.ofDays(30));
+        ReflectionTestUtils.setField(tokenService, "refreshTokenExpiryTime", 2592000000L);
     }
 
     @Test

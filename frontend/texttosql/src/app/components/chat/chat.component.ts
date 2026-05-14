@@ -113,7 +113,7 @@ export class ChatComponent implements OnInit {
       const isGuest = this.isGuest();
       untracked(() => {
         this.loadDatabases();
-        if (!isGuest) {
+        if (!isGuest || localStorage.getItem('token')) {
           this.loadChats(0, true);
         }
         this.checkScreenSize();

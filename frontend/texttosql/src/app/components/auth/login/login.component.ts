@@ -54,7 +54,7 @@ export class LoginComponent {
 
       if (authResponse?.token) {
         localStorage.setItem('token', authResponse.token);
-        const userDto: any = await this.api.invoke(getMe);
+        const userDto: any = await this.api.invoke(getMe, { Authorization: '' });
         this.authService.login(userDto, authResponse);
       }
 

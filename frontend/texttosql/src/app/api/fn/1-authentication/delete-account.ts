@@ -12,7 +12,7 @@ export interface DeleteAccount$Params {
   Authorization: string;
 }
 
-export function deleteAccount(http: HttpClient, rootUrl: string, params?: DeleteAccount$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+export function deleteAccount(http: HttpClient, rootUrl: string, params: DeleteAccount$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
   const rb = new RequestBuilder(rootUrl, deleteAccount.PATH, 'delete');
   if (params) {
     rb.header('Authorization', params.Authorization, {});

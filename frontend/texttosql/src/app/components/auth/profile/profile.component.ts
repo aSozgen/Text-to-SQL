@@ -71,7 +71,7 @@ export class ProfileComponent implements OnInit {
     this.errorMessage = null;
 
     try {
-      const user: UserDto = await this.api.invoke(getMe);
+      const user: UserDto = await this.api.invoke(getMe, { Authorization: '' });
 
       this.profileForm.patchValue({
         username: user.username,
@@ -96,7 +96,7 @@ export class ProfileComponent implements OnInit {
         const profileRequest: UpdateProfileRequest = {
           username: this.profileForm.value.username,
         };
-        await this.api.invoke(updateProfile, { body: profileRequest });
+        await this.api.invoke(updateProfile, { body: profileRequest, Authorization: '' });
         await this.authService.refreshUser();
       }
 
@@ -113,7 +113,7 @@ export class ProfileComponent implements OnInit {
           newPassword: newPass,
         };
 
-        await this.api.invoke(changePassword, { body: passRequest });
+        await this.api.invoke(changePassword, { body: passRequest, Authorization: '' });
         shouldLogout = true;
       }
 
@@ -144,7 +144,7 @@ export class ProfileComponent implements OnInit {
     this.isSaving = true;
     this.errorMessage = null;
     try {
-      await this.api.invoke(deleteAccount);
+      await this.api.invoke(deleteAccount, { Authorization: '' });
       this.authService.logout();
     } catch (e: any) {
       this.handleError(e, 'Failed to delete account. Please try again.');

@@ -50,7 +50,6 @@ export class RegisterComponent {
       
       // Clear guest session after successful registration & migration
       localStorage.removeItem('token');
-      localStorage.removeItem('refreshToken');
       
       this.registeredEmail = this.registerForm.value.email;
       this.registerSuccess = true;

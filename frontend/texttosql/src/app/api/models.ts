@@ -15,7 +15,6 @@ export type { PagedModelChatDto } from './models/paged-model-chat-dto';
 export type { PagedModelDatabaseDto } from './models/paged-model-database-dto';
 export type { PagedModelMessageDto } from './models/paged-model-message-dto';
 export type { PageMetadata } from './models/page-metadata';
-export type { RefreshTokenRequest } from './models/refresh-token-request';
 export type { RegisterRequest } from './models/register-request';
 export type { ResetPasswordRequest } from './models/reset-password-request';
 export type { SchemaImportRequest } from './models/schema-import-request';

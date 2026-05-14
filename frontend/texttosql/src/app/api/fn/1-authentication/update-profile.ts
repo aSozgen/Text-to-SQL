@@ -10,7 +10,7 @@ import { RequestBuilder } from '../../request-builder';
 import { UpdateProfileRequest } from '../../models/update-profile-request';
 
 export interface UpdateProfile$Params {
-  Authorization?: string;
+  Authorization: string;
       body: UpdateProfileRequest
 }
 

@@ -15,12 +15,16 @@ import com.texttosql.backend.service.TokenService;
 import com.texttosql.backend.service.EmailService;
 import com.texttosql.backend.util.JwtUtil;
 import com.texttosql.backend.entity.enums.Role;
+import jakarta.servlet.http.Cookie;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -62,6 +66,11 @@ public class AuthenticationTest {
     @InjectMocks
     private AuthenticationService authenticationService;
 
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(authenticationService, "refreshTokenExpiryTime", 2592000000L);
+    }
+
     @Test
     void register_ShouldReturnVoid_WhenRequestIsValid() {
         RegisterRequest request = new RegisterRequest("test@example.com", "testuser", "password");
@@ -92,7 +101,7 @@ public class AuthenticationTest {
 
     @Test
     void login_ShouldReturnToken_WhenCredentialsAreCorrect() {
-        LoginRequest loginRequest = new LoginRequest("testuser", "password");
+        LoginRequest loginRequest = new LoginRequest("test@example.com", "password");
         UUID userId = UUID.randomUUID();
         UserEntity userEntity = UserEntity.builder()
                 .userId(userId)
@@ -101,6 +110,7 @@ public class AuthenticationTest {
                 .emailVerified(true)
                 .active(true)
                 .build();
+        MockHttpServletResponse httpResponse = new MockHttpServletResponse();
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(null);
         when(userRepository.findByEmailAndActiveTrue(loginRequest.email())).thenReturn(Optional.of(userEntity));
@@ -115,10 +125,13 @@ public class AuthenticationTest {
         when(jwtUtil.generateToken(any(CustomUserDetails.class))).thenReturn("jwt-token");
         when(tokenService.createRefreshToken(any(UserEntity.class))).thenReturn("refresh-token");
 
-        AuthenticationResponse response = authenticationService.login(loginRequest);
+        AuthenticationResponse response = authenticationService.login(loginRequest, httpResponse);
 
         assertThat(response.getToken()).isEqualTo("jwt-token");
-        assertThat(response.getRefreshToken()).isEqualTo("refresh-token");
+        Cookie cookie = httpResponse.getCookie("refreshToken");
+        assertThat(cookie).isNotNull();
+        assertThat(cookie.getValue()).isEqualTo("refresh-token");
+        assertThat(cookie.isHttpOnly()).isTrue();
         verify(userRepository).findByEmailAndActiveTrue(loginRequest.email());
     }
 
@@ -133,11 +146,12 @@ public class AuthenticationTest {
                 .emailVerified(false)
                 .active(true)
                 .build();
+        MockHttpServletResponse httpResponse = new MockHttpServletResponse();
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(null);
         when(userRepository.findByEmailAndActiveTrue(loginRequest.email())).thenReturn(Optional.of(userEntity));
 
-        assertThatThrownBy(() -> authenticationService.login(loginRequest))
+        assertThatThrownBy(() -> authenticationService.login(loginRequest, httpResponse))
                 .isInstanceOf(EmailNotVerifiedException.class)
                 .hasMessageContaining("Email not verified");
 
@@ -147,11 +161,12 @@ public class AuthenticationTest {
     @Test
     void login_ShouldThrowException_WhenUserNotFoundAfterAuth() {
         LoginRequest loginRequest = new LoginRequest("ghost", "password");
+        MockHttpServletResponse httpResponse = new MockHttpServletResponse();
 
         when(authenticationManager.authenticate(any())).thenReturn(null);
         when(userRepository.findByEmailAndActiveTrue("ghost")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> authenticationService.login(loginRequest))
+        assertThatThrownBy(() -> authenticationService.login(loginRequest, httpResponse))
                 .isInstanceOf(UsernameNotFoundException.class)
                 .hasMessageContaining("User not found.");
     }
@@ -159,10 +174,11 @@ public class AuthenticationTest {
     @Test
     void login_ShouldPropagateException_WhenAuthenticationFails() {
         LoginRequest loginRequest = new LoginRequest("wrongUser", "wrongPass");
+        MockHttpServletResponse httpResponse = new MockHttpServletResponse();
         when(authenticationManager.authenticate(any()))
                 .thenThrow(new BadCredentialsException("Bad credentials"));
 
-        assertThatThrownBy(() -> authenticationService.login(loginRequest))
+        assertThatThrownBy(() -> authenticationService.login(loginRequest, httpResponse))
                 .isInstanceOf(BadCredentialsException.class);
 
         verify(userRepository, never()).findByEmailAndActiveTrue(any());
@@ -203,6 +219,7 @@ public class AuthenticationTest {
 
     @Test
     void generateGuestToken_ShouldReturnValidToken() {
+        MockHttpServletResponse httpResponse = new MockHttpServletResponse();
         when(passwordEncoder.encode(anyString())).thenReturn("encoded-pass");
         UserEntity userEntity = UserEntity.builder()
                 .username("Guest")
@@ -222,10 +239,13 @@ public class AuthenticationTest {
         when(jwtUtil.generateToken(any(CustomUserDetails.class))).thenReturn("guest-jwt-token");
         when(tokenService.createRefreshToken(any(UserEntity.class))).thenReturn("guest-refresh-token");
 
-        AuthenticationResponse response = authenticationService.generateGuestToken();
+        AuthenticationResponse response = authenticationService.generateGuestToken(httpResponse);
 
         assertThat(response.getToken()).isEqualTo("guest-jwt-token");
-        assertThat(response.getRefreshToken()).isEqualTo("guest-refresh-token");
+        Cookie cookie = httpResponse.getCookie("refreshToken");
+        assertThat(cookie).isNotNull();
+        assertThat(cookie.getValue()).isEqualTo("guest-refresh-token");
+        assertThat(cookie.isHttpOnly()).isTrue();
         verify(userRepository).save(any(UserEntity.class));
     }
 
@@ -461,7 +481,8 @@ public class AuthenticationTest {
 
     @Test
     void refreshToken_ShouldReturnNewTokens_WhenTokenIsValid() {
-        RefreshTokenRequest request = new RefreshTokenRequest("valid-refresh-token");
+        String refreshToken = "valid-refresh-token";
+        MockHttpServletResponse httpResponse = new MockHttpServletResponse();
         UserEntity userEntity = UserEntity.builder()
                 .userId(UUID.randomUUID())
                 .username("testuser")
@@ -469,7 +490,7 @@ public class AuthenticationTest {
                 .active(true)
                 .build();
 
-        when(tokenService.validateToken("valid-refresh-token", TokenType.REFRESH)).thenReturn(userEntity);
+        when(tokenService.validateToken(refreshToken, TokenType.REFRESH)).thenReturn(userEntity);
         when(userMapper.toDetails(any(UserEntity.class))).thenAnswer(i -> {
             UserEntity entity = i.getArgument(0);
             CustomUserDetails mockDetails = new CustomUserDetails();
@@ -481,19 +502,25 @@ public class AuthenticationTest {
         when(jwtUtil.generateToken(any(CustomUserDetails.class))).thenReturn("new-jwt-token");
         when(tokenService.createRefreshToken(any(UserEntity.class))).thenReturn("new-refresh-token");
 
-        AuthenticationResponse response = authenticationService.refreshToken(request);
+        AuthenticationResponse response = authenticationService.refreshToken(refreshToken, httpResponse);
 
         assertThat(response.getToken()).isEqualTo("new-jwt-token");
-        assertThat(response.getRefreshToken()).isEqualTo("new-refresh-token");
-        verify(tokenService).markTokenAsUsed("valid-refresh-token", TokenType.REFRESH);
+        Cookie cookie = httpResponse.getCookie("refreshToken");
+        assertThat(cookie).isNotNull();
+        assertThat(cookie.getValue()).isEqualTo("new-refresh-token");
+        verify(tokenService).markTokenAsUsed(refreshToken, TokenType.REFRESH);
     }
 
     @Test
     void logout_ShouldRevokeRefreshToken() {
-        RefreshTokenRequest request = new RefreshTokenRequest("valid-refresh-token");
+        String refreshToken = "valid-refresh-token";
+        MockHttpServletResponse httpResponse = new MockHttpServletResponse();
 
-        authenticationService.logout(request);
+        authenticationService.logout(refreshToken, httpResponse);
 
-        verify(tokenService).markTokenAsUsed("valid-refresh-token", TokenType.REFRESH);
+        verify(tokenService).markTokenAsUsed(refreshToken, TokenType.REFRESH);
+        Cookie cookie = httpResponse.getCookie("refreshToken");
+        assertThat(cookie).isNotNull();
+        assertThat(cookie.getMaxAge()).isEqualTo(0);
     }
 }

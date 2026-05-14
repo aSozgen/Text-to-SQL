@@ -10,6 +10,8 @@ import com.texttosql.backend.mapper.UserMapper;
 import com.texttosql.backend.repository.UserRepository;
 import com.texttosql.backend.util.JwtUtil;
 import com.texttosql.backend.entity.enums.Role;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -38,9 +40,11 @@ public class AuthenticationService {
     private final SchemaService schemaService;
     @Value("${guest.email.domain}")
     private String guestEmailDomain;
+    @Value( "${token.jwt.refresh.expiration}")
+    private Long refreshTokenExpiryTime;
 
     @Transactional
-    public AuthenticationResponse generateGuestToken() {
+    public AuthenticationResponse generateGuestToken(HttpServletResponse response) {
         String uuid = UUID.randomUUID().toString();
         String prefix = uuid.substring(0, 8);
         String guestEmail = "guest_" + prefix + guestEmailDomain;
@@ -59,7 +63,9 @@ public class AuthenticationService {
 
         String jwtToken = jwtUtil.generateToken(userMapper.toDetails(guestUser));
         String refreshToken = tokenService.createRefreshToken(guestUser);
-        return new AuthenticationResponse(jwtToken, refreshToken);
+        
+        setRefreshTokenCookie(response, refreshToken);
+        return new AuthenticationResponse(jwtToken);
     }
 
     @Transactional
@@ -104,7 +110,7 @@ public class AuthenticationService {
     }
 
     @Transactional
-    public AuthenticationResponse login(LoginRequest loginRequest) {
+    public AuthenticationResponse login(LoginRequest loginRequest, HttpServletResponse response) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.email(),
@@ -123,7 +129,8 @@ public class AuthenticationService {
         String jwtToken = jwtUtil.generateToken(userMapper.toDetails(user));
         String refreshToken = tokenService.createRefreshToken(user);
 
-        return new AuthenticationResponse(jwtToken, refreshToken);
+        setRefreshTokenCookie(response, refreshToken);
+        return new AuthenticationResponse(jwtToken);
     }
 
     @Transactional(readOnly = true)
@@ -133,7 +140,7 @@ public class AuthenticationService {
             throw new BadCredentialsException("Invalid or expired token.");
         }
 
-        return new AuthenticationResponse(token, null);
+        return new AuthenticationResponse(token);
     }
 
     @Transactional(readOnly = true)
@@ -212,22 +219,44 @@ public class AuthenticationService {
     }
 
     @Transactional
-    public AuthenticationResponse refreshToken(RefreshTokenRequest request) {
-        UserEntity user = tokenService.validateToken(request.refreshToken(), TokenType.REFRESH);
+    public AuthenticationResponse refreshToken(String refreshToken, HttpServletResponse response) {
+        UserEntity user = tokenService.validateToken(refreshToken, TokenType.REFRESH);
 
         // Revoke the old refresh token
-        tokenService.markTokenAsUsed(request.refreshToken(), TokenType.REFRESH);
+        tokenService.markTokenAsUsed(refreshToken, TokenType.REFRESH);
 
         // Generate new tokens
         String jwtToken = jwtUtil.generateToken(userMapper.toDetails(user));
         String newRefreshToken = tokenService.createRefreshToken(user);
 
-        return new AuthenticationResponse(jwtToken, newRefreshToken);
+        setRefreshTokenCookie(response, newRefreshToken);
+        return new AuthenticationResponse(jwtToken);
     }
 
     @Transactional
-    public void logout(RefreshTokenRequest request) {
-        tokenService.markTokenAsUsed(request.refreshToken(), TokenType.REFRESH);
+    public void logout(String refreshToken, HttpServletResponse response) {
+        if (refreshToken != null) {
+            tokenService.markTokenAsUsed(refreshToken, TokenType.REFRESH);
+        }
+        deleteRefreshTokenCookie(response);
+    }
+
+    private void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
+        Cookie cookie = new Cookie("refreshToken", refreshToken);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true); // Should be true in production (HTTPS)
+        cookie.setPath("/");
+        cookie.setMaxAge(refreshTokenExpiryTime.intValue() / 1000);
+        response.addCookie(cookie);
+    }
+
+    private void deleteRefreshTokenCookie(HttpServletResponse response) {
+        Cookie cookie = new Cookie("refreshToken", null);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
     }
 
     private UserEntity getUserFromToken(String token) {

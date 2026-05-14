@@ -15,9 +15,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const isPublic: boolean = PUBLIC_PATHS.some(path => req.url.includes(path));
 
   const token: string | null = localStorage.getItem('token');
-  let request = req;
+  let request = req.clone({ withCredentials: true });
   if (token) {
-    request = req.clone({ setHeaders: { Authorization: `Bearer ${token}` } });
+    request = request.clone({ setHeaders: { Authorization: `Bearer ${token}` } });
   }
 
   return next(request).pipe(
@@ -37,7 +37,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
               isRefreshing = false;
               if (newToken) {
                 refreshTokenSubject.next(newToken);
-                return next(req.clone({ setHeaders: { Authorization: `Bearer ${newToken}` } }));
+                return next(request.clone({ setHeaders: { Authorization: `Bearer ${newToken}` } }));
               }
               return throwError(() => error);
             }),
@@ -51,7 +51,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             filter(token => token != null),
             take(1),
             switchMap(jwt => {
-              return next(req.clone({ setHeaders: { Authorization: `Bearer ${jwt}` } }));
+              return next(request.clone({ setHeaders: { Authorization: `Bearer ${jwt}` } }));
             })
           );
         }

@@ -13,7 +13,7 @@ export interface GetMe$Params {
   Authorization: string;
 }
 
-export function getMe(http: HttpClient, rootUrl: string, params?: GetMe$Params, context?: HttpContext): Observable<StrictHttpResponse<UserDto>> {
+export function getMe(http: HttpClient, rootUrl: string, params: GetMe$Params, context?: HttpContext): Observable<StrictHttpResponse<UserDto>> {
   const rb = new RequestBuilder(rootUrl, getMe.PATH, 'get');
   if (params) {
     rb.header('Authorization', params.Authorization, {});

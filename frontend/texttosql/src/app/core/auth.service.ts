@@ -26,20 +26,41 @@ export class AuthService {
     return names[0].slice(0, 2).toUpperCase();
   });
 
+  public initPromise: Promise<void>;
+
   constructor() {
-    this.initializeUser();
+    this.initPromise = this.initializeUser();
   }
 
   private async initializeUser() {
     const token = localStorage.getItem('token');
+    
+    // Always try to load the user first. If it fails, or if there's no token,
+    // we attempt a token refresh. The HttpOnly cookie might still be valid.
     if (token) {
-      await this.refreshUser();
+      try {
+        await this.refreshUser(false); // pass false to avoid clearing session on first failure
+      } catch (e) {
+        // Access token might be expired, let's try refreshing
+        const refreshedToken = await this.doRefreshToken();
+        if (refreshedToken) {
+           await this.refreshUser(true);
+        } else {
+           this.clearSession();
+        }
+      }
+    } else {
+       // No access token, but maybe we have a refresh cookie from a previous session
+       const refreshedToken = await this.doRefreshToken();
+       if (refreshedToken) {
+          await this.refreshUser(true);
+       }
     }
   }
 
-  async refreshUser() {
+  async refreshUser(clearOnFail: boolean = true) {
     try {
-      const user = await this.api.invoke(getMe);
+      const user = await this.api.invoke(getMe, { Authorization: '' });
       // Only set currentUser if it's a real user (not GUEST)
       if (user.role === 'USER' || user.role === 'ADMIN') {
         this.currentUser.set(user);
@@ -47,13 +68,15 @@ export class AuthService {
         this.currentUser.set(null);
       }
     } catch (error) {
-      this.clearSession();
+      if (clearOnFail) {
+         this.clearSession();
+      }
+      throw error; // Re-throw so initializeUser can catch it
     }
   }
 
   login(user: UserDto, response: AuthenticationResponse) {
     if (response.token) localStorage.setItem('token', response.token);
-    if (response.refreshToken) localStorage.setItem('refreshToken', response.refreshToken);
     this.currentUser.set(user);
     this.router.navigate(['/home']);
   }
@@ -65,7 +88,6 @@ export class AuthService {
     try {
       const response = await this.api.invoke(getGuestToken);
       if (response.token) localStorage.setItem('token', response.token);
-      if (response.refreshToken) localStorage.setItem('refreshToken', response.refreshToken);
       // We explicitly don't set currentUser for guests
     } catch (e) {
       console.error('Failed to create guest session', e);
@@ -73,13 +95,9 @@ export class AuthService {
   }
 
   async doRefreshToken(): Promise<string | null> {
-    const rToken = localStorage.getItem('refreshToken');
-    if (!rToken) return null;
-
     try {
-      const response = await this.api.invoke(refreshToken, { body: { refreshToken: rToken } });
+      const response = await this.api.invoke(refreshToken);
       if (response.token) localStorage.setItem('token', response.token);
-      if (response.refreshToken) localStorage.setItem('refreshToken', response.refreshToken);
       return response.token || null;
     } catch (e) {
       console.error('Failed to refresh token', e);
@@ -89,13 +107,10 @@ export class AuthService {
   }
 
   async logout() {
-    const rToken = localStorage.getItem('refreshToken');
-    if (rToken) {
-      try {
-        await this.api.invoke(logout, { body: { refreshToken: rToken } });
-      } catch (e) {
-        console.error('Logout API call failed', e);
-      }
+    try {
+      await this.api.invoke(logout);
+    } catch (e) {
+      console.error('Logout API call failed', e);
     }
     this.clearSession();
     this.router.navigate(['/login']);
@@ -103,7 +118,6 @@ export class AuthService {
 
   private clearSession() {
     localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
     this.currentUser.set(null);
   }
 }

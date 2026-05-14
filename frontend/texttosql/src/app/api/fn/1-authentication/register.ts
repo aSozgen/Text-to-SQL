@@ -10,12 +10,14 @@ import { RequestBuilder } from '../../request-builder';
 import { RegisterRequest } from '../../models/register-request';
 
 export interface Register$Params {
+  Authorization?: string;
       body: RegisterRequest
 }
 
 export function register(http: HttpClient, rootUrl: string, params: Register$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
   const rb = new RequestBuilder(rootUrl, register.PATH, 'post');
   if (params) {
+    rb.header('Authorization', params.Authorization, {});
     rb.body(params.body, 'application/json');
   }
 

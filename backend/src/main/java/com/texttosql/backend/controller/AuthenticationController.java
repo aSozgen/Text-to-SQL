@@ -4,6 +4,7 @@ import com.texttosql.backend.dto.auth.*;
 import com.texttosql.backend.dto.entity.UserDto;
 import com.texttosql.backend.service.AuthenticationService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,8 +20,8 @@ public class AuthenticationController {
     private final AuthenticationService authenticationService;
 
     @PostMapping("/guest-token")
-    public ResponseEntity<AuthenticationResponse> getGuestToken() {
-        return ResponseEntity.ok(authenticationService.generateGuestToken());
+    public ResponseEntity<AuthenticationResponse> getGuestToken(jakarta.servlet.http.HttpServletResponse response) {
+        return ResponseEntity.ok(authenticationService.generateGuestToken(response));
     }
 
     @PostMapping("/register")
@@ -38,24 +39,29 @@ public class AuthenticationController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthenticationResponse> login(
-            @Valid
-            @RequestBody LoginRequest loginRequest
+            @Valid @RequestBody LoginRequest loginRequest,
+            HttpServletResponse response
     ) {
-        return ResponseEntity.ok(authenticationService.login(loginRequest));
+        return ResponseEntity.ok(authenticationService.login(loginRequest, response));
     }
 
     @PostMapping("/refresh-token")
     public ResponseEntity<AuthenticationResponse> refreshToken(
-            @Valid @RequestBody RefreshTokenRequest request
+            @CookieValue(name = "refreshToken", required = false) String refreshToken,
+            HttpServletResponse response
     ) {
-        return ResponseEntity.ok(authenticationService.refreshToken(request));
+        if (refreshToken == null) {
+            throw new IllegalArgumentException("Refresh token is missing");
+        }
+        return ResponseEntity.ok(authenticationService.refreshToken(refreshToken, response));
     }
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(
-            @Valid @RequestBody RefreshTokenRequest request
+            @CookieValue(name = "refreshToken", required = false) String refreshToken,
+            HttpServletResponse response
     ) {
-        authenticationService.logout(request);
+        authenticationService.logout(refreshToken, response);
         return ResponseEntity.ok().build();
     }
 

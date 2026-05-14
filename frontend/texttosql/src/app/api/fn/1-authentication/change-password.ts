@@ -10,12 +10,14 @@ import { RequestBuilder } from '../../request-builder';
 import { ChangePasswordRequest } from '../../models/change-password-request';
 
 export interface ChangePassword$Params {
+  Authorization: string;
       body: ChangePasswordRequest
 }
 
 export function changePassword(http: HttpClient, rootUrl: string, params: ChangePassword$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
   const rb = new RequestBuilder(rootUrl, changePassword.PATH, 'post');
   if (params) {
+    rb.header('Authorization', params.Authorization, {});
     rb.body(params.body, 'application/json');
   }
 
