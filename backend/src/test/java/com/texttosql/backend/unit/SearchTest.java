@@ -84,7 +84,7 @@ public class SearchTest {
         UUID tableId = UUID.randomUUID();
         UUID columnId = UUID.randomUUID();
 
-        DatabaseDto databaseDto = new DatabaseDto(dbId, "UserDB", "Description", now);
+        DatabaseDto databaseDto = new DatabaseDto(dbId, "UserDB", "Description", false, now);
         TableDto tableDto = new TableDto(tableId, dbId, "Users", "Description", now);
         ColumnDto columnDto = new ColumnDto(columnId, tableId, dbId, "username", "VARCHAR", false, null, null, now);
 

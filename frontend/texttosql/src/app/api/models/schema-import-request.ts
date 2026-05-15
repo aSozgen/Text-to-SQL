@@ -7,4 +7,5 @@ export interface SchemaImportRequest {
 [key: string]: any;
 }>;
   name: string;
+  isTemplate?: boolean;
 }

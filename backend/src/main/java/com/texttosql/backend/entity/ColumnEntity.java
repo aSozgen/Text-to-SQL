@@ -28,7 +28,7 @@ public class ColumnEntity {
     @Column(nullable = false)
     private String name;
 
-    @Column(name = "data_type")
+    @Column(name = "data_type", nullable = false)
     private String dataType;
 
     @Column(name = "is_primary_key")

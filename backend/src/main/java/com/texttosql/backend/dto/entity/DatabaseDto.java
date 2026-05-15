@@ -1,6 +1,7 @@
 package com.texttosql.backend.dto.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -25,6 +26,9 @@ public class DatabaseDto {
 
     @Size(max = 255, message = "Description cannot exceed 255 characters")
     String description;
+
+    @JsonProperty("isTemplate")
+    private Boolean isTemplate;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd.MM.yyyy HH:mm:ss", timezone = "Europe/Istanbul")
     private LocalDateTime createdAt;

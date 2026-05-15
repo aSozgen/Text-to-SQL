@@ -1,6 +1,7 @@
 package com.texttosql.backend.unit;
 
 import com.texttosql.backend.dto.auth.*;
+import com.texttosql.backend.dto.entity.UserDto;
 import com.texttosql.backend.entity.UserEntity;
 import com.texttosql.backend.entity.enums.TokenType;
 import com.texttosql.backend.exception.DuplicatedResourceException;
@@ -221,13 +222,7 @@ public class AuthenticationTest {
     void generateGuestToken_ShouldReturnValidToken() {
         MockHttpServletResponse httpResponse = new MockHttpServletResponse();
         when(passwordEncoder.encode(anyString())).thenReturn("encoded-pass");
-        UserEntity userEntity = UserEntity.builder()
-                .username("Guest")
-                .email("guest@texttosql.local.com")
-                .role(Role.GUEST)
-                .emailVerified(true)
-                .active(true)
-                .build();
+
         when(userMapper.toDetails(any(UserEntity.class))).thenAnswer(i -> {
             UserEntity entity = i.getArgument(0);
             CustomUserDetails mockDetails = new CustomUserDetails();
@@ -441,6 +436,93 @@ public class AuthenticationTest {
         assertThatThrownBy(() -> authenticationService.validateToken(token))
                 .isInstanceOf(BadCredentialsException.class)
                 .hasMessage("Invalid or expired token.");
+    }
+
+    @Test
+    void getMe_ShouldReturnUserDto_WhenTokenIsValid() {
+        String token = "valid-token";
+        String email = "test@example.com";
+        UserEntity userEntity = UserEntity.builder()
+                .username("testuser")
+                .email(email)
+                .role(Role.USER)
+                .active(true)
+                .build();
+
+        when(jwtUtil.extractEmail(token)).thenReturn(email);
+        when(userRepository.findByEmailAndActiveTrue(email)).thenReturn(Optional.of(userEntity));
+
+        UserDto result = authenticationService.getMe(token);
+
+        assertThat(result.username()).isEqualTo("testuser");
+        assertThat(result.email()).isEqualTo(email);
+        assertThat(result.role()).isEqualTo(Role.USER);
+    }
+
+    @Test
+    void updateProfile_ShouldUpdateUsername_WhenTokenIsValid() {
+        String token = "valid-token";
+        String email = "test@example.com";
+        UserEntity userEntity = UserEntity.builder()
+                .username("oldUser")
+                .email(email)
+                .active(true)
+                .build();
+        UpdateProfileRequest request = new UpdateProfileRequest("newUser");
+
+        when(jwtUtil.extractEmail(token)).thenReturn(email);
+        when(userRepository.findByEmailAndActiveTrue(email)).thenReturn(Optional.of(userEntity));
+
+        authenticationService.updateProfile(token, request);
+
+        assertThat(userEntity.getUsername()).isEqualTo("newUser");
+        verify(userRepository).save(userEntity);
+    }
+
+    @Test
+    void changePassword_ShouldUpdatePassword_WhenCurrentPasswordIsCorrect() {
+        String token = "valid-token";
+        String email = "test@example.com";
+        UserEntity userEntity = UserEntity.builder()
+                .username("testuser")
+                .email(email)
+                .password("encodedOldPassword")
+                .active(true)
+                .build();
+        ChangePasswordRequest request = new ChangePasswordRequest("newPassword", "oldPassword");
+
+        when(jwtUtil.extractEmail(token)).thenReturn(email);
+        when(userRepository.findByEmailAndActiveTrue(email)).thenReturn(Optional.of(userEntity));
+        when(passwordEncoder.matches("oldPassword", "encodedOldPassword")).thenReturn(true);
+        when(passwordEncoder.encode("newPassword")).thenReturn("encodedNewPassword");
+
+        authenticationService.changePassword(token, request);
+
+        assertThat(userEntity.getPassword()).isEqualTo("encodedNewPassword");
+        verify(userRepository).save(userEntity);
+    }
+
+    @Test
+    void changePassword_ShouldThrowException_WhenCurrentPasswordIsIncorrect() {
+        String token = "valid-token";
+        String email = "test@example.com";
+        UserEntity userEntity = UserEntity.builder()
+                .username("testuser")
+                .email(email)
+                .password("encodedOldPassword")
+                .active(true)
+                .build();
+        ChangePasswordRequest request = new ChangePasswordRequest("newPassword", "wrongPassword");
+
+        when(jwtUtil.extractEmail(token)).thenReturn(email);
+        when(userRepository.findByEmailAndActiveTrue(email)).thenReturn(Optional.of(userEntity));
+        when(passwordEncoder.matches("wrongPassword", "encodedOldPassword")).thenReturn(false);
+
+        assertThatThrownBy(() -> authenticationService.changePassword(token, request))
+                .isInstanceOf(BadCredentialsException.class)
+                .hasMessage("Current password is incorrect.");
+
+        verify(userRepository, never()).save(any());
     }
 
     @Test

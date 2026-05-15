@@ -40,7 +40,7 @@ public class UserEntity {
     @Builder.Default
     private Boolean active = true;
 
-    @Column(name = "email_verified", nullable = false)
+    @Column(name = "is_verified", nullable = false)
     @Builder.Default
     private Boolean emailVerified = false;
 

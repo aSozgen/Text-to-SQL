@@ -374,4 +374,32 @@ public class TokenServiceTest {
         assertThat(result).isEqualTo(userEntity);
         verify(tokenRepository).findByTokenAndType(tokenValue, TokenType.REFRESH);
     }
+
+    @Test
+    void createEmailVerificationToken_ShouldInvalidateExistingTokens() {
+        UserEntity userEntity = UserEntity.builder()
+                .userId(UUID.randomUUID())
+                .email("test@example.com")
+                .build();
+
+        TokenEntity existingToken = TokenEntity.builder()
+                .token("old-token")
+                .used(false)
+                .build();
+
+        when(tokenRepository.findAllByUserAndTypeAndUsedFalse(userEntity, TokenType.VERIFICATION))
+                .thenReturn(java.util.List.of(existingToken));
+
+        tokenService.createEmailVerificationToken(userEntity);
+
+        assertThat(existingToken.getUsed()).isTrue();
+        verify(tokenRepository).saveAll(java.util.List.of(existingToken));
+        verify(tokenRepository).save(any(TokenEntity.class));
+    }
+
+    @Test
+    void cleanupExpiredTokens_ShouldCallRepositoryDelete() {
+        tokenService.cleanupExpiredTokens();
+        verify(tokenRepository).deleteByExpiresAtBefore(any(LocalDateTime.class));
+    }
 }

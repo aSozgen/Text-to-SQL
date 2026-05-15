@@ -46,10 +46,10 @@ interface PageCacheData {
   styleUrl: './schemas.component.scss'
 })
 export class SchemasComponent {
-  private readonly api = inject(Api);
-  private readonly authService = inject(AuthService);
-  private readonly schemaService = inject(SchemaService);
-  private readonly errorHandler = inject(ErrorHandlerService);
+  protected readonly api = inject(Api);
+  protected readonly authService = inject(AuthService);
+  protected readonly schemaService = inject(SchemaService);
+  protected readonly errorHandler = inject(ErrorHandlerService);
 
   isGuest = computed(() => !this.authService.currentUser());
   isCopied = signal<boolean>(false);
@@ -281,7 +281,7 @@ WHERE ac.OWNER = SYS_CONTEXT('USERENV','CURRENT_USER');`
     return `${this.page()}-${this.size()}-${this.sort()}-${this.direction()}-${this.searchQuery()}`;
   }
 
-  private invalidateCache(type: 'DB' | 'TABLE' | 'COLUMN', parentId?: string) {
+  protected invalidateCache(type: 'DB' | 'TABLE' | 'COLUMN', parentId?: string) {
     if (type === 'DB') {
       this.pageCache.clear();
       this.fullyLoadedDbIds.set(new Set());
@@ -310,7 +310,7 @@ WHERE ac.OWNER = SYS_CONTEXT('USERENV','CURRENT_USER');`
       try {
         const templates = await this.schemaService.loadTemplates();
         this.databases.set(templates.databases || []);
-        
+
         const tMap = new Map<string, TableDto[]>();
         (templates.tables || []).forEach(t => {
           if (t.databaseId) {
@@ -320,7 +320,7 @@ WHERE ac.OWNER = SYS_CONTEXT('USERENV','CURRENT_USER');`
           }
         });
         this.tablesMap.set(tMap);
-        
+
         const cMap = new Map<string, ColumnDto[]>();
         (templates.columns || []).forEach(c => {
           if (c.tableId) {

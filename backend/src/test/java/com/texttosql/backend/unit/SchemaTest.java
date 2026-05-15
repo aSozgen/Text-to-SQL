@@ -100,7 +100,7 @@ public class SchemaTest {
         request.setDescription("Description");
         request.setJsonContent(dummyJson);
 
-        DatabaseDto responseDto = new DatabaseDto(databaseId, "Imported_DB", "Description", now);
+        DatabaseDto responseDto = new DatabaseDto(databaseId, "Imported_DB", "Description", false, now);
         when(schemaService.importSchema(any(SchemaImportRequest.class), any(CustomUserDetails.class)))
                 .thenReturn(responseDto);
 
@@ -139,7 +139,7 @@ public class SchemaTest {
     void getTemplates_ShouldReturnSchemaSearchResponse() throws Exception {
         LocalDateTime now = LocalDateTime.now();
         UUID templateId = UUID.randomUUID();
-        DatabaseDto dbDto = new DatabaseDto(templateId, "Template_DB", "Description", now);
+        DatabaseDto dbDto = new DatabaseDto(templateId, "Template_DB", "Description", false, now);
 
         SchemaSearchResponse response = SchemaSearchResponse.builder()
                 .databases(List.of(dbDto))
@@ -181,7 +181,7 @@ public class SchemaTest {
         LocalDateTime now = LocalDateTime.now();
         UUID databaseId = UUID.randomUUID();
 
-        DatabaseDto dbDto = new DatabaseDto(databaseId, "My_DB", "Test Desc", now);
+        DatabaseDto dbDto = new DatabaseDto(databaseId, "My_DB", "Test Desc", false, now);
         Page<DatabaseDto> page = new PageImpl<>(Collections.singletonList(dbDto), PageRequest.of(0, 10), 1);
         when(schemaService.getDatabases(any(CustomUserDetails.class), anyInt(), anyInt(), anyString(), anyString()))
                 .thenReturn(page);
@@ -215,7 +215,7 @@ public class SchemaTest {
         LocalDateTime now = LocalDateTime.now();
         UUID databaseId = UUID.randomUUID();
 
-        DatabaseDto dbDto = new DatabaseDto(databaseId, "Single_DB", "Desc", now);
+        DatabaseDto dbDto = new DatabaseDto(databaseId, "Single_DB", "Desc", false, now);
         when(schemaService.getDatabase(eq(databaseId), any(CustomUserDetails.class))).thenReturn(dbDto);
 
         mockMvc.perform(get("/api/v1/schemas/databases/{id}", databaseId))
@@ -242,8 +242,8 @@ public class SchemaTest {
         LocalDateTime now = LocalDateTime.now();
         UUID databaseId = UUID.randomUUID();
 
-        DatabaseDto requestDto = new DatabaseDto(null, "New_DB", "Desc", null);
-        DatabaseDto responseDto = new DatabaseDto(databaseId, "New_DB", "Desc", now);
+        DatabaseDto requestDto = new DatabaseDto(null, "New_DB", "Desc", false, null);
+        DatabaseDto responseDto = new DatabaseDto(databaseId, "New_DB", "Desc", false, now);
         when(schemaService.createDatabase(any(DatabaseDto.class), any(CustomUserDetails.class))).thenReturn(responseDto);
 
         mockMvc.perform(post("/api/v1/schemas/databases")
@@ -258,7 +258,7 @@ public class SchemaTest {
 
     @Test
     void createDatabase_ShouldReturnForbidden_WhenUserIsGuest() throws Exception {
-        DatabaseDto requestDto = new DatabaseDto(null, "New_DB", "Desc", null);
+        DatabaseDto requestDto = new DatabaseDto(null, "New_DB", "Desc", false, null);
         when(schemaService.createDatabase(any(DatabaseDto.class), any(CustomUserDetails.class)))
                 .thenThrow(new AccessDeniedException("Guests cannot create databases."));
 
@@ -271,7 +271,7 @@ public class SchemaTest {
 
     @Test
     void createDatabase_ShouldReturnConflict_WhenNameExists() throws Exception {
-        DatabaseDto requestDto = new DatabaseDto(null, "Existing_DB", "Desc", null);
+        DatabaseDto requestDto = new DatabaseDto(null, "Existing_DB", "Desc", null, null);
         when(schemaService.createDatabase(any(DatabaseDto.class), any(CustomUserDetails.class)))
                 .thenThrow(new DuplicatedResourceException("There is already a Database with the same name."));
 
@@ -287,8 +287,8 @@ public class SchemaTest {
         LocalDateTime now = LocalDateTime.now();
         UUID databaseId = UUID.randomUUID();
 
-        DatabaseDto updateDto = new DatabaseDto(databaseId, "Updated_DB", "New Desc", null);
-        DatabaseDto responseDto = new DatabaseDto(databaseId, "Updated_DB", "New Desc", now);
+        DatabaseDto updateDto = new DatabaseDto(databaseId, "Updated_DB", "New Desc", null, null);
+        DatabaseDto responseDto = new DatabaseDto(databaseId, "Updated_DB", "New Desc", false, now);
         when(schemaService.updateDatabase(eq(databaseId), any(DatabaseDto.class), any(CustomUserDetails.class)))
                 .thenReturn(responseDto);
 
@@ -305,7 +305,7 @@ public class SchemaTest {
     @Test
     void updateDatabase_ShouldReturnForbidden_WhenUserIsGuest() throws Exception {
         UUID databaseId = UUID.randomUUID();
-        DatabaseDto updateDto = new DatabaseDto(databaseId, "Updated_DB", "New Desc", null);
+        DatabaseDto updateDto = new DatabaseDto(databaseId, "Updated_DB", "New Desc", null, null);
 
         when(schemaService.updateDatabase(eq(databaseId), any(DatabaseDto.class), any(CustomUserDetails.class)))
                 .thenThrow(new AccessDeniedException("Guests cannot update databases."));
@@ -320,7 +320,7 @@ public class SchemaTest {
     @Test
     void updateDatabase_ShouldReturnConflict_WhenNameExists() throws Exception {
         UUID databaseId = UUID.randomUUID();
-        DatabaseDto updateDto = new DatabaseDto(databaseId, "Existing_Name", "Desc", null);
+        DatabaseDto updateDto = new DatabaseDto(databaseId, "Existing_Name", "Desc", null, null);
         when(schemaService.updateDatabase(eq(databaseId), any(DatabaseDto.class), any(CustomUserDetails.class)))
                 .thenThrow(new DuplicatedResourceException("There is already a Database with the same name."));
 

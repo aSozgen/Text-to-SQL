@@ -5,5 +5,6 @@ export interface DatabaseDto {
   createdAt?: string;
   databaseId?: string;
   description?: string;
+  isTemplate?: boolean;
   name: string;
 }

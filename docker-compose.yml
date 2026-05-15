@@ -139,6 +139,25 @@ services:
     volumes:
       - backend_logs:/app/logs
 
+  frontend:
+    build:
+      context: ./frontend/texttosql
+      dockerfile: Dockerfile
+    container_name: texttosql-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      - "${FRONTEND_PORT:-4200}:80"
+    networks:
+      - app-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
 networks:
   app-network:
     driver: bridge

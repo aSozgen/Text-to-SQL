@@ -43,6 +43,9 @@
             </a>
             <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark shadow mt-3" aria-labelledby="profileDropdown">
               <li><a class="dropdown-item" routerLink="/profile"><i class="fas fa-user me-2"></i>Profile</a></li>
+              @if (authService.currentUser()?.role === 'ADMIN') {
+                <li><a class="dropdown-item" routerLink="/admin/templates"><i class="fas fa-tools me-2"></i>Admin Panel</a></li>
+              }
               <li><hr class="dropdown-divider"></li>
               <li>
                 <button class="dropdown-item text-danger" type="button" (click)="logout()">

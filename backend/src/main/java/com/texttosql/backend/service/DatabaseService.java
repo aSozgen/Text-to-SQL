@@ -68,6 +68,15 @@ public class DatabaseService {
         databaseEntity.setName(databaseDTO.getName());
         databaseEntity.setDescription(databaseDTO.getDescription());
 
+        if (databaseDTO.getIsTemplate() != null && databaseDTO.getIsTemplate()) {
+            boolean isAdmin = userDetails.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            if (!isAdmin) {
+                throw new AccessDeniedException("Only administrators can create template schemas.");
+            }
+            databaseEntity.setIsTemplate(true);
+        }
+
         DatabaseEntity savedDatabaseEntity = databaseRepository.save(databaseEntity);
         databaseDTO.setDatabaseId(savedDatabaseEntity.getDatabaseId());
 
@@ -96,6 +105,16 @@ public class DatabaseService {
         String oldName = entity.getName();
         entity.setName(databaseDTO.getName());
         entity.setDescription(databaseDTO.getDescription());
+
+        if (databaseDTO.getIsTemplate() != null) {
+            boolean isAdmin = userDetails.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            if (isAdmin) {
+                entity.setIsTemplate(databaseDTO.getIsTemplate());
+            } else if (databaseDTO.getIsTemplate() != entity.getIsTemplate()) {
+                throw new AccessDeniedException("Only administrators can modify template status.");
+            }
+        }
 
         // If the current SchemaVersion is not used in any message, don't create a new SchemaVersion just update the existing one
         // Else create a new SchemaVersion iff Database name has changed (Database description doesn't matter)
