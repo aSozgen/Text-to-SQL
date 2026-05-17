@@ -190,6 +190,28 @@ docker-compose up -d --build
 - **Optimized Rate Limiting** - Balanced protection (100 req/min) to prevent abuse while ensuring smooth UX.
 - **Structured Error Tracking** - Comprehensive exception logging with full stack traces for faster debugging.
 - **Stateless Session** - Fully stateless API for scalability.
+
+## 🔑 Administration
+
+The application includes a powerful **Admin Panel** accessible only to users with the `ADMIN` role.
+
+### Admin Capabilities
+- **Template Management**: Create, edit, and delete global database templates.
+- **System-wide Import**: Import complex schemas as templates for all users.
+- **Cache Control**: Authorized actions automatically manage system-wide template caches.
+
+### How to Become an Admin
+Currently, administrative roles are managed at the database level for security:
+
+1.  **Direct Database Access**:
+    Connect to your PostgreSQL instance and update the user's role:
+    ```sql
+    UPDATE users SET role = 'ADMIN' WHERE email = 'your-email@example.com';
+    ```
+2.  **Accessing the Panel**:
+    Once the role is updated, a new **"Admin Panel"** option will appear in the user dropdown menu in the navigation bar. Alternatively, navigate directly to:
+    `http://localhost:4200/admin/templates`
+
 ## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
