@@ -124,7 +124,7 @@ public class DatabaseService {
             databaseRepository.save(entity);
         }
 
-        return databaseDTO;
+        return databaseMapper.toDto(entity);
     }
 
     @Transactional

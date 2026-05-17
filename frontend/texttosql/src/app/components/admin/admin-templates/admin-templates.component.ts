@@ -14,14 +14,10 @@ import { ColumnDto } from '../../../api/models/column-dto';
   templateUrl: '../../schemas/schemas.component.html', // Reuse HTML
   styleUrl: '../../schemas/schemas.component.scss' // Reuse styles
 })
-export class AdminTemplatesComponent extends SchemasComponent implements OnInit {
+export class AdminTemplatesComponent extends SchemasComponent {
 
-  ngOnInit(): void {
-    // Override the base class ngOnInit to load templates instead
-    this.loadTemplates();
-  }
-
-  // Override loadSchemas to only load templates
+  // Override loadSchemas to only load templates. 
+  // The base constructor's effect will call this once.
   override async loadSchemas(): Promise<void> {
     await this.loadTemplates();
   }
@@ -58,11 +54,12 @@ export class AdminTemplatesComponent extends SchemasComponent implements OnInit 
         this.columnsMap.set(cMap);
       }
     } catch (e: any) {
-      this.errorMessage.set(this.errorHandler.message(e)); 
+      this.openErrorModal(this.errorHandler.message(e)); 
     } finally {
       this.isLoading.set(false);
     }
   }
+
   // Override the form submission logic for DB creation/editing to set isTemplate
   override async submitModal(): Promise<void> {
     if (this.modalMode() === 'CREATE_DB') {
@@ -76,7 +73,7 @@ export class AdminTemplatesComponent extends SchemasComponent implements OnInit 
             description: this.formData.description,
             isTemplate: true // Force template flag
         };
-        const newDb = await this.api.invoke(createDatabase, { body: dto, Authorization: '' }); // Fixed function reference
+        const newDb = await this.api.invoke(createDatabase, { body: dto }); 
         this.databases.update(dbs => [newDb, ...dbs]);
         this.closeModal();
       } catch (e: any) {
@@ -95,12 +92,12 @@ export class AdminTemplatesComponent extends SchemasComponent implements OnInit 
             description: this.formData.description,
             isTemplate: true // Keep template flag
         };
-        const updatedDb = await this.api.invoke(updateDatabase, { // Fixed function reference
-          databaseId: this.selectedDbId!, // Fixed property name
-          body: dto,
-          Authorization: ''
+        await this.api.invoke(updateDatabase, { 
+          databaseId: this.selectedDbId!, 
+          body: dto
         });
-        this.databases.update(dbs => dbs.map(d => d.databaseId === updatedDb.databaseId ? updatedDb : d));
+        
+        await this.loadSchemas();
         this.closeModal();
       } catch (e: any) {
         this.openErrorModal(this.errorHandler.message(e));
@@ -121,7 +118,6 @@ export class AdminTemplatesComponent extends SchemasComponent implements OnInit 
                 isTemplate: true // Force template flag for admin import
             }
         });
-        this.invalidateCache('DB');
         await this.loadSchemas();
         this.closeModal();
       } catch (e: any) {
