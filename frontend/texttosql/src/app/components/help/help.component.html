@@ -23,9 +23,15 @@
     <div class="contact-container">
       <h2 class="section-title">Contact Us</h2>
 
-      @if (successMessage) {
+      @if (successMessage()) {
         <div class="alert-custom success">
-          <i class="fas fa-check-circle me-2"></i> {{ successMessage }}
+          <i class="fas fa-check-circle me-2"></i> {{ successMessage() }}
+        </div>
+      }
+
+      @if (errorMessage()) {
+        <div class="alert-custom error">
+          <i class="fas fa-exclamation-circle me-2"></i> {{ errorMessage() }}
         </div>
       }
 
@@ -70,8 +76,8 @@
           }
         </div>
 
-        <button class="submit-btn" [disabled]="isSubmitting">
-          @if (isSubmitting) {
+        <button class="submit-btn" [disabled]="isSubmitting()">
+          @if (isSubmitting()) {
             <span class="spinner-border spinner-border-sm me-2"></span> Sending...
           } @else {
             Submit Message

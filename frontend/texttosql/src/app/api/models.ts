@@ -19,6 +19,7 @@ export type { RegisterRequest } from './models/register-request';
 export type { ResetPasswordRequest } from './models/reset-password-request';
 export type { SchemaImportRequest } from './models/schema-import-request';
 export type { SchemaSearchResponse } from './models/schema-search-response';
+export type { SupportRequest } from './models/support-request';
 export type { TableDto } from './models/table-dto';
 export type { UpdateProfileRequest } from './models/update-profile-request';
 export type { UserDto } from './models/user-dto';

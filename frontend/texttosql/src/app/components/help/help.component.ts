@@ -1,6 +1,9 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Api } from '../../api/api';
+import { contactSupport } from '../../api/functions';
+import { ErrorHandlerService } from '../../core/error.handler.service';
 
 interface FaqItem {
   question: string;
@@ -17,10 +20,13 @@ interface FaqItem {
 })
 export class HelpComponent {
   private fb = inject(FormBuilder);
+  private api = inject(Api);
+  private errorHandler = inject(ErrorHandlerService);
 
   contactForm: FormGroup;
-  isSubmitting = false;
-  successMessage: string | null = null;
+  isSubmitting = signal(false);
+  successMessage = signal<string | null>(null);
+  errorMessage = signal<string | null>(null);
 
   faqs: FaqItem[] = [
     {
@@ -65,23 +71,32 @@ export class HelpComponent {
   }
 
   async onSubmit() {
-    this.successMessage = null;
+    this.successMessage.set(null);
+    this.errorMessage.set(null);
 
     if (this.contactForm.invalid) {
       this.contactForm.markAllAsTouched();
       return;
     }
 
-    this.isSubmitting = true;
+    this.isSubmitting.set(true);
 
-    setTimeout(() => {
-      this.isSubmitting = false;
-      this.successMessage = 'Message sent successfully! We will get back to you soon.';
+    try {
+      await this.api.invoke(contactSupport, {
+        body: this.contactForm.value
+      });
+
+      this.successMessage.set('Message sent successfully! We will get back to you soon.');
       this.contactForm.reset();
-
       this.faqs.forEach(f => f.expanded = false);
 
-      setTimeout(() => this.successMessage = null, 5000);
-    }, 1500);
+      setTimeout(() => this.successMessage.set(null), 5000);
+    } catch (e: any) {
+      console.error('Failed to send support message', e);
+      this.errorMessage.set(this.errorHandler.message(e));
+      setTimeout(() => this.errorMessage.set(null), 5000);
+    } finally {
+      this.isSubmitting.set(false);
+    }
   }
 }

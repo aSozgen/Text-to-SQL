@@ -3,9 +3,9 @@
 
 export interface SchemaImportRequest {
   description?: string;
+  isTemplate?: boolean;
   jsonContent: Array<{
 [key: string]: any;
 }>;
   name: string;
-  isTemplate?: boolean;
 }

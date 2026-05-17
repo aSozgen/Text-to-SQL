@@ -68,6 +68,7 @@ public class SecurityConfig {
                                         "/api/v1/auth/refresh-token",
                                         "/api/v1/auth/logout",
                                         "/api/v1/schemas/templates",
+                                        "/api/v1/support/contact",
                                         "/actuator/health",
                                         "/error",
                                         "/v3/api-docs/**",

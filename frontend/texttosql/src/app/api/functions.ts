@@ -31,6 +31,8 @@ export type { GetMe$Params as GetMe$Params } from './fn/1-authentication/get-me'
 export { getMe as getMe } from './fn/1-authentication/get-me';
 export type { Health$Params as Health$Params } from './fn/1-authentication/health';
 export { health as health } from './fn/1-authentication/health';
+export type { ContactSupport$Params as ContactSupport$Params } from './fn/5-support/contact-support';
+export { contactSupport as contactSupport } from './fn/5-support/contact-support';
 export type { ImportSchema$Params as ImportSchema$Params } from './fn/2-schema-management/import-schema';
 export { importSchema as importSchema } from './fn/2-schema-management/import-schema';
 export type { GetDatabases$Params as GetDatabases$Params } from './fn/2-schema-management/get-databases';
