@@ -20,7 +20,7 @@ app:
 
 rate-limit:
   enabled: true
-  limit-for-period: 20
+  limit-for-period: 100
   period-in-seconds: 60
 
 springdoc:

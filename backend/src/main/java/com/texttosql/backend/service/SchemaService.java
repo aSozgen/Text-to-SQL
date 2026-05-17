@@ -6,6 +6,7 @@ import com.texttosql.backend.dto.entity.DatabaseDto;
 import com.texttosql.backend.dto.entity.TableDto;
 import com.texttosql.backend.dto.search.SchemaSearchResponse;
 import com.texttosql.backend.entity.*;
+import com.texttosql.backend.entity.enums.Role;
 import com.texttosql.backend.exception.SchemaImportException;
 import com.texttosql.backend.mapper.DatabaseMapper;
 import com.texttosql.backend.mapper.TableMapper;
@@ -15,7 +16,8 @@ import com.texttosql.backend.repository.DatabaseRepository;
 import com.texttosql.backend.repository.TableRepository;
 import com.texttosql.backend.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,9 +44,9 @@ public class SchemaService {
     private final DatabaseRepository databaseRepository;
     private final TableRepository tableRepository;
     private final ColumnRepository columnRepository;
+    private final CacheManager cacheManager;
 
     @Transactional
-    @CacheEvict(value = "templateSchemas", allEntries = true)
     public DatabaseDto importSchema(SchemaImportRequest request, CustomUserDetails userDetails) {
         try {
             DatabaseDto databaseDto = new DatabaseDto();
@@ -178,23 +180,46 @@ public class SchemaService {
         return databaseService.getDatabases(userDetails, page, size, sort, direction);
     }
 
-    @CacheEvict(value = "templateSchemas", allEntries = true)
+    private boolean isAdmin(CustomUserDetails userDetails) {
+        return userDetails.getRole() == Role.ADMIN;
+    }
+
+    private void clearTemplateCache() {
+        Cache cache = cacheManager.getCache("templateSchemas");
+        if (cache != null) {
+            cache.clear();
+        }
+    }
+
     public DatabaseDto createDatabase(DatabaseDto databaseDTO, CustomUserDetails userDetails) {
-        return databaseService.createDatabase(databaseDTO, userDetails);
+        DatabaseDto result = databaseService.createDatabase(databaseDTO, userDetails);
+        if (Boolean.TRUE.equals(result.getIsTemplate()) && isAdmin(userDetails)) {
+            clearTemplateCache();
+        }
+        return result;
     }
 
     public DatabaseDto getDatabase(UUID databaseId, CustomUserDetails userDetails) {
         return databaseService.getDatabase(databaseId, userDetails);
     }
 
-    @CacheEvict(value = "templateSchemas", allEntries = true)
     public DatabaseDto updateDatabase(UUID databaseId, DatabaseDto databaseDTO, CustomUserDetails userDetails) {
-        return databaseService.updateDatabase(databaseId, databaseDTO, userDetails, isVersionUsedInMessages(databaseId, userDetails));
+        DatabaseEntity db = getCurrentDatabaseEntity(databaseId, userDetails);
+        boolean wasTemplate = db.getIsTemplate();
+        DatabaseDto result = databaseService.updateDatabase(databaseId, databaseDTO, userDetails, isVersionUsedInMessages(databaseId, userDetails));
+        if ((wasTemplate || Boolean.TRUE.equals(result.getIsTemplate())) && isAdmin(userDetails)) {
+            clearTemplateCache();
+        }
+        return result;
     }
 
-    @CacheEvict(value = "templateSchemas", allEntries = true)
     public void deleteDatabase(UUID databaseId, CustomUserDetails userDetails) {
+        DatabaseEntity db = getCurrentDatabaseEntity(databaseId, userDetails);
+        boolean wasTemplate = db.getIsTemplate();
         databaseService.deleteDatabase(databaseId, userDetails);
+        if (wasTemplate && isAdmin(userDetails)) {
+            clearTemplateCache();
+        }
     }
 
     private DatabaseEntity getCurrentDatabaseEntity(UUID databaseId, CustomUserDetails userDetails) {
@@ -209,19 +234,30 @@ public class SchemaService {
         return tableService.getTable(getCurrentDatabaseEntity(databaseId, userDetails), tableId);
     }
 
-    @CacheEvict(value = "templateSchemas", allEntries = true)
     public TableDto createTable(UUID databaseId, TableDto tableDTO, CustomUserDetails userDetails) {
-        return tableService.createTable(getCurrentDatabaseEntity(databaseId, userDetails), tableDTO, isVersionUsedInMessages(databaseId, userDetails));
+        DatabaseEntity db = getCurrentDatabaseEntity(databaseId, userDetails);
+        TableDto result = tableService.createTable(db, tableDTO, isVersionUsedInMessages(databaseId, userDetails));
+        if (db.getIsTemplate() && isAdmin(userDetails)) {
+            clearTemplateCache();
+        }
+        return result;
     }
 
-    @CacheEvict(value = "templateSchemas", allEntries = true)
     public TableDto updateTable(UUID databaseId, UUID tableId, TableDto tableDTO, CustomUserDetails userDetails) {
-        return tableService.updateTable(getCurrentDatabaseEntity(databaseId, userDetails), tableId, tableDTO, isVersionUsedInMessages(databaseId, userDetails));
+        DatabaseEntity db = getCurrentDatabaseEntity(databaseId, userDetails);
+        TableDto result = tableService.updateTable(db, tableId, tableDTO, isVersionUsedInMessages(databaseId, userDetails));
+        if (db.getIsTemplate() && isAdmin(userDetails)) {
+            clearTemplateCache();
+        }
+        return result;
     }
 
-    @CacheEvict(value = "templateSchemas", allEntries = true)
     public void deleteTable(UUID databaseId, UUID tableId, CustomUserDetails userDetails) {
-        tableService.deleteTable(getCurrentDatabaseEntity(databaseId, userDetails), tableId, isVersionUsedInMessages(databaseId, userDetails));
+        DatabaseEntity db = getCurrentDatabaseEntity(databaseId, userDetails);
+        tableService.deleteTable(db, tableId, isVersionUsedInMessages(databaseId, userDetails));
+        if (db.getIsTemplate() && isAdmin(userDetails)) {
+            clearTemplateCache();
+        }
     }
 
     private TableEntity getCurrentTableEntity(UUID databaseId, UUID tableId, CustomUserDetails userDetails) {
@@ -236,18 +272,29 @@ public class SchemaService {
         return columnService.getColumn(getCurrentTableEntity(databaseId, tableId, userDetails), columnId);
     }
 
-    @CacheEvict(value = "templateSchemas", allEntries = true)
     public ColumnDto createColumn(UUID databaseId, UUID tableId, ColumnDto columnDto, CustomUserDetails userDetails) {
-        return columnService.createColumn(getCurrentDatabaseEntity(databaseId, userDetails), getCurrentTableEntity(databaseId, tableId, userDetails), columnDto, isVersionUsedInMessages(databaseId, userDetails));
+        DatabaseEntity db = getCurrentDatabaseEntity(databaseId, userDetails);
+        ColumnDto result = columnService.createColumn(db, getCurrentTableEntity(databaseId, tableId, userDetails), columnDto, isVersionUsedInMessages(databaseId, userDetails));
+        if (db.getIsTemplate() && isAdmin(userDetails)) {
+            clearTemplateCache();
+        }
+        return result;
     }
 
-    @CacheEvict(value = "templateSchemas", allEntries = true)
     public ColumnDto updateColumn(UUID databaseId, UUID tableId, UUID columnId, ColumnDto columnDto, CustomUserDetails userDetails) {
-        return columnService.updateColumn(getCurrentDatabaseEntity(databaseId, userDetails), getCurrentTableEntity(databaseId, tableId, userDetails), columnId, columnDto, isVersionUsedInMessages(databaseId, userDetails));
+        DatabaseEntity db = getCurrentDatabaseEntity(databaseId, userDetails);
+        ColumnDto result = columnService.updateColumn(db, getCurrentTableEntity(databaseId, tableId, userDetails), columnId, columnDto, isVersionUsedInMessages(databaseId, userDetails));
+        if (db.getIsTemplate() && isAdmin(userDetails)) {
+            clearTemplateCache();
+        }
+        return result;
     }
 
-    @CacheEvict(value = "templateSchemas", allEntries = true)
     public void deleteColumn(UUID databaseId, UUID tableId, UUID columnId, CustomUserDetails userDetails) {
-        columnService.deleteColumn(getCurrentDatabaseEntity(databaseId, userDetails), getCurrentTableEntity(databaseId, tableId, userDetails), columnId, isVersionUsedInMessages(databaseId, userDetails));
+        DatabaseEntity db = getCurrentDatabaseEntity(databaseId, userDetails);
+        columnService.deleteColumn(db, getCurrentTableEntity(databaseId, tableId, userDetails), columnId, isVersionUsedInMessages(databaseId, userDetails));
+        if (db.getIsTemplate() && isAdmin(userDetails)) {
+            clearTemplateCache();
+        }
     }
 }

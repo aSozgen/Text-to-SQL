@@ -15,7 +15,7 @@ public class CacheConfig {
 
     @Bean
     public CacheManager cacheManager() {
-        CaffeineCacheManager cacheManager = new CaffeineCacheManager("llmResponses", "schemas", "templateSchemas");
+        CaffeineCacheManager cacheManager = new CaffeineCacheManager("llmResponses", "templateSchemas");
         cacheManager.setCaffeine(caffeineCacheBuilder());
         return cacheManager;
     }

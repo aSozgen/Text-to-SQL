@@ -32,25 +32,25 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DuplicatedResourceException.class)
     public ResponseEntity<ErrorResponse> handleDuplicatedResourceException(DuplicatedResourceException e) {
-        log.error("DuplicatedResourceException: {}", e.getMessage());
+        log.error("DuplicatedResourceException: {}", e.getMessage(), e);
         return buildErrorResponse(HttpStatus.CONFLICT, e.getMessage());
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException e) {
-        log.error("ResourceNotFoundException: {}", e.getMessage());
+        log.error("ResourceNotFoundException: {}", e.getMessage(), e);
         return buildErrorResponse(HttpStatus.NOT_FOUND, e.getMessage());
     }
 
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleUsernameNotFoundException(UsernameNotFoundException e) {
-        log.error("UsernameNotFoundException: {}", e.getMessage());
+        log.error("UsernameNotFoundException: {}", e.getMessage(), e);
         return buildErrorResponse(HttpStatus.NOT_FOUND, e.getMessage());
     }
 
     @ExceptionHandler(EmailNotVerifiedException.class)
     public ResponseEntity<ErrorResponse> handleEmailNotVerifiedException(EmailNotVerifiedException e) {
-        log.error("EmailNotVerifiedException: {}", e.getMessage());
+        log.error("EmailNotVerifiedException: {}", e.getMessage(), e);
         return buildErrorResponse(HttpStatus.UNAUTHORIZED, e.getMessage());
     }
 
@@ -68,31 +68,31 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorResponse> handleBadCredentialsException(BadCredentialsException e) {
-        log.error("BadCredentialsException: {}", e.getMessage());
+        log.error("BadCredentialsException: {}", e.getMessage(), e);
         return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Invalid credentials.");
     }
 
     @ExceptionHandler(ExpiredJwtException.class)
     public ResponseEntity<ErrorResponse> handleExpiredJwtException(ExpiredJwtException e) {
-        log.error("ExpiredJwtException: {}", e.getMessage());
+        log.error("ExpiredJwtException: {}", e.getMessage(), e);
         return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Token has expired.");
     }
 
     @ExceptionHandler(SignatureException.class)
     public ResponseEntity<ErrorResponse> handleSignatureException(SignatureException e) {
-        log.error("SignatureException: {}", e.getMessage());
+        log.error("SignatureException: {}", e.getMessage(), e);
         return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Invalid token signature.");
     }
 
     @ExceptionHandler(MalformedJwtException.class)
     public ResponseEntity<ErrorResponse> handleMalformedJwtException(MalformedJwtException e) {
-        log.error("MalformedJwtException: {}", e.getMessage());
+        log.error("MalformedJwtException: {}", e.getMessage(), e);
         return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Malformed token.");
     }
 
     @ExceptionHandler(JwtException.class)
     public ResponseEntity<ErrorResponse> handleJwtException(JwtException e) {
-        log.error("JwtException: {}", e.getMessage());
+        log.error("JwtException: {}", e.getMessage(), e);
         return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Invalid token.");
     }
 
@@ -100,14 +100,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
         String message = String.format("Method '%s' not supported. Supported methods: %s",
                 ex.getMethod(), ex.getSupportedHttpMethods());
-        log.error("Method not supported: {}", message);
+        log.error("Method not supported: {}", message, ex);
 
         return buildErrorResponse(HttpStatus.METHOD_NOT_ALLOWED, message);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleMalformedJson(HttpMessageNotReadableException ex) {
-        log.error("Malformed JSON request: {}", ex.getMessage());
+        log.error("Malformed JSON request: {}", ex.getMessage(), ex);
         return buildErrorResponse(HttpStatus.BAD_REQUEST, "Malformed JSON request or missing request body.");
     }
 
@@ -117,7 +117,7 @@ public class GlobalExceptionHandler {
         String message = String.format("The parameter '%s' with value '%s' could not be converted to type '%s'",
                 ex.getName(), ex.getValue(), requiredType);
 
-        log.error("Type mismatch: {}", message);
+        log.error("Type mismatch: {}", message, ex);
         return buildErrorResponse(HttpStatus.BAD_REQUEST, message);
     }
 
@@ -127,7 +127,7 @@ public class GlobalExceptionHandler {
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .collect(Collectors.joining(", "));
 
-        log.error("Validation error: {}", errorMessage);
+        log.error("Validation error: {}", errorMessage, e);
         return buildErrorResponse(HttpStatus.BAD_REQUEST, "Validation failed: " + errorMessage);
     }
 
@@ -139,19 +139,19 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponse> handleDataIntegrityViolationException(DataIntegrityViolationException e) {
-        log.error("Database integrity violation: {}", e.getMessage());
+        log.error("Database integrity violation: {}", e.getMessage(), e);
         return buildErrorResponse(HttpStatus.CONFLICT, "Database error: Invalid data format or constraint violation.");
     }
 
     @ExceptionHandler(ResourceAccessException.class)
     public ResponseEntity<ErrorResponse> handleResourceAccessException(ResourceAccessException e) {
-        log.error("LLM Service Unreachable: {}", e.getMessage());
+        log.error("LLM Service Unreachable: {}", e.getMessage(), e);
         return buildErrorResponse(HttpStatus.SERVICE_UNAVAILABLE, "LLM Service unavailable: " + e.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException e) {
-        log.error("IllegalArgumentException: {}", e.getMessage());
+        log.error("IllegalArgumentException: {}", e.getMessage(), e);
         return buildErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 
@@ -163,14 +163,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ServletException.class)
     public ResponseEntity<ErrorResponse> handleServletException(ServletException e) {
-        log.warn("Error accessing Servlet: {}", e.getMessage());
+        log.error("Error accessing Servlet: {}", e.getMessage(), e);
         return buildErrorResponse(HttpStatus.BAD_REQUEST, "Error accessing Servlet: " + e.getMessage());
     }
 
     @ExceptionHandler(SchemaImportException.class)
     public ResponseEntity<ErrorResponse> handleSchemaImportException(SchemaImportException e) {
-
-        log.error("Schema import failed: {}", e.getMessage());
+        log.error("Schema import failed: {}", e.getMessage(), e);
         return buildErrorResponse(HttpStatus.BAD_REQUEST, "Schema import failed: " + e.getMessage());
     }
 

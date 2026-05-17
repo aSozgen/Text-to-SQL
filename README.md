@@ -179,14 +179,17 @@ docker-compose up -d --build
 ### 4. Search
 - `GET /api/v1/search/schema` - Search databases
 - `GET /api/v1/search/chatbot` - Search chat history
+- **Caffeine Cache** - Multi-layer caching with smart, role-aware eviction logic (Admin-only template clearing).
+- **Advanced Logging** - AOP-based automated method tracking and performance monitoring.
+- **Enhanced Rate Limiting** - Bucket4j protection optimized for modern SPAs (100 req/min).
 
 ## 🔐 Security
 
-- **Refresh Token Rotation** - Secure cookie-based refresh tokens.
+- **Role-Based Cache Security** - Only authorized admin actions can trigger global cache evictions.
 - **SQL Validation** - LLM output is validated before being returned.
-- **Rate Limiting** - Prevents abuse via Bucket4j.
+- **Optimized Rate Limiting** - Balanced protection (100 req/min) to prevent abuse while ensuring smooth UX.
+- **Structured Error Tracking** - Comprehensive exception logging with full stack traces for faster debugging.
 - **Stateless Session** - Fully stateless API for scalability.
-
 ## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
