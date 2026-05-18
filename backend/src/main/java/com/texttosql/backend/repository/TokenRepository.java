@@ -14,7 +14,6 @@ import java.util.UUID;
 @Repository
 public interface TokenRepository extends JpaRepository<TokenEntity, UUID> {
     Optional<TokenEntity> findByTokenAndType(String token, TokenType tokenType);
-    Optional<TokenEntity> findByUserAndTypeAndUsedFalse(UserEntity user, TokenType tokenType);
     void deleteByExpiresAtBefore(LocalDateTime now);
     List<TokenEntity> findAllByUserAndTypeAndUsedFalse(UserEntity user, TokenType type);
 }

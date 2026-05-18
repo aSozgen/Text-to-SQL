@@ -13,6 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -158,6 +161,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException e) {
         log.warn("Access denied: {}", e.getMessage());
+        
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            
+        if (authentication == null || !authentication.isAuthenticated() || 
+            "anonymousUser".equals(authentication.getPrincipal())) {
+            return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Access denied: Authentication is required.");
+        }
+        
         return buildErrorResponse(HttpStatus.FORBIDDEN, e.getMessage());
     }
 
@@ -177,6 +188,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleRateLimitExceededException(RateLimitExceededException e) {
         log.warn("Rate limit exceeded: {}", e.getMessage());
         return buildErrorResponse(HttpStatus.TOO_MANY_REQUESTS, e.getMessage());
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleAuthenticationException(org.springframework.security.core.AuthenticationException e) {
+        log.warn("Authentication failed: {}", e.getMessage());
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Full authentication is required to access this resource.");
     }
 
     @ExceptionHandler(Exception.class)

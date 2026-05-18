@@ -50,10 +50,6 @@ public class ChatService {
     public ChatDto createChat(ChatDto chatDto, CustomUserDetails userDetails) {
         UserEntity userEntity = userMapper.toEntity(userDetails);
 
-        if (chatRepository.existsByNameIgnoreCaseAndUserAndActiveTrue(chatDto.getName(), userEntity)) {
-            throw new DuplicatedResourceException("There is already a Chat with the same name.");
-        }
-
         ChatEntity chatEntity = new ChatEntity();
         chatEntity.setUser(userEntity);
         chatEntity.setName(chatDto.getName());
@@ -66,11 +62,6 @@ public class ChatService {
     @Transactional
     public ChatDto updateChat(UUID chatID, ChatDto chatDto, CustomUserDetails userDetails) {
         ChatEntity chatEntity = getCurrentChatEntity(chatID, userDetails);
-
-        if (chatRepository.existsByNameIgnoreCaseAndUserAndActiveTrue(chatDto.getName(), userMapper.toEntity(userDetails))
-                && !chatEntity.getName().equalsIgnoreCase(chatDto.getName())) {
-            throw new DuplicatedResourceException("There is already a Chat with the same name.");
-        }
 
         chatEntity.setName(chatDto.getName());
 

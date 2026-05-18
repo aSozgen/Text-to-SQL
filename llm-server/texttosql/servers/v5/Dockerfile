@@ -19,6 +19,6 @@ ENV PORT=8000
 # Ollama'nın varsayılan adresi (Docker'dan host makineye çıkış)
 ENV OLLAMA_BASE_URL=http://ollama:11434
 # Qwen modelini varsayılan yaptık
-ENV MODEL_NAME="hf.co/abdlkdr/QueryGen_Qwen2.5_Coder"
+ENV MODEL_NAME="hf.co/abdlkdr/QueryGen_Qwen2.5_Coder_v1.2"
 
 CMD ["python", "server.py"]

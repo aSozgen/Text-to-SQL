@@ -18,7 +18,5 @@ public interface ChatRepository extends JpaRepository<ChatEntity, UUID> {
 
     Page<ChatEntity> findByUserAndActiveTrueAndNameContainingIgnoreCase(UserEntity user, String name, Pageable pageable);
 
-    boolean existsByNameIgnoreCaseAndUserAndActiveTrue(String name, UserEntity user);
-
     long countAllByUserAndActiveTrue(UserEntity user);
 }

@@ -82,7 +82,7 @@ JWT_REFRESH_EXPIRATION=2592000000   # 30 days
 # LLM Configuration
 LLM_URL=http://llm:8000
 LLM_PORT=8000
-MODEL_PATH=hf.co/abdlkdr/QueryGen_Qwen2.5_Coder
+MODEL_PATH=hf.co/abdlkdr/QueryGen_Qwen2.5_Coder_v1.2
 
 # Email Configuration
 MAIL_HOST=smtp.gmail.com

@@ -55,7 +55,7 @@ services:
       - app-network
     # Ollama'nın tam açılması için sleep süresi 15 saniyeye çıkarıldı ve model tam adı kullanıldı
     command: >
-      sh -c "sleep 15 && curl -X POST http://ollama:11434/api/pull -d '{\"model\": \"hf.co/abdlkdr/QueryGen_Qwen2.5_Coder\"}'"
+      sh -c "sleep 15 && curl -X POST http://ollama:11434/api/pull -d '{\"model\": \"hf.co/abdlkdr/QueryGen_Qwen2.5_Coder_v1.2\"}'"
 
   llm:
     build:
@@ -73,7 +73,7 @@ services:
       PORT: 8000
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       OLLAMA_BASE_URL: http://ollama:11434
-      MODEL_NAME: "${MODEL_PATH:-hf.co/abdlkdr/QueryGen_Qwen2.5_Coder}"
+      MODEL_NAME: "${MODEL_PATH:-hf.co/abdlkdr/QueryGen_Qwen2.5_Coder_v1.2}"
     networks:
       - app-network
     healthcheck:

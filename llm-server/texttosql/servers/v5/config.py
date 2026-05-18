@@ -9,7 +9,7 @@ class ServerConfig:
 
     # Ollama settings
     OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://ollama:11434")
-    MODEL_NAME = os.environ.get("MODEL_NAME", "hf.co/abdlkdr/QueryGen_Qwen2.5_Coder")
+    MODEL_NAME = os.environ.get("MODEL_NAME", "hf.co/abdlkdr/QueryGen_Qwen2.5_Coder_v1.2")
 
     # Request limits
     MAX_SOURCE_LENGTH = 768

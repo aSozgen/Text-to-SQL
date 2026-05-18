@@ -27,7 +27,14 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         return throwError(() => error);
       }
 
-      if (error.status === 401 && token) {
+      if ((error.status === 401 || error.status === 403) && token) {
+        // If the token in localStorage has already changed, it means another request 
+        // has already refreshed it. We just retry with the new token.
+        const currentToken = localStorage.getItem('token');
+        if (currentToken && currentToken !== token) {
+          return next(req.clone({ setHeaders: { Authorization: `Bearer ${currentToken}` }, withCredentials: true }));
+        }
+
         if (!isRefreshing) {
           isRefreshing = true;
           refreshTokenSubject.next(null);
@@ -35,9 +42,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
           return from(authService.doRefreshToken()).pipe(
             switchMap((newToken: string | null) => {
               isRefreshing = false;
-              if (newToken) {
+              // Only retry if we got a DIFFERENT token to avoid infinite loops
+              if (newToken && newToken !== token) {
                 refreshTokenSubject.next(newToken);
-                return next(request.clone({ setHeaders: { Authorization: `Bearer ${newToken}` } }));
+                return next(req.clone({ setHeaders: { Authorization: `Bearer ${newToken}` }, withCredentials: true }));
               }
               return throwError(() => error);
             }),
@@ -48,10 +56,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
           );
         } else {
           return refreshTokenSubject.pipe(
-            filter(token => token != null),
+            filter(t => t !== null),
             take(1),
             switchMap(jwt => {
-              return next(request.clone({ setHeaders: { Authorization: `Bearer ${jwt}` } }));
+              return next(req.clone({ setHeaders: { Authorization: `Bearer ${jwt}` }, withCredentials: true }));
             })
           );
         }

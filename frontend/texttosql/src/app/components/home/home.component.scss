@@ -47,22 +47,13 @@
     border-radius: 12px;
     padding: 2rem;
     height: 100%;
-    transition: all 0.3s ease;
 
     .icon-wrapper {
       height: 80px; display: flex; align-items: center; justify-content: center;
-      margin-bottom: 1.5rem; transition: transform 0.3s ease;
+      margin-bottom: 1.5rem;
     }
 
     h3 { margin-bottom: 15px; color: white; font-weight: 600; }
     p { color: var(--text-muted); line-height: 1.6; }
-
-    &:hover {
-      transform: translateY(-8px);
-      border-color: var(--accent-blue);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
-
-      .icon-wrapper { transform: scale(1.1); }
-    }
   }
 }

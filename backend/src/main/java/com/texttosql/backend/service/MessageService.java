@@ -23,7 +23,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
-import java.util.*;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @Validated
@@ -74,36 +79,85 @@ public class MessageService {
 
     @Transactional
     public MessageDto createMessage(ChatEntity chat, MessageDto messageDto) {
+        return createMessageWithTimestamp(chat, messageDto, null);
+    }
+
+    @Transactional
+    public MessageDto createMessageWithTimestamp(ChatEntity chat, MessageDto messageDto, LocalDateTime createdAt) {
         SchemaVersionEntity schemaVersion = null;
 
         if (messageDto.getDatabaseId() != null) {
             schemaVersion = versionService.getSchemaVersion(messageDto.getDatabaseId());
         }
 
-        List<ConversationTurn> history = getHistoryForLlm(chat, schemaVersion);
-        LLMRequest request = new LLMRequest(
-                messageDto.getContent(),
-                schemaVersion != null ? schemaVersion.getSchemaStructure() : null,
-                history
-        );
-
-        LLMResponse response = llmClient.generateSql(request);
-
+        // 1. Save user message immediately to ensure it persists
         MessageEntity userMessage = MessageEntity.builder()
                 .chat(chat)
                 .schemaVersion(schemaVersion)
                 .content(messageDto.getContent())
+                .senderType(SenderType.USER)
+                .createdAt(createdAt)
                 .build();
+        messageRepository.save(userMessage);
 
+        // 2. Prepare for LLM call with history
+        List<ConversationTurn> history = getHistoryForLlm(chat, schemaVersion);
+        String currentQuestion = messageDto.getContent();
+        LLMResponse response = null;
+        int maxRetries = 2;
+        int attempt = 0;
+
+        // Self-Correction Loop
+        while (attempt <= maxRetries) {
+            LLMRequest request = new LLMRequest(
+                    currentQuestion,
+                    schemaVersion != null ? schemaVersion.getSchemaStructure() : null,
+                    history
+            );
+
+            try {
+                response = llmClient.generateSql(request);
+
+                if (response != null && Boolean.TRUE.equals(response.isValid())) {
+                    break;
+                }
+
+                // If invalid, prepare for retry with feedback
+                if (response != null && response.validationError() != null && attempt < maxRetries) {
+                    currentQuestion = messageDto.getContent() + 
+                        "\n\nIMPORTANT: Your previous SQL attempt was invalid.\nError: " + response.validationError() + 
+                        "\nPlease fix the SQL query and provide only the corrected SQL.";
+                }
+            } catch (Exception e) {
+                if (attempt == maxRetries) break; 
+            }
+            
+            attempt++;
+        }
+
+        // Determine LLM message content
+        String llmContent;
+        Double confidence = -1.0;
+
+        if (response != null && Boolean.TRUE.equals(response.isValid())) {
+            llmContent = response.sql();
+            confidence = response.confidence();
+        } else {
+            llmContent = "-- Error: I was unable to generate a valid SQL query for your request after multiple attempts.";
+            if (response != null && response.validationError() != null) {
+                llmContent += "\nReason: " + response.validationError();
+            }
+        }
+
+        // 3. Save LLM response
         MessageEntity llmMessage = MessageEntity.builder()
                 .chat(chat)
                 .schemaVersion(schemaVersion)
-                .content(response.sql())
-                .confidence(response.confidence())
+                .content(llmContent)
+                .confidence(confidence)
                 .senderType(SenderType.LLM)
                 .build();
 
-        messageRepository.save(userMessage);
         MessageEntity savedLlmMessage = messageRepository.save(llmMessage);
 
         return messageMapper.toDto(savedLlmMessage);
@@ -117,6 +171,8 @@ public class MessageService {
             throw new AccessDeniedException("LLM messages cannot be updated.");
         }
 
+        LocalDateTime originalTimestamp = oldUserMessage.getCreatedAt();
+
         oldUserMessage.setActive(false);
         messageRepository.save(oldUserMessage);
 
@@ -125,7 +181,7 @@ public class MessageService {
             messageRepository.save(llmMsg);
         });
 
-        return createMessage(chat, messageDto);
+        return createMessageWithTimestamp(chat, messageDto, originalTimestamp);
     }
 
     @Transactional
