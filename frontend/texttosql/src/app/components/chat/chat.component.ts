@@ -57,6 +57,7 @@ export class ChatComponent implements OnInit {
   isGuest = computed(() => !this.authService.currentUser());
   isLoading = signal(false);
   isSending = signal(false);
+  sendingChatId = signal<string | null>(null);
   isLoadingMoreMsg = signal(false);
 
   // Data
@@ -405,6 +406,7 @@ export class ChatComponent implements OnInit {
 
     this.isSending.set(true);
     let chatId = this.selectedChatId();
+    this.sendingChatId.set(chatId || 'NEW_CHAT');
 
     if (this.isGuest()) {
       try {
@@ -412,6 +414,7 @@ export class ChatComponent implements OnInit {
       } catch {
         this.showError('Failed to initialize guest session.');
         this.isSending.set(false);
+        this.sendingChatId.set(null);
         return;
       }
     }
@@ -422,11 +425,14 @@ export class ChatComponent implements OnInit {
       try {
         const chatRes = await this.api.invoke(createChat, { body: { name: newChatName } }) as ChatDto;
         chatId = chatRes.chatId!;
+        this.messageCache.set(chatId, []);
+        this.sendingChatId.set(chatId);
         this.selectedChatId.set(chatId);
         this.chats.update(c => [chatRes, ...c]);
       } catch {
         this.showError('Failed to create chat session.');
         this.isSending.set(false);
+        this.sendingChatId.set(null);
         return;
       }
     }
@@ -463,6 +469,7 @@ export class ChatComponent implements OnInit {
       this.scrollToBottom();
     } finally {
       this.isSending.set(false);
+      this.sendingChatId.set(null);
     }
   }
 
@@ -475,10 +482,8 @@ export class ChatComponent implements OnInit {
   private appendLocalMessage(chatId: string, msg: MessageDto): void {
     this.messages.update(m => this.sortMessages([...m, msg]));
     // Keep cache in sync
-    const cached = this.messageCache.get(chatId);
-    if (cached) {
-      this.messageCache.set(chatId, this.sortMessages([...cached, msg]));
-    }
+    const currentMsgs = this.messageCache.get(chatId) || [];
+    this.messageCache.set(chatId, this.sortMessages([...currentMsgs, msg]));
   }
 
   // --- Modal Logic ---

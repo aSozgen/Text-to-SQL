@@ -186,7 +186,7 @@
           </div>
         }
 
-        @if (isSending()) {
+        @if (isSending() && (sendingChatId() === selectedChatId() || (sendingChatId() === 'NEW_CHAT' && !selectedChatId()))) {
           <div class="msg-row system-row">
             <div class="avatar"><i class="fas fa-robot"></i></div>
             <div class="msg-bubble system loading-bubble">
