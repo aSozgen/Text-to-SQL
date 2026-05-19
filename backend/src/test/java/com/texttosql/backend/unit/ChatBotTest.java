@@ -292,7 +292,7 @@ public class ChatBotTest {
     }
 
     @Test
-    void updateMessageContent_ShouldReturnForbidden_WhenMessageIsLLM() throws Exception {
+    void updateMessageContent_ShouldReturnUnauthorized_WhenMessageIsLLM() throws Exception {
         UUID chatId = UUID.randomUUID();
         UUID messageId = UUID.randomUUID();
 
@@ -304,8 +304,8 @@ public class ChatBotTest {
         mockMvc.perform(patch("/api/v1/chatbot/chats/{chatID}/messages/{messageID}", chatId, messageId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateDto)))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value("LLM messages cannot be updated."));
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("Access denied: Authentication is required."));
     }
 
     @Test
@@ -334,7 +334,7 @@ public class ChatBotTest {
     }
 
     @Test
-    void updateMessageFeedback_ShouldReturnForbidden_WhenMessageIsUser() throws Exception {
+    void updateMessageFeedback_ShouldReturnUnauthorized_WhenMessageIsUser() throws Exception {
         UUID chatId = UUID.randomUUID();
         UUID messageId = UUID.randomUUID();
         FeedbackRequest feedbackRequest = new FeedbackRequest(Feedback.GOOD);
@@ -345,8 +345,8 @@ public class ChatBotTest {
         mockMvc.perform(patch("/api/v1/chatbot/chats/{chatID}/messages/{messageID}/feedback", chatId, messageId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(feedbackRequest)))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value("Cannot give feedback for USER messages."));
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("Access denied: Authentication is required."));
     }
 
     @Test
@@ -361,7 +361,7 @@ public class ChatBotTest {
     }
 
     @Test
-    void deleteMessage_ShouldReturnForbidden_WhenMessageIsLLM() throws Exception {
+    void deleteMessage_ShouldReturnUnauthorized_WhenMessageIsLLM() throws Exception {
         UUID chatId = UUID.randomUUID();
         UUID messageId = UUID.randomUUID();
 
@@ -369,8 +369,8 @@ public class ChatBotTest {
                 .when(chatBotService).deleteMessage(eq(chatId), eq(messageId), any(CustomUserDetails.class));
 
         mockMvc.perform(delete("/api/v1/chatbot/chats/{chatID}/messages/{messageID}", chatId, messageId))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value("LLM messages cannot be deleted."));
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("Access denied: Authentication is required."));
     }
 
     @Test
@@ -445,7 +445,7 @@ public class ChatBotTest {
                 .thenThrow(new AccessDeniedException("You don't have access to this chat"));
 
         mockMvc.perform(get("/api/v1/chatbot/chats/{chatID}/export/csv", chatId))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

@@ -257,7 +257,7 @@ public class SchemaTest {
     }
 
     @Test
-    void createDatabase_ShouldReturnForbidden_WhenUserIsGuest() throws Exception {
+    void createDatabase_ShouldReturnUnauthorized_WhenUserIsGuest() throws Exception {
         DatabaseDto requestDto = new DatabaseDto(null, "New_DB", "Desc", false, null);
         when(schemaService.createDatabase(any(DatabaseDto.class), any(CustomUserDetails.class)))
                 .thenThrow(new AccessDeniedException("Guests cannot create databases."));
@@ -265,8 +265,8 @@ public class SchemaTest {
         mockMvc.perform(post("/api/v1/schemas/databases")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDto)))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value("Guests cannot create databases."));
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("Access denied: Authentication is required."));
     }
 
     @Test
@@ -303,7 +303,7 @@ public class SchemaTest {
     }
 
     @Test
-    void updateDatabase_ShouldReturnForbidden_WhenUserIsGuest() throws Exception {
+    void updateDatabase_ShouldReturnUnauthorized_WhenUserIsGuest() throws Exception {
         UUID databaseId = UUID.randomUUID();
         DatabaseDto updateDto = new DatabaseDto(databaseId, "Updated_DB", "New Desc", null, null);
 
@@ -313,8 +313,8 @@ public class SchemaTest {
         mockMvc.perform(patch("/api/v1/schemas/databases/{id}", databaseId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateDto)))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value("Guests cannot update databases."));
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("Access denied: Authentication is required."));
     }
 
     @Test
@@ -341,14 +341,14 @@ public class SchemaTest {
     }
 
     @Test
-    void deleteDatabase_ShouldReturnForbidden_WhenUserIsGuest() throws Exception {
+    void deleteDatabase_ShouldReturnUnauthorized_WhenUserIsGuest() throws Exception {
         UUID databaseId = UUID.randomUUID();
         doThrow(new AccessDeniedException("Guests cannot delete databases."))
                 .when(schemaService).deleteDatabase(eq(databaseId), any(CustomUserDetails.class));
 
         mockMvc.perform(delete("/api/v1/schemas/databases/{id}", databaseId))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value("Guests cannot delete databases."));
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("Access denied: Authentication is required."));
     }
 
     @Test
