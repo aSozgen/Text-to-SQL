@@ -1,4 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideRouter } from '@angular/router';
+import { provideApiConfiguration } from '../../api/api-configuration';
 
 import { HelpComponent } from './help.component';
 
@@ -8,7 +12,13 @@ describe('HelpComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [HelpComponent]
+      imports: [HelpComponent],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        provideApiConfiguration('')
+      ]
     })
     .compileComponents();
 
