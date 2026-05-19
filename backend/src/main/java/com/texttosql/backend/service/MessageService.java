@@ -156,6 +156,7 @@ public class MessageService {
                 .content(llmContent)
                 .confidence(confidence)
                 .senderType(SenderType.LLM)
+                .createdAt(createdAt)
                 .build();
 
         MessageEntity savedLlmMessage = messageRepository.save(llmMessage);
