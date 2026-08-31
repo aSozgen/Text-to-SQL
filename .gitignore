@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # IntelliJ IDEA
 .idea/
 *.iml
@@ -24,3 +25,6 @@ logs/
 
 # Env
 .env
+=======
+/YararlıIcerikler_HocanınAttıklari
+>>>>>>> origin
