@@ -2,7 +2,7 @@ services:
   db:
     image: postgres:15-alpine
     container_name: texttosql-postgres
-    restart: unless-stopped
+    restart: no
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -29,9 +29,11 @@ services:
   ollama:
     image: ollama/ollama:latest
     container_name: texttosql-ollama
-    restart: unless-stopped
+    restart: no
     ports:
       - "11434:11434"
+    environment:
+      - OLLAMA_KEEP_ALIVE=-1
     volumes:
       - ollama_data:/root/.ollama  # İndirilen model silinmesin diye diske kaydedilir
     networks:
@@ -62,7 +64,7 @@ services:
       context: llm-server/texttosql
       dockerfile: servers/v5/Dockerfile
     container_name: texttosql-llm
-    restart: unless-stopped
+    restart: no
     depends_on:
       ollama-init:
         condition: service_completed_successfully # BAŞARILI BİR ŞEKİLDE MODEL İNMEDEN LLM BAŞLAMASIN
@@ -95,7 +97,7 @@ services:
       args:
         - MAVEN_OPTS=-Xmx512m
     container_name: texttosql-backend
-    restart: unless-stopped
+    restart: no
     depends_on:
       db:
         condition: service_healthy
@@ -144,7 +146,7 @@ services:
       context: ./frontend/texttosql
       dockerfile: Dockerfile
     container_name: texttosql-frontend
-    restart: unless-stopped
+    restart: no
     depends_on:
       backend:
         condition: service_started

@@ -1,0 +1,2550 @@
+[
+    {
+        "id": 1,
+        "question": "What are the address details and biographical information of each student?",
+        "expected": "SELECT T1.address_details ,  T3.bio_data FROM Addresses AS T1 JOIN Students_Addresses AS T2 ON T1.address_id  =  T2.address_id JOIN Students AS T3 ON T2.student_id  =  T3.student_id",
+        "generated": "SELECT T1.student_details , T1.bio_data FROM Students AS T1 JOIN Transcripts AS T2 ON T1.student_id = T2.student_id",
+        "response_time_secs": 10.097750902175903
+    },
+    {
+        "id": 2,
+        "question": "What is the product average price?",
+        "expected": "SELECT avg(product_price) FROM Products",
+        "generated": "SELECT AVG(product_price) AS average_price FROM Products",
+        "response_time_secs": 11.105504512786865
+    },
+    {
+        "id": 4,
+        "question": "How many reference papers does paper with id D12-1027 have?",
+        "expected": "SELECT count(*) FROM Citation WHERE paper_id  =  \"D12-1027\"",
+        "generated": "SELECT COUNT(*) AS reference_count FROM Citations WHERE paper_id = 'D12-1027'",
+        "response_time_secs": 21.691934823989868
+    },
+    {
+        "id": 6,
+        "question": "What is the average sale price of books written by George Orwell?",
+        "expected": "SELECT avg(saleprice) FROM Book AS T1 JOIN Author_book AS T2 ON T1.isbn  =  T2.isbn JOIN Author AS T3 ON T2.Author  =  T3.idAuthor WHERE T3.name  =  \"George Orwell\"",
+        "generated": "SELECT AVG(Book.SalePrice) FROM Author JOIN Author_Book ON Author.idAuthor = Author_Book.Author JOIN Book ON Author_Book.ISBN = Book.ISBN WHERE Author.Name = 'George Orwell'",
+        "response_time_secs": 28.511160135269165
+    },
+    {
+        "id": 9,
+        "question": "What are the codes of boxes for which the value is greater than the value of any box that contains Rocks?",
+        "expected": "SELECT code FROM boxes WHERE value  >  (SELECT min(value) FROM boxes WHERE CONTENTS  =  'Rocks')",
+        "generated": "SELECT Code FROM Boxes WHERE Value > (SELECT MAX(Value) FROM Boxes WHERE Contents = 'Rocks')",
+        "response_time_secs": 46.15145993232727
+    },
+    {
+        "id": 10,
+        "question": "Find the number of channels that do not run any program.",
+        "expected": "SELECT count(*) FROM channel WHERE channel_id NOT IN (SELECT channel_id FROM program)",
+        "generated": "SELECT COUNT(*) FROM channel c WHERE NOT EXISTS ( SELECT 1 FROM program p WHERE p.Channel_ID = c.Channel_ID )",
+        "response_time_secs": 33.79766082763672
+    },
+    {
+        "id": 11,
+        "question": "How many channels have the word 'bbc' in their internet link?",
+        "expected": "SELECT count(*) FROM channel WHERE internet LIKE \"%bbc%\"",
+        "generated": "SELECT COUNT(*) FROM channel WHERE Internet LIKE '%bbc%'",
+        "response_time_secs": 14.663301229476929
+    },
+    {
+        "id": 12,
+        "question": "Find all the details of the customers who have been involved in an interaction with status `` Stuck '' and service and channel detail `` bad '' .",
+        "expected": "select t1.customer_details from customers as t1 join customer_interactions as t2 on t1.customer_id  =  t2.customer_id where t2.status_code  =  \"stuck\" and services_and_channels_details  =  \"bad\"",
+        "generated": "SELECT C.Customer_Details FROM Customers AS C JOIN Interactions AS I ON C.Customer_ID = I.Customer_ID JOIN Services AS S ON I.Service_ID = S.Service_ID JOIN Channels AS CH ON I.Channel_ID = CH.Channel_ID WHERE I.Status = 'Stuck' AND S.Service_Details = 'bad' AND CH.Channel_Details = 'bad'",
+        "response_time_secs": 34.91781949996948
+    },
+    {
+        "id": 13,
+        "question": "Find the number of reservations for each boat with id greater than 50.",
+        "expected": "SELECT bid ,  count(*) FROM Reserves GROUP BY bid HAVING bid  >  50",
+        "generated": "SELECT count(*) , T1.name FROM Boats AS T1 JOIN Reserves AS T2 ON T1.bid = T2.bid WHERE T1.bid > 50 GROUP BY T1.name",
+        "response_time_secs": 8.41596269607544
+    },
+    {
+        "id": 14,
+        "question": "Which store has the headphones in stock? Give me the store name and the total quantity.",
+        "expected": "SELECT t1.name ,  sum(t2.quantity) FROM store AS t1 JOIN stock AS t2 ON t1.store_id  =  t2.store_id GROUP BY t2.store_id ORDER BY sum(t2.quantity) DESC LIMIT 1",
+        "generated": "SELECT s.Name, SUM(st.Quantity) AS Total_Quantity FROM store s JOIN stock st ON s.Store_ID = st.Store_ID JOIN headphone h ON st.Headphone_ID = h.Headphone_ID GROUP BY s.Name",
+        "response_time_secs": 37.78702640533447
+    },
+    {
+        "id": 15,
+        "question": "Show agency ids and details with at least 2 clients.",
+        "expected": "SELECT T1.agency_id ,  T1.agency_details FROM Agencies AS T1 JOIN Clients AS T2 ON T1.agency_id  =  T2.agency_id GROUP BY T1.agency_id HAVING count(*)  >=  2",
+        "generated": "SELECT a.agency_id, a.agency_details FROM Agencies a JOIN Clients c ON a.agency_id = c.agency_id GROUP BY a.agency_id, a.agency_details HAVING COUNT(c.client_id) >= 2",
+        "response_time_secs": 23.984705448150635
+    },
+    {
+        "id": 16,
+        "question": "List the order date of the orders who are placed by customers with at least 2 payment methods.",
+        "expected": "SELECT date_order_placed FROM Orders WHERE customer_id IN ( SELECT T1.customer_id FROM Customers AS T1 JOIN Customer_Payment_Methods AS T2 ON T1.customer_id  =  T2.customer_id GROUP BY T1.customer_id HAVING count(*)  >=  2 )",
+        "generated": "SELECT o.order_date FROM Orders o JOIN Payments p ON o.order_id = p.order_id GROUP BY o.customer_id HAVING COUNT(DISTINCT p.payment_method) >= 2",
+        "response_time_secs": 29.337802171707153
+    },
+    {
+        "id": 17,
+        "question": "What is the distance between Boston and Newark?",
+        "expected": "SELECT distance FROM Direct_distance AS T1 JOIN City AS T2 ON T1.city1_code  =  T2.city_code JOIN City AS T3 ON T1.city2_code  =  T3.city_code WHERE T2.city_name  =  \"Boston\" AND T3.city_name  =  \"Newark\"",
+        "generated": "SELECT distance FROM Direct_distance WHERE (city1_code = 'BOS' AND city2_code = 'NWK') OR (city1_code = 'NWK' AND city2_code = 'BOS')",
+        "response_time_secs": 21.74010396003723
+    },
+    {
+        "id": 19,
+        "question": "What are the rating and average age for sailors who reserved red boats for each rating?",
+        "expected": "SELECT T1.rating ,  avg(T1.age) FROM Sailors AS T1 JOIN Reserves AS T2 ON T1.sid  =  T2.sid JOIN Boats AS T3 ON T3.bid  =  T2.bid WHERE T3.color  =  'red' GROUP BY T1.rating",
+        "generated": "SELECT T1.rating , avg(T2.age) FROM Reserves AS T3 JOIN Boats AS T1 ON T3.bid = T1.bid JOIN Sailors AS T2 ON T3.sid = T2.sid WHERE T1.color = 'red' GROUP BY T1.rating",
+        "response_time_secs": 10.948806285858154
+    },
+    {
+        "id": 20,
+        "question": "Find the number of movies whose rating is not null.",
+        "expected": "SELECT count(*) ,  rating FROM movies WHERE rating != 'null' GROUP BY rating",
+        "generated": "SELECT count(*) FROM Movies WHERE rating != \"null\"",
+        "response_time_secs": 3.116579055786133
+    },
+    {
+        "id": 21,
+        "question": "How many pilots who are older than 40 or younger than 30?",
+        "expected": "SELECT count(pilot_name) FROM pilotskills ORDER BY age  >  40 OR age  <  30",
+        "generated": "SELECT count(*) FROM PilotSkills WHERE age > 40 OR age < 30",
+        "response_time_secs": 24.24658465385437
+    },
+    {
+        "id": 22,
+        "question": "Please show the most common manufacturer of clubs.",
+        "expected": "SELECT Manufacturer FROM club GROUP BY Manufacturer ORDER BY COUNT(*) DESC LIMIT 1",
+        "generated": "SELECT Manufacturer, COUNT(*) as Count FROM club GROUP BY Manufacturer ORDER BY Count DESC LIMIT 1",
+        "response_time_secs": 15.377171277999878
+    },
+    {
+        "id": 23,
+        "question": "Show the names of club leaders and the names of clubs they joined.",
+        "expected": "SELECT T3.Name ,  T2.Club_Name FROM club_leader AS T1 JOIN club AS T2 ON T1.Club_ID  =  T2.Club_ID JOIN member AS T3 ON T1.Member_ID  =  T3.Member_ID",
+        "generated": "SELECT m.Name AS Club_Leader, c.Club_Name FROM club_leader cl JOIN member m ON cl.Member_ID = m.Member_ID JOIN club c ON cl.Club_ID = c.Club_ID",
+        "response_time_secs": 39.625184535980225
+    },
+    {
+        "id": 24,
+        "question": "Find the total value of boxes stored in the warehouse with the largest capacity.",
+        "expected": "SELECT sum(T1.value) FROM boxes AS T1 JOIN warehouses AS T2 ON T1.warehouse  =  T2.code ORDER BY T2.capacity DESC LIMIT 1",
+        "generated": "SELECT SUM(T2.Value) FROM Warehouses AS T1 JOIN Boxes AS T2 ON T1.Code = T2.Warehouse WHERE T1.Capacity = (SELECT MAX(Capacity) FROM Warehouses)",
+        "response_time_secs": 7.5562169551849365
+    },
+    {
+        "id": 26,
+        "question": "What are the different plane names, ordered alphabetically?",
+        "expected": "SELECT DISTINCT plane_name FROM pilotskills ORDER BY plane_name",
+        "generated": "SELECT DISTINCT plane_name FROM Hangar ORDER BY plane_name",
+        "response_time_secs": 3.0602073669433594
+    },
+    {
+        "id": 27,
+        "question": "Show each customer name and the total quantities of dishes ordered by that customer.",
+        "expected": "SELECT T1.Name ,  sum(T2.Quantity) FROM customer AS T1 JOIN customer_order AS T2 ON T1.Customer_ID  =  T2.Customer_ID GROUP BY T1.Name",
+        "generated": "SELECT c.Name, SUM(co.Quantity) AS Total_Quantity FROM customer c JOIN customer_order co ON c.Customer_ID = co.Customer_ID GROUP BY c.Customer_ID",
+        "response_time_secs": 22.685664892196655
+    },
+    {
+        "id": 28,
+        "question": "what is the name and id of every sailor who has a rating greater than 2 and reserved a boat.",
+        "expected": "SELECT DISTINCT T1.name ,  T1.sid FROM Sailors AS T1 JOIN Reserves AS T2 ON T1.sid  =  T2.sid WHERE  T1.rating  >  2",
+        "generated": "SELECT T1.name , T1.sid FROM sailors AS T1 JOIN reserves AS T2 ON T1.sid = T2.sid WHERE T1.rating > 2",
+        "response_time_secs": 7.217141628265381
+    },
+    {
+        "id": 29,
+        "question": "Show the official languages and the number of countries speaking each language.",
+        "expected": "SELECT T2.name ,  COUNT(*) FROM official_languages AS T1 JOIN languages AS T2 ON T1.language_id  =  T2.id GROUP BY T2.name",
+        "generated": "SELECT l.name AS language_name, COUNT(ol.country_id) AS number_of_countries FROM languages l JOIN official_languages ol ON l.id = ol.language_id GROUP BY l.name",
+        "response_time_secs": 21.397917985916138
+    },
+    {
+        "id": 31,
+        "question": "Find the names of all the services which both have been used by customer \"Hardy Kutch\" and have been rated \"bad\" in one of the customer interactions.",
+        "expected": "SELECT DISTINCT t3.service_details FROM customers AS t1 JOIN customers_and_services AS t2 ON t1.customer_id  =  t2.customer_id JOIN services AS t3 ON t2.service_id  =  t3.service_id JOIN customer_interactions AS t4 ON t3.service_id  =  t4.service_id WHERE t1.customer_details  =  \"Hardy Kutch\" AND t4.services_and_channels_details  =  \"bad\"",
+        "generated": "SELECT DISTINCT s.Service_Details FROM Services s JOIN Customers_and_Services cas ON s.Service_ID = cas.Service_ID JOIN Customers c ON cas.Customer_ID = c.Customer_ID JOIN Customer_Interaction_Ratings cir ON cas.Customers_and_Services_ID = cir.Customers_and_Services_ID WHERE c.Customer_Details = 'Hardy Kutch' AND cir.Rating = 'bad'",
+        "response_time_secs": 35.52470111846924
+    },
+    {
+        "id": 32,
+        "question": "What is the cheapest good with cheese flavor?",
+        "expected": "SELECT min(price) FROM goods WHERE flavor  =  \"Cheese\"",
+        "generated": "SELECT T1.Id FROM goods AS T1 JOIN items AS T2 ON T1.Id = T2.Item WHERE T1.Flavor = \"cheese\" ORDER BY T1.Price LIMIT 1",
+        "response_time_secs": 8.117584705352783
+    },
+    {
+        "id": 35,
+        "question": "How many properties have 1 parking lot or 1 garage?",
+        "expected": "SELECT count(*) FROM Properties WHERE parking_lots  =  1 OR garage_yn  =  1;",
+        "generated": "SELECT COUNT(*) FROM Properties WHERE has_parking_lot = 1 OR has_garage = 1",
+        "response_time_secs": 27.811470985412598
+    },
+    {
+        "id": 36,
+        "question": "Show all staff names who have been both speaker and sponsor in some conference.",
+        "expected": "SELECT T1.name FROM staff AS T1 JOIN conference_participation AS T2 ON T1.staff_id  =  T2.staff_id WHERE T2.role  =  'Speaker' INTERSECT SELECT T1.name FROM staff AS T1 JOIN conference_participation AS T2 ON T1.staff_id  =  T2.staff_id WHERE T2.role  =  'Sponsor'",
+        "generated": "SELECT s.name FROM staff s WHERE s.staff_ID IN (SELECT sp.staff_ID FROM speakers sp) AND s.staff_ID IN (SELECT sn.staff_ID FROM sponsors sn)",
+        "response_time_secs": 24.837594747543335
+    },
+    {
+        "id": 37,
+        "question": "What are the models which have not been driven by any drivers?",
+        "expected": "SELECT model FROM vehicle EXCEPT SELECT T1.model FROM vehicle AS T1 JOIN vehicle_driver AS T2 ON T1.vehicle_id  =  T2.vehicle_id",
+        "generated": "SELECT v.Model FROM vehicle v LEFT JOIN vehicle_driver vd ON v.Vehicle_ID = vd.Vehicle_ID WHERE vd.Driver_ID IS NULL",
+        "response_time_secs": 26.17545986175537
+    },
+    {
+        "id": 38,
+        "question": "Who sent most number of packages? List client name and number of packages sent by that client.",
+        "expected": "SELECT T2.Name ,  count(*) FROM PACKAGE AS T1 JOIN Client AS T2 ON T1.Sender  =  T2.AccountNumber GROUP BY T1.Sender ORDER BY count(*) DESC LIMIT 1;",
+        "generated": "SELECT e.Name AS ClientName, COUNT(s.ShipmentID) AS NumberOfPackagesSent FROM Employee e JOIN Shipment s ON e.EmployeeID = s.Manager GROUP BY e.EmployeeID, e.Name ORDER BY NumberOfPackagesSent DESC LIMIT 1",
+        "response_time_secs": 34.64904570579529
+    },
+    {
+        "id": 39,
+        "question": "List the start time and the end time of the students' addresses for the students who have 2 transcripts.",
+        "expected": "SELECT date_from ,  date_to FROM Students_Addresses WHERE student_id IN ( SELECT student_id FROM Transcripts GROUP BY student_id HAVING count(*)  =  2 )",
+        "generated": "SELECT s.student_id, MIN(t.date_of_transcript) AS start_time, MAX(t.date_of_transcript) AS end_time FROM Students s JOIN Transcripts t ON s.student_id = t.student_id GROUP BY s.student_id HAVING COUNT(t.transcript_id) = 2",
+        "response_time_secs": 38.8495876789093
+    },
+    {
+        "id": 40,
+        "question": "Give the ids of Cookies or Cakes that cost between 3 and 7 dollars.",
+        "expected": "SELECT id FROM goods WHERE food  =  \"Cookie\" OR food  =  \"Cake\" AND price BETWEEN 3 AND 7",
+        "generated": "SELECT id FROM goods WHERE food IN ('Cookie','Cake') AND price BETWEEN 3 AND 7",
+        "response_time_secs": 22.069501399993896
+    },
+    {
+        "id": 41,
+        "question": "Among the buildings not completed in 1980, what is the maximum number of stories?",
+        "expected": "SELECT max(Number_of_Stories) FROM building WHERE Completed_Year != \"1980\"",
+        "generated": "SELECT max(Number_of_Stories) FROM building WHERE Completed_Year != 1980",
+        "response_time_secs": 23.320626258850098
+    },
+    {
+        "id": 44,
+        "question": "Show the first name and the last name for students living in state MD.",
+        "expected": "SELECT T2.Fname ,  T2.Lname FROM City AS T1 JOIN Student AS T2 ON T1.city_code  =  T2.city_code WHERE T1.state  =  \"MD\"",
+        "generated": "SELECT Fname , LName FROM Student WHERE city_code IN (SELECT city_code FROM City WHERE state = 'MD')",
+        "response_time_secs": 5.663408517837524
+    },
+    {
+        "id": 46,
+        "question": "How many drivers have been racing in each racing series?",
+        "expected": "SELECT count(*) ,  racing_series FROM driver GROUP BY racing_series",
+        "generated": "SELECT Racing_Series, COUNT(Driver_ID) AS Number_of_Drivers FROM driver GROUP BY Racing_Series",
+        "response_time_secs": 15.692104578018188
+    },
+    {
+        "id": 47,
+        "question": "What are the model, class, and construction of the cheapest headphone?",
+        "expected": "SELECT model ,  CLASS ,  construction FROM headphone ORDER BY price LIMIT 1",
+        "generated": "SELECT Model, Class, Construction FROM headphone ORDER BY Price ASC LIMIT 1",
+        "response_time_secs": 18.974506855010986
+    },
+    {
+        "id": 48,
+        "question": "Find the names of districts whose government links use a 'gov' domain.",
+        "expected": "SELECT name FROM district WHERE Government_website LIKE \"%gov%\"",
+        "generated": "SELECT Name FROM district WHERE Government_website LIKE '%.gov'",
+        "response_time_secs": 14.488034009933472
+    },
+    {
+        "id": 49,
+        "question": "List the names of regions in alphabetical order.",
+        "expected": "SELECT Name FROM region ORDER BY Name ASC",
+        "generated": "SELECT name FROM region ORDER BY name",
+        "response_time_secs": 2.6917524337768555
+    },
+    {
+        "id": 50,
+        "question": "Find the name of stores which have no headphone in stock.",
+        "expected": "SELECT name FROM store WHERE store_id NOT IN (SELECT store_id FROM stock)",
+        "generated": "SELECT s.Name FROM store s LEFT JOIN stock st ON s.Store_ID = st.Store_ID AND st.Headphone_ID IS NULL",
+        "response_time_secs": 29.856016397476196
+    },
+    {
+        "id": 51,
+        "question": "Show the type of powertrain with at least two vehicles, and the average annual fuel cost for vehicles in each such type.",
+        "expected": "SELECT type_of_powertrain ,  avg(annual_fuel_cost) FROM vehicles GROUP BY type_of_powertrain HAVING count(*)  >=  2",
+        "generated": "SELECT Type_of_powertrain, AVG(Annual_fuel_cost) as Average_Annual_Fuel_Cost FROM Vehicles GROUP BY Type_of_powertrain HAVING COUNT(*) >= 2",
+        "response_time_secs": 24.883214712142944
+    },
+    {
+        "id": 52,
+        "question": "What is the invoice id, status code, and details for the invoice with most number of payments.",
+        "expected": "SELECT T1.invoice_id ,  T2.invoice_status ,  T2.invoice_details FROM Payments AS T1 JOIN Invoices AS T2 ON T1.invoice_id  =  T2.invoice_id GROUP BY T1.invoice_id ORDER BY count(*) DESC LIMIT 1",
+        "generated": "SELECT i.invoice_id, i.invoice_status, i.invoice_details FROM Invoices i JOIN Payments p ON i.invoice_id = p.invoice_id GROUP BY i.invoice_id, i.invoice_status, i.invoice_details ORDER BY COUNT(p.payment_id) DESC LIMIT 1",
+        "response_time_secs": 32.495333671569824
+    },
+    {
+        "id": 53,
+        "question": "What is the agent id and details for the agency with most staff?",
+        "expected": "SELECT T1.agency_id ,  T2.agency_details FROM Staff AS T1 JOIN Agencies AS T2 ON T1.agency_id  =  T2.agency_id GROUP BY T1.agency_id ORDER BY count(*) DESC LIMIT 1",
+        "generated": "SELECT a.agency_id, a.agency_details FROM Agencies a JOIN Staff s ON a.agency_id = s.agency_id GROUP BY a.agency_id, a.agency_details ORDER BY COUNT(s.staff_id) DESC LIMIT 1",
+        "response_time_secs": 24.578044891357422
+    },
+    {
+        "id": 54,
+        "question": "What is the total weight of all the packages that customer Leo Wong sent?",
+        "expected": "SELECT sum(T1.Weight) FROM PACKAGE AS T1 JOIN Client AS T2 ON T1.Sender  =  T2.AccountNumber WHERE T2.Name  =  \"Leo Wong\";",
+        "generated": "SELECT SUM(Packages.Weight) FROM Packages JOIN Orders ON Packages.OrderID = Orders.OrderID JOIN Customers ON Orders.CustomerID = Customers.CustomerID WHERE Customers.Name = 'Leo Wong'",
+        "response_time_secs": 35.67533254623413
+    },
+    {
+        "id": 56,
+        "question": "What are the document subset names?",
+        "expected": "SELECT Document_Subset_Name FROM Document_Subsets;",
+        "generated": "SELECT document_subset_name FROM document_subsets",
+        "response_time_secs": 3.1227917671203613
+    },
+    {
+        "id": 57,
+        "question": "What is the receipt number and date corresponding to the receipt for which the most expensive item was purchased?",
+        "expected": "SELECT T1.ReceiptNumber ,  T1.Date FROM receipts AS T1 JOIN items AS T2 ON T1.ReceiptNumber  =  T2.receipt JOIN goods AS T3 ON T2.item  =  T3.id ORDER BY T3.price DESC LIMIT 1",
+        "generated": "SELECT T1.Receipt , T1.Date FROM receipts AS T1 JOIN items AS T2 ON T1.Receipt = T2.Receipt WHERE T2.Item IN (SELECT Id FROM goods ORDER BY Price DESC LIMIT 1)",
+        "response_time_secs": 9.569175720214844
+    },
+    {
+        "id": 58,
+        "question": "Return the date stamp and property name for each property history event, sorted by date stamp.",
+        "expected": "SELECT T1.datestamp ,  T2.property_name FROM User_Property_History AS T1 JOIN Properties AS T2 ON T1.property_id  =  T2.property_id ORDER BY datestamp;",
+        "generated": "SELECT date_stamp, property_name FROM Property_History ORDER BY date_stamp",
+        "response_time_secs": 4.7221527099609375
+    },
+    {
+        "id": 59,
+        "question": "What is the name and id of every sailor who reserved one or more boats?",
+        "expected": "SELECT DISTINCT T1.name ,  T1.sid FROM Sailors AS T1 JOIN Reserves AS T2 ON T1.sid  =  T2.sid",
+        "generated": "SELECT T1.name , T1.sid FROM sailors AS T1 JOIN reserves AS T2 ON T1.sid = T2.sid GROUP BY T1.sid HAVING count(*) >= 1",
+        "response_time_secs": 7.800105571746826
+    },
+    {
+        "id": 60,
+        "question": "Find the name and nationality of the people who did not participate in any ACL conference.",
+        "expected": "SELECT name ,  nationality FROM staff WHERE staff_id NOT IN (SELECT T2.staff_id FROM Conference AS T1 JOIN Conference_participation AS T2 ON T1.conference_id  =  T2.conference_id WHERE T1.Conference_Name  =  \"ACL\")",
+        "generated": "SELECT name, Nationality FROM staff WHERE staff_ID NOT IN (SELECT staff_ID FROM conference_participation WHERE Conference_ID = (SELECT Conference_ID FROM conference WHERE Conference_Name = 'ACL'))",
+        "response_time_secs": 27.823628902435303
+    },
+    {
+        "id": 61,
+        "question": "What were the ids, dates, and status codes for orders made by Jeromy?",
+        "expected": "SELECT order_id ,  order_date ,  order_status_code FROM Customer_orders AS T1 JOIN Customers AS T2 ON T1.customer_id  =  T2.customer_id WHERE T2.customer_name  =  \"Jeromy\"",
+        "generated": "SELECT t1.order_id , t1.order_date , t1.status_code FROM customer_orders AS t1 JOIN customers AS t2 ON t1.customer_id = t2.customer_id WHERE t2.customer_name = \"Jeromy\"",
+        "response_time_secs": 8.701912641525269
+    },
+    {
+        "id": 62,
+        "question": "What are the collection subset ids, names, and number of collections for each subset?",
+        "expected": "SELECT T2.Collection_Subset_ID ,  T1.Collection_Subset_Name ,  count(*) FROM Collection_Subsets AS T1 JOIN Collection_Subset_Members AS T2 ON T1.Collection_Subset_ID =  T2.Collection_Subset_ID GROUP BY T2.Collection_Subset_ID;",
+        "generated": "SELECT Collection_Subset_ID, Collection_Subset_Name, COUNT(*) AS Number_of_Collections FROM Collection_Subsets GROUP BY Collection_Subset_ID, Collection_Subset_Name",
+        "response_time_secs": 34.85437798500061
+    },
+    {
+        "id": 63,
+        "question": "Count the number of papers which cited a paper with id A00-1002.",
+        "expected": "SELECT count(*) FROM Citation WHERE cited_paper_id  =  \"A00-1002\"",
+        "generated": "SELECT COUNT(*) FROM Citation WHERE cited_paper_id = 'A00-1002'",
+        "response_time_secs": 19.973876476287842
+    },
+    {
+        "id": 64,
+        "question": "List document id of all documents.",
+        "expected": "SELECT Document_Object_ID FROM Document_Objects;",
+        "generated": "SELECT Document_Object_ID FROM Document_Objects",
+        "response_time_secs": 15.547271966934204
+    },
+    {
+        "id": 65,
+        "question": "List the dates of all shipments.",
+        "expected": "SELECT Date FROM Shipment;",
+        "generated": "SELECT Date FROM Shipment",
+        "response_time_secs": 9.573829889297485
+    },
+    {
+        "id": 67,
+        "question": "Where is the plane F-14 Fighter located?",
+        "expected": "SELECT LOCATION FROM hangar WHERE plane_name  =  'F-14 Fighter'",
+        "generated": "SELECT T2.location FROM Hangar AS T1 JOIN Plane AS T2 ON T1.plane_name = T2.plane_name WHERE T2.plane_name = \"F-14 Fighter\"",
+        "response_time_secs": 8.164186954498291
+    },
+    {
+        "id": 68,
+        "question": "Find the number of reservations by sailors with id greater than 1 for each boat.",
+        "expected": "SELECT bid ,  count(*) FROM Reserves WHERE sid  >  1 GROUP BY bid",
+        "generated": "SELECT count(*) , T1.name FROM boats AS T1 JOIN reserves AS T2 ON T1.bid = T2.bid WHERE T2.sid > 1 GROUP BY T1.name",
+        "response_time_secs": 8.0310537815094
+    },
+    {
+        "id": 73,
+        "question": "Find the first names and number of works of all artists who have at least two paintings?",
+        "expected": "SELECT T1.fname ,  count(*) FROM artists AS T1 JOIN paintings AS T2 ON T1.artistID  =  T2.painterID GROUP BY T2.painterID HAVING count(*)  >=  2",
+        "generated": "SELECT a.fname, COUNT(p.paintingID) AS num_paintings FROM Artists a JOIN Paintings p ON a.artistID = p.painterID GROUP BY a.artistID HAVING COUNT(p.paintingID) >= 2",
+        "response_time_secs": 25.597938537597656
+    },
+    {
+        "id": 75,
+        "question": "What are the names and locations of the universities that did not have any staff participating in any conferences in 2004?",
+        "expected": "SELECT T1.Institution_Name ,  T1.location FROM institution AS T1 JOIN staff AS T2 ON T1.institution_id  =  T2.institution_id WHERE T2.staff_id NOT IN (SELECT T4.staff_id FROM Conference AS T3 JOIN Conference_participation AS T4 ON T3.conference_id  =  T4.conference_id WHERE T3.year  =  2004)",
+        "generated": "SELECT DISTINCT T1.institution_name, T1.location FROM institution AS T1 LEFT JOIN staff AS T2 ON T1.institution_id = T2.institution_id LEFT JOIN conference_participation AS T3 ON T2.staff_id = T3.staff_id WHERE T3.conference_year != 2004",
+        "response_time_secs": 64.04358434677124
+    },
+    {
+        "id": 77,
+        "question": "What are the names and ids of sailors who reserved red or blue boats?",
+        "expected": "SELECT DISTINCT T2.sid ,  T3.name FROM Boats AS T1 JOIN Reserves AS T2 ON  T1.bid  =  T2.bid JOIN Sailors AS T3 ON T2.sid  =  T3.sid WHERE T1.color  =  'red' OR T1.color  =  \"blue\"",
+        "generated": "SELECT T1.name , T1.sid FROM sailors AS T1 JOIN reserves AS T2 ON T1.sid = T2.sid JOIN boats AS T3 ON T2.bid = T3.bid WHERE color = 'red' OR color = 'blue'",
+        "response_time_secs": 10.354382753372192
+    },
+    {
+        "id": 78,
+        "question": "What are the maximum height and width of paintings for each year?",
+        "expected": "SELECT max(height_mm) ,  max(width_mm) ,  YEAR FROM paintings GROUP BY YEAR ORDER BY YEAR",
+        "generated": "SELECT year, MAX(height_mm) AS max_height, MAX(width_mm) AS max_width FROM Paintings GROUP BY year",
+        "response_time_secs": 19.22605061531067
+    },
+    {
+        "id": 81,
+        "question": "Find all the countries where some drivers have points above 150.",
+        "expected": "SELECT T1.Country FROM country AS T1 JOIN driver AS T2 ON T1.Country_ID  =  T2.Country WHERE T2.Points  >  150",
+        "generated": "SELECT DISTINCT c.Country FROM driver d JOIN country c ON d.Country = c.Country_Id WHERE d.Points > 150",
+        "response_time_secs": 25.173973560333252
+    },
+    {
+        "id": 82,
+        "question": "List package number and weight of top 3 lightest packages.",
+        "expected": "SELECT PackageNumber ,  Weight FROM PACKAGE ORDER BY Weight ASC LIMIT 3;",
+        "generated": "SELECT PackageID, Weight FROM Package ORDER BY Weight ASC LIMIT 3",
+        "response_time_secs": 21.022051334381104
+    },
+    {
+        "id": 83,
+        "question": "Show ids for orders including both \"Pride and Prejudice\" and \"The Little Prince\".",
+        "expected": "SELECT idOrder FROM Book AS T1 JOIN Books_Order AS T2 ON T1.isbn  =  T2.isbn WHERE T1.title  =  \"Pride and Prejudice\" INTERSECT SELECT idOrder FROM Book AS T1 JOIN Books_Order AS T2 ON T1.isbn  =  T2.isbn WHERE T1.title  =  \"The Little Prince\"",
+        "generated": "SELECT o.IdOrder FROM Orders o JOIN Order_Details od ON o.IdOrder = od.IdOrder JOIN Book b ON od.ISBN = b.ISBN WHERE b.Title = 'Pride and Prejudice' INTERSECT SELECT o.IdOrder FROM Orders o JOIN Order_Details od ON o.IdOrder = od.IdOrder JOIN Book b ON od.ISBN = b.ISBN WHERE b.Title = 'The Little Prince'",
+        "response_time_secs": 33.610310316085815
+    },
+    {
+        "id": 85,
+        "question": "What are the ids and details of the staff who have attended at least 1 meetings and have the detail with letter 's'?",
+        "expected": "SELECT staff_id ,  staff_details FROM staff WHERE staff_details LIKE \"%s%\" GROUP BY staff_id HAVING count(*)  >=  1",
+        "generated": "SELECT T2.staff_id, T2.staff_details FROM Meetings AS T1 JOIN Staff AS T2 ON T1.staff_id = T2.staff_id GROUP BY T2.staff_id HAVING COUNT(*) >= 1 AND T2.staff_details LIKE '%s%'",
+        "response_time_secs": 29.01201820373535
+    },
+    {
+        "id": 86,
+        "question": "What are the 10 most cited papers, and how many citations did each have?",
+        "expected": "SELECT paper_id ,  count(*) FROM Citation GROUP BY cited_paper_id ORDER BY count(*) DESC LIMIT 10",
+        "generated": "SELECT p.paper_id, COUNT(*) as citation_count FROM Paper p JOIN Citation c ON p.paper_id = c.cited_paper_id GROUP BY p.paper_id ORDER BY citation_count DESC LIMIT 10",
+        "response_time_secs": 30.31488847732544
+    },
+    {
+        "id": 88,
+        "question": "How many different types of contents are stored in each warehouse?",
+        "expected": "SELECT count(DISTINCT CONTENTS) ,  warehouse FROM boxes GROUP BY warehouse",
+        "generated": "SELECT count(DISTINCT contents) , T1.code FROM warehouses AS T1 JOIN boxes AS T2 ON T1.code = T2.warehouse GROUP BY T1.code",
+        "response_time_secs": 7.100856304168701
+    },
+    {
+        "id": 90,
+        "question": "What are the names of distinct racing bikes that are purchased by the cyclists with better results than '4:21.558' ?",
+        "expected": "SELECT DISTINCT T3.product_name FROM cyclist AS T1 JOIN cyclists_own_bikes AS T2 ON T1.id  =  T2.cyclist_id JOIN bike AS T3 ON T2.bike_id  =  T3.id WHERE T1.result  <  '4:21.558'",
+        "generated": "SELECT DISTINCT T1.product_name FROM bike AS T1 JOIN cyclists_own_bikes AS T2 ON T1.id = T2.bike_id JOIN cyclist AS T3 ON T3.id = T2.cyclist_id WHERE T3.result < '4:21.558'",
+        "response_time_secs": 50.59649038314819
+    },
+    {
+        "id": 91,
+        "question": "How many reservations exist for each boat that has more than 1 reservation already?",
+        "expected": "SELECT bid ,  count(*) FROM Reserves GROUP BY bid HAVING count(*)  >  1",
+        "generated": "SELECT count(*) , T1.name FROM Boats AS T1 JOIN Reserves AS T2 ON T1.bid = T2.bid GROUP BY T1.name HAVING count(*) > 1",
+        "response_time_secs": 8.269683122634888
+    },
+    {
+        "id": 93,
+        "question": "Show the number of documents.",
+        "expected": "SELECT count(*) FROM Documents",
+        "generated": "SELECT COUNT(staff_id) AS number_of_documents FROM Staff",
+        "response_time_secs": 18.801785945892334
+    },
+    {
+        "id": 94,
+        "question": "Which customers used the least commonly-used service ? Give me the distinct customer details .",
+        "expected": "select distinct t1.customer_details from customers as t1 join customers_and_services as t2 on t1.customer_id  =  t2.customer_id where t2.service_id  =  (select service_id from services group by service_id order by count(*) asc limit 1)",
+        "generated": "SELECT DISTINCT c.Customer_Details FROM Customers c JOIN Customers_and_Services cas ON c.Customer_ID = cas.Customer_ID JOIN Services s ON cas.Service_ID = s.Service_ID GROUP BY c.Customer_ID ORDER BY COUNT(s.Service_ID) ASC LIMIT 1",
+        "response_time_secs": 29.66656517982483
+    },
+    {
+        "id": 96,
+        "question": "List the detail and id of the teacher who teaches the most courses.",
+        "expected": "SELECT T1.teacher_details ,  T1.teacher_id FROM Teachers AS T1 JOIN Classes AS T2 ON T1.teacher_id  =  T2.teacher_id GROUP BY T1.teacher_id ORDER BY count(*) DESC LIMIT 1",
+        "generated": "SELECT t.teacher_id, t.teacher_details, COUNT(c.course_id) AS course_count FROM Teachers t JOIN Courses c ON t.teacher_id = c.teacher_id GROUP BY t.teacher_id, t.teacher_details ORDER BY course_count DESC LIMIT 1",
+        "response_time_secs": 34.85233926773071
+    },
+    {
+        "id": 97,
+        "question": "Show different nationalities of customers, along with the number of customers of each nationality.",
+        "expected": "SELECT Nationality ,  COUNT(*) FROM customer GROUP BY Nationality",
+        "generated": "SELECT Nationality, COUNT(*) AS Number_of_Customers FROM customer GROUP BY Nationality",
+        "response_time_secs": 14.489359140396118
+    },
+    {
+        "id": 98,
+        "question": "Show the names of club leaders that joined their club before 2018.",
+        "expected": "SELECT T3.Name ,  T2.Club_Name FROM club_leader AS T1 JOIN club AS T2 ON T1.Club_ID  =  T2.Club_ID JOIN member AS T3 ON T1.Member_ID  =  T3.Member_ID WHERE T1.Year_Join  <  2018",
+        "generated": "SELECT T3.Name FROM club AS T1 JOIN club_leader AS T2 ON T1.Club_ID = T2.Club_ID JOIN member AS T3 ON T2.Member_ID = T3.Member_ID WHERE T2.Year_Join < 2018",
+        "response_time_secs": 10.136825323104858
+    },
+    {
+        "id": 100,
+        "question": "What are the names of all Hardware products, sorted by price ascending?",
+        "expected": "SELECT product_name FROM Products WHERE product_type_code  =  \"Hardware\" ORDER BY product_price ASC",
+        "generated": "SELECT product_name FROM products WHERE product_type_code = 'Hardware' ORDER BY product_price ASC",
+        "response_time_secs": 4.856605768203735
+    },
+    {
+        "id": 101,
+        "question": "What are the full names of students living in MD?",
+        "expected": "SELECT T2.Fname ,  T2.Lname FROM City AS T1 JOIN Student AS T2 ON T1.city_code  =  T2.city_code WHERE T1.state  =  \"MD\"",
+        "generated": "SELECT Fname , Lname FROM STUDENT WHERE city_code = \"MD\"",
+        "response_time_secs": 4.692470073699951
+    },
+    {
+        "id": 102,
+        "question": "List all states with at least two cities.",
+        "expected": "SELECT state FROM City GROUP BY state HAVING count(*)  >=  2",
+        "generated": "SELECT s.state_name, COUNT(c.city_code) AS city_count FROM City c JOIN State s ON c.state_code = s.state_code GROUP BY s.state_name HAVING COUNT(c.city_code) >= 2",
+        "response_time_secs": 29.683861255645752
+    },
+    {
+        "id": 103,
+        "question": "What are the first and last names of the artist who lived the longest?",
+        "expected": "SELECT lname ,  fname FROM artists ORDER BY deathYear - birthYear DESC LIMIT 1",
+        "generated": "SELECT fname, lname FROM Artists ORDER BY (deathYear - birthYear) DESC LIMIT 1",
+        "response_time_secs": 28.754204511642456
+    },
+    {
+        "id": 105,
+        "question": "Find the headphone model whose total quantity in stock is the largest.",
+        "expected": "SELECT t1.model FROM headphone AS t1 JOIN stock AS t2 ON t1.headphone_id  =  t2.headphone_id GROUP BY t1.model ORDER BY sum(t2.quantity) DESC LIMIT 1",
+        "generated": "SELECT h.Model, SUM(s.Quantity) AS Total_Quantity FROM stock s JOIN headphone h ON s.Headphone_ID = h.Headphone_ID GROUP BY h.Model ORDER BY Total_Quantity DESC LIMIT 1",
+        "response_time_secs": 25.602267742156982
+    },
+    {
+        "id": 106,
+        "question": "Show all the different invoice ids and statuses of the payments",
+        "expected": "SELECT DISTINCT T1.invoice_id ,  T1.invoice_status FROM Invoices AS T1 JOIN Payments AS T2 ON T1.invoice_id  =  T2.invoice_id",
+        "generated": "SELECT DISTINCT invoice_id, invoice_status FROM Invoices",
+        "response_time_secs": 14.104519844055176
+    },
+    {
+        "id": 107,
+        "question": "Give me the detention start date for all the detention records.",
+        "expected": "SELECT datetime_detention_start FROM Detention",
+        "generated": "SELECT date_of_transcript FROM Transcripts WHERE transcript_details LIKE '%detention%'",
+        "response_time_secs": 3.924844741821289
+    },
+    {
+        "id": 108,
+        "question": "How many authors are of age above 30 for each gender?",
+        "expected": "SELECT count(*) ,  gender FROM author WHERE age  >  30 GROUP BY gender",
+        "generated": "SELECT Gender, COUNT(*) AS Number_of_Authors FROM author WHERE Age > 30 GROUP BY Gender",
+        "response_time_secs": 18.341290712356567
+    },
+    {
+        "id": 110,
+        "question": "What is the total number of universities located in Illinois or Ohio?",
+        "expected": "SELECT count(*) FROM University WHERE state  =  'Illinois' OR state  =  'Ohio'",
+        "generated": "SELECT COUNT(*) FROM university WHERE State IN ('Illinois', 'Ohio')",
+        "response_time_secs": 14.703830242156982
+    },
+    {
+        "id": 111,
+        "question": "What is the number of employees that do not have clearance on Mars ?",
+        "expected": "select count(*) from employee where employeeid not in ( select t2.employeeid from has_clearance as t1 join employee as t2 on t1.employee = t2.employeeid join planet as t3 on t1.planet = t3.planetid where t3.name = \"mars\" );",
+        "generated": "SELECT COUNT(*) FROM Employee e WHERE NOT EXISTS ( SELECT 1 FROM Has_Clearance hc JOIN Planet p ON hc.Planet = p.PlanetID WHERE hc.Employee = e.EmployeeID AND p.Name = 'Mars' )",
+        "response_time_secs": 31.88584280014038
+    },
+    {
+        "id": 112,
+        "question": "What are the names of clubs, ordered descending by the average earnings of players within each?",
+        "expected": "SELECT T1.Name FROM club AS T1 JOIN player AS T2 ON T1.Club_ID  =  T2.Club_ID GROUP BY T1.Club_ID ORDER BY avg(T2.Earnings) DESC",
+        "generated": "SELECT T1.Name FROM CLub AS T1 JOIN player AS T2 ON T1.Club_ID = T2.Club_ID GROUP BY T1.Name ORDER BY avg(T2.Earnings) DESC",
+        "response_time_secs": 8.303722143173218
+    },
+    {
+        "id": 113,
+        "question": "Return the id and detail for the agency with the most staff.",
+        "expected": "SELECT T1.agency_id ,  T2.agency_details FROM Staff AS T1 JOIN Agencies AS T2 ON T1.agency_id  =  T2.agency_id GROUP BY T1.agency_id ORDER BY count(*) DESC LIMIT 1",
+        "generated": "SELECT a.agency_id, a.agency_details FROM Agencies a JOIN Staff s ON a.agency_id = s.agency_id GROUP BY a.agency_id, a.agency_details ORDER BY COUNT(s.staff_id) DESC LIMIT 1",
+        "response_time_secs": 28.095366954803467
+    },
+    {
+        "id": 114,
+        "question": "What are the distinct ids and product names of the bikes that are purchased after year 2015?",
+        "expected": "SELECT DISTINCT T1.id ,  T1.product_name FROM bike AS T1 JOIN cyclists_own_bikes AS T2 ON T1.id  =  T2.bike_id WHERE T2.purchase_year  >  2015",
+        "generated": "SELECT DISTINCT T1.id , T1.product_name FROM bike AS T1 JOIN cyclists_own_bikes AS T2 ON T1.id = T2.bike_id JOIN cyclist AS T3 ON T2.cyclist_id = T3.id WHERE T2.purchase_year > 2015",
+        "response_time_secs": 60.74223041534424
+    },
+    {
+        "id": 115,
+        "question": "Count the number of addresses.",
+        "expected": "SELECT count(*) FROM Addresses",
+        "generated": "SELECT COUNT(address_id) AS total_addresses FROM Addresses",
+        "response_time_secs": 15.500415325164795
+    },
+    {
+        "id": 116,
+        "question": "Show the names of languages that are the official language for both countries with overall score greater than 95 and countries with overall score less than than 90.",
+        "expected": "SELECT T3.name FROM countries AS T1 JOIN official_languages AS T2 ON T1.id  =  T2.country_id JOIN languages AS T3 ON T2.language_id  =  T3.id WHERE T1.overall_score  >  95 INTERSECT SELECT T3.name FROM countries AS T1 JOIN official_languages AS T2 ON T1.id  =  T2.country_id JOIN languages AS T3 ON T2.language_id  =  T3.id WHERE T1.overall_score  <  90",
+        "generated": "SELECT l.name FROM languages l JOIN official_languages ol ON l.id = ol.language_id JOIN ( SELECT country_id FROM countries WHERE overall_score > 95 ) c1 ON ol.country_id = c1.country_id JOIN ( SELECT country_id FROM countries WHERE overall_score < 90 ) c2 ON ol.country_id = c2.country_id",
+        "response_time_secs": 51.885647773742676
+    },
+    {
+        "id": 119,
+        "question": "Which good has \"70\" in its id? And what is its price?",
+        "expected": "SELECT id ,  price FROM goods WHERE id LIKE \"%70%\"",
+        "generated": "SELECT id , price FROM goods WHERE id LIKE '%70%'",
+        "response_time_secs": 21.100791215896606
+    },
+    {
+        "id": 121,
+        "question": "Give the ids of goods that are more than twice as expensive as the average good.",
+        "expected": "SELECT id FROM goods WHERE price  >  (SELECT avg(price) FROM goods)",
+        "generated": "SELECT Id FROM goods WHERE Price > ( SELECT avg(Price) * 2 FROM goods )",
+        "response_time_secs": 28.105735301971436
+    },
+    {
+        "id": 122,
+        "question": "Find the locations that have paintings before 1885 and no work with medium on canvas?",
+        "expected": "SELECT DISTINCT LOCATION FROM paintings WHERE YEAR  <  1885 AND mediumOn != \"canvas\"",
+        "generated": "SELECT location FROM Paintings WHERE year < 1885 EXCEPT SELECT location FROM Paintings WHERE mediumOn = 'canvas'",
+        "response_time_secs": 31.74815607070923
+    },
+    {
+        "id": 123,
+        "question": "What is the number of child collections belonging to the collection named Best?",
+        "expected": "SELECT count(*) FROM Collections AS T1 JOIN Collections AS T2 ON T1.Parent_Collection_ID = T2.Collection_ID WHERE T2.Collection_Name = \"Best\";",
+        "generated": "SELECT COUNT(*) FROM Collections c1 JOIN Collections c2 ON c1.Collection_ID = c2.Parent_Collection_ID WHERE c1.Collection_Name = 'Best'",
+        "response_time_secs": 36.48933219909668
+    },
+    {
+        "id": 124,
+        "question": "Which student answer texts were given both \"Normal\" and \"Absent\" as comments?",
+        "expected": "SELECT Student_Answer_Text FROM Student_Answers WHERE Comments  =  \"Normal\" INTERSECT SELECT Student_Answer_Text FROM Student_Answers WHERE Comments  =  \"Absent\"",
+        "generated": "SELECT sa1.Answer_ID, sa1.Student_ID, sa1.Question_ID, sa1.Exam_ID, sa1.Comment FROM Student_Answers sa1 JOIN ( SELECT Student_ID, Question_ID, Exam_ID FROM Student_Answers WHERE Comment = 'Normal' ) AS normal_comments ON sa1.Student_ID = normal_comments.Student_ID AND sa1.Question_ID = normal_comments.Question_ID AND sa1.Exam_ID = normal_comments.Exam_ID JOIN ( SELECT Student_ID, Question_ID, Exam_ID FROM Student_Answers WHERE Comment = 'Absent' ) AS absent_comments ON sa1.Student_ID = absent_comments.Student_ID AND sa1.Question_ID = absent_comments.Question_ID AND sa1.Exam_ID = absent_comments.Exam_ID",
+        "response_time_secs": 47.92019748687744
+    },
+    {
+        "id": 127,
+        "question": "What is the average population for all regions?",
+        "expected": "SELECT avg(Population) FROM region",
+        "generated": "SELECT AVG(Population) AS Average_Population FROM region",
+        "response_time_secs": 10.916134595870972
+    },
+    {
+        "id": 128,
+        "question": "how many different earpads are there?",
+        "expected": "SELECT count(DISTINCT earpads) FROM headphone",
+        "generated": "SELECT COUNT(DISTINCT Earpads) AS Number_of_Different_Earpads FROM headphone",
+        "response_time_secs": 12.240891695022583
+    },
+    {
+        "id": 130,
+        "question": "What is the average number of units sold in millions of games played by players with position \"Guard\"?",
+        "expected": "SELECT avg(Units_sold_Millions) FROM game AS T1 JOIN game_player AS T2 ON T1.Game_ID  =  T2.Game_ID JOIN player AS T3 ON T2.Player_ID  =  T3.Player_ID WHERE T3.Position  =  \"Guard\"",
+        "generated": "SELECT AVG(g.Units_sold_Millions) FROM game g JOIN player_stats ps ON g.Game_ID = ps.Game_ID WHERE ps.Player_position = 'Guard'",
+        "response_time_secs": 26.466801166534424
+    },
+    {
+        "id": 131,
+        "question": "What are the id and name of the cyclist who owns the most bikes?",
+        "expected": "SELECT T1.id ,  T1.name FROM cyclist AS T1 JOIN cyclists_own_bikes AS T2 ON T1.id  =  T2.cyclist_id GROUP BY T1.id ORDER BY count(*) DESC LIMIT 1",
+        "generated": "SELECT T1.id , T1.name FROM cyclist AS T1 JOIN cyclists_own_bikes AS T2 ON T1.id = T2.cyclist_id JOIN bike AS T3 ON T2.bike_id = T3.id GROUP BY T1.id ORDER BY count(*) DESC LIMIT 1",
+        "response_time_secs": 25.92245626449585
+    },
+    {
+        "id": 132,
+        "question": "List all university names in ascending order of their reputation points.",
+        "expected": "SELECT T1.university_name FROM University AS T1 JOIN Overall_ranking AS T2 ON T1.university_id  =  T2.university_id ORDER BY T2.reputation_point",
+        "generated": "SELECT T1.University_Name FROM university AS T1 JOIN overall_ranking AS T2 ON T1.University_ID = T2.University_ID ORDER BY T2.Reputation_point ASC",
+        "response_time_secs": 7.6813013553619385
+    },
+    {
+        "id": 134,
+        "question": "Show the book title corresponding to the book with the most number of orders.",
+        "expected": "SELECT T2.title FROM Books_Order AS T1 JOIN Book AS T2 ON T1.isbn  =  T2.isbn GROUP BY T1.isbn ORDER BY count(*) DESC LIMIT 1",
+        "generated": "SELECT b.Title FROM Book b JOIN Orders o ON b.ISBN = o.IdOrder GROUP BY b.ISBN ORDER BY COUNT(o.IdOrder) DESC LIMIT 1",
+        "response_time_secs": 19.858253717422485
+    },
+    {
+        "id": 136,
+        "question": "How many papers does Columbia University have in or before 2009 ?",
+        "expected": "select count(distinct t1.paper_id) from paper as t1 join author_list as t2 on t1.paper_id  =  t2.paper_id join affiliation as t3 on t2.affiliation_id  =  t3.affiliation_id where t1.year  <=  2009 and t3.name = \"columbia university\"",
+        "generated": "SELECT COUNT(DISTINCT p.paper_id) AS paper_count FROM Paper p JOIN Author_list al ON p.paper_id = al.paper_id JOIN Affiliation a ON al.affiliation_id = a.affiliation_id WHERE a.name = 'Columbia University' AND p.year <= 2009",
+        "response_time_secs": 32.536123275756836
+    },
+    {
+        "id": 137,
+        "question": "What are the minimum and maximum prices of food goods, ordered by food?",
+        "expected": "SELECT min(price) ,  max(price) ,  food FROM goods GROUP BY food ORDER BY food",
+        "generated": "SELECT min(price) , max(price) FROM goods ORDER BY food",
+        "response_time_secs": 4.034960746765137
+    },
+    {
+        "id": 138,
+        "question": "Find the details of the customer who has used services the most times.",
+        "expected": "SELECT t1.customer_details FROM customers AS t1 JOIN customers_and_services AS t2 ON t1.customer_id  =  t2.customer_id GROUP BY t1.customer_details ORDER BY count(*) DESC LIMIT 1",
+        "generated": "SELECT C.Customer_Details FROM Customers C JOIN ( SELECT Customer_ID FROM Customers_and_Services GROUP BY Customer_ID ORDER BY COUNT(*) DESC LIMIT 1 ) AS Most_Frequent_Customer ON C.Customer_ID = Most_Frequent_Customer.Customer_ID",
+        "response_time_secs": 34.644216537475586
+    },
+    {
+        "id": 139,
+        "question": "Find the name of the affiliation whose address contains 'China' and publishes the greatest number of papers.",
+        "expected": "SELECT T1.name FROM Affiliation AS T1 JOIN Author_list AS T2 ON T1.affiliation_id  =  T2.affiliation_id WHERE T1.address LIKE \"%China%\" GROUP BY T1.affiliation_id ORDER BY count(*) DESC LIMIT 1",
+        "generated": "SELECT a.name FROM Affiliation a JOIN Author_list al ON a.affiliation_id = al.affiliation_id WHERE a.address LIKE '%China%' GROUP BY a.name ORDER BY COUNT(al.paper_id) DESC LIMIT 1",
+        "response_time_secs": 30.56667447090149
+    },
+    {
+        "id": 140,
+        "question": "List all package numbers received by Leo Wong ?",
+        "expected": "select t1.packagenumber from package as t1 join client as t2 on t1.recipient  =  t2.accountnumber where t2.name = \"leo wong\";",
+        "generated": "SELECT s.ShipmentID FROM Employee e JOIN Has_Clearance hc ON e.EmployeeID = hc.Employee JOIN Shipment s ON hc.Shipment = s.ShipmentID WHERE e.Name = 'Leo Wong'",
+        "response_time_secs": 22.382912397384644
+    },
+    {
+        "id": 141,
+        "question": "What is the most common valid answer text?",
+        "expected": "SELECT Valid_Answer_Text FROM Valid_Answers GROUP BY Valid_Answer_Text ORDER BY COUNT(*) DESC LIMIT 1",
+        "generated": "SELECT Answer_Text, COUNT(*) AS Frequency FROM Answers GROUP BY Answer_Text ORDER BY Frequency DESC LIMIT 1",
+        "response_time_secs": 25.096129417419434
+    },
+    {
+        "id": 142,
+        "question": "What is the name, city, and state of the university with number 1 ranked Accounting major?",
+        "expected": "SELECT T2.university_name ,  T2.city ,  T2.state FROM Major_Ranking AS T1 JOIN University AS T2 JOIN Major AS T3 ON T1.university_id  =  T2.university_id AND T1.major_id  =  T3.major_id WHERE T1.rank  =  1 AND T3.major_name  =  'Accounting'",
+        "generated": "SELECT u.University_Name, u.City, u.State FROM university u JOIN overall_ranking o ON u.University_ID = o.University_ID JOIN major m ON u.University_ID = m.University_ID AND m.Major_Name = 'Accounting' WHERE o.Rank = 1",
+        "response_time_secs": 33.64847803115845
+    },
+    {
+        "id": 143,
+        "question": "Which locations have paintings in the mediums of on panel and on canvas?",
+        "expected": "SELECT DISTINCT LOCATION FROM paintings WHERE mediumOn  =  \"panel\" INTERSECT SELECT DISTINCT LOCATION FROM paintings WHERE mediumOn  =  \"canvas\"",
+        "generated": "SELECT location FROM Paintings WHERE mediumOn = 'on panel' OR mediumOn = 'on canvas'",
+        "response_time_secs": 14.2860746383667
+    },
+    {
+        "id": 146,
+        "question": "List the year, location and title of paintings whose height is longer than 1000 ordered by title.",
+        "expected": "SELECT title ,  LOCATION ,  YEAR FROM paintings WHERE height_mm  >  1000 ORDER BY title",
+        "generated": "SELECT year , location , title FROM Paintings WHERE height_mm > 1000 ORDER BY title",
+        "response_time_secs": 5.562252759933472
+    },
+    {
+        "id": 147,
+        "question": "For each press, return its name and the number of books that have sale amount above 1000.",
+        "expected": "SELECT count(*) ,  t2.name FROM book AS t1 JOIN press AS t2 ON t1.press_id  =  t2.press_id WHERE sale_amount  >  1000 GROUP BY t2.name",
+        "generated": "SELECT p.Name, COUNT(b.Book_ID) AS Number_of_Books FROM press p JOIN book b ON p.Press_ID = b.Press_ID WHERE b.Sale_Amount > 1000 GROUP BY p.Name",
+        "response_time_secs": 10.063050985336304
+    },
+    {
+        "id": 148,
+        "question": "What is the average height of paintings for different medium types?",
+        "expected": "SELECT avg(height_mm) ,  medium FROM paintings GROUP BY medium",
+        "generated": "SELECT medium, AVG(height_mm) AS average_height FROM Paintings GROUP BY medium",
+        "response_time_secs": 15.39310908317566
+    },
+    {
+        "id": 149,
+        "question": "What is the type of powertrain with most number of vehicles.",
+        "expected": "SELECT type_of_powertrain FROM vehicles GROUP BY type_of_powertrain ORDER BY count(*) DESC LIMIT 1",
+        "generated": "SELECT Type_of_powertrain, COUNT(*) AS Number_of_Vehicles FROM Vehicles GROUP BY Type_of_powertrain ORDER BY Number_of_Vehicles DESC LIMIT 1",
+        "response_time_secs": 19.706750869750977
+    },
+    {
+        "id": 150,
+        "question": "Show all the order dates and ids of the orders with quantity of any product larger than 6 or with more than 3 products.",
+        "expected": "SELECT T1.order_date ,  T1.order_id FROM Customer_Orders AS T1 JOIN Order_items AS T2 ON T1.order_id  =  T2.order_id WHERE T2.order_quantity  >  6 UNION SELECT T1.order_date ,  T1.order_id FROM Customer_Orders AS T1 JOIN Order_items AS T2 ON T1.order_id  =  T2.order_id GROUP BY T1.order_id HAVING count(*)  >  3;",
+        "generated": "SELECT o.order_date, o.order_id FROM Customer_Orders o JOIN Order_Details od ON o.order_id = od.order_id WHERE od.quantity > 6 OR o.product_count > 3",
+        "response_time_secs": 25.64161229133606
+    },
+    {
+        "id": 151,
+        "question": "How many countries do we have?",
+        "expected": "SELECT count(DISTINCT country) FROM City",
+        "generated": "SELECT COUNT(*) AS NumberOfCountries FROM Country",
+        "response_time_secs": 41.27849721908569
+    },
+    {
+        "id": 152,
+        "question": "Find the top three dates with the most receipts.",
+        "expected": "SELECT date FROM receipts GROUP BY date ORDER BY count(*) DESC LIMIT 3",
+        "generated": "SELECT Date, COUNT(ReceiptNumber) AS ReceiptCount FROM receipts GROUP BY Date ORDER BY ReceiptCount DESC LIMIT 3",
+        "response_time_secs": 26.98804473876953
+    },
+    {
+        "id": 153,
+        "question": "Which region has the largest population? Give me the capital of the region.",
+        "expected": "SELECT Capital FROM region ORDER BY Population DESC LIMIT 1",
+        "generated": "SELECT r.Name AS Region_Name, r.Capital FROM region r ORDER BY r.Population DESC LIMIT 1",
+        "response_time_secs": 15.735397100448608
+    },
+    {
+        "id": 154,
+        "question": "What are the names of pilots who are younger than 35 and have a plane named Piper Cub?",
+        "expected": "SELECT pilot_name FROM PilotSkills WHERE age  <  35 AND plane_name  =  'Piper Cub'",
+        "generated": "SELECT T1.pilot_name FROM PilotSkills AS T1 JOIN Hangar AS T2 ON T1.plane_name = T2.plane_name WHERE T1.age < 35 AND T2.location = 'Piper Cub'",
+        "response_time_secs": 9.523842811584473
+    },
+    {
+        "id": 155,
+        "question": "What are the different developers of games that are played by players that attend Auburn college?",
+        "expected": "SELECT DISTINCT T1.Developers FROM game AS T1 JOIN game_player AS T2 ON T1.Game_ID  =  T2.Game_ID JOIN player AS T3 ON T2.Player_ID  =  T3.Player_ID WHERE T3.College  =  \"Auburn\"",
+        "generated": "SELECT DISTINCT T1.Developers FROM game AS T1 JOIN player AS T2 ON T1.Platform_ID = T2.Platform_ID WHERE T2.College = 'Auburn'",
+        "response_time_secs": 51.48278284072876
+    },
+    {
+        "id": 156,
+        "question": "How many drivers receive points greater than 150 for each make? Show the make and the count.",
+        "expected": "SELECT make ,  count(*) FROM driver WHERE points  >  150 GROUP BY make",
+        "generated": "SELECT T2.Make, COUNT(*) as Driver_Count FROM driver AS T1 JOIN team AS T2 ON T1.Make = T2.Make WHERE T1.Points > 150 GROUP BY T2.Make",
+        "response_time_secs": 23.77848219871521
+    },
+    {
+        "id": 157,
+        "question": "List all Planets' names and coordinates in alphabetical order of name.",
+        "expected": "SELECT Name ,  Coordinates FROM Planet ORDER BY Name",
+        "generated": "SELECT Name, Coordinates FROM Planet ORDER BY Name ASC",
+        "response_time_secs": 12.309975385665894
+    },
+    {
+        "id": 158,
+        "question": "What are the names of everbody who has participated in both the ACL and NACCL conferences?",
+        "expected": "SELECT T1.name FROM staff AS T1 JOIN conference_participation AS T2 JOIN Conference AS T3 ON T1.staff_id  =  T2.staff_id AND T2.conference_id  =  T3.conference_id WHERE T3.Conference_name  =  'ACL' INTERSECT SELECT T1.name FROM staff AS T1 JOIN conference_participation AS T2 JOIN conference AS T3 ON T1.staff_id  =  T2.staff_id AND T2.conference_id  =  T3.conference_id WHERE T3.Conference_name  =  'Naccl'",
+        "generated": "SELECT s.name FROM staff s JOIN conference_pa cp ON s.staff_id = cp.staff_id JOIN conference c ON cp.conference_id = c.conference_id WHERE c.conference_name IN ('ACL', 'NACCL') GROUP BY s.name HAVING COUNT(DISTINCT c.conference_name) > 1",
+        "response_time_secs": 29.212348222732544
+    },
+    {
+        "id": 159,
+        "question": "List all payment ids and its corresponding invoice ids and details.",
+        "expected": "SELECT payment_id ,  invoice_id ,  payment_details FROM Payments",
+        "generated": "SELECT payment_id, invoice_id, details FROM Payments",
+        "response_time_secs": 15.454604148864746
+    },
+    {
+        "id": 161,
+        "question": "How many paintings are exhibited at gallery 240?",
+        "expected": "SELECT count(*) FROM paintings WHERE LOCATION  =  \"Gallery 240\"",
+        "generated": "SELECT COUNT(*) FROM Paintings WHERE location = 'gallery 240'",
+        "response_time_secs": 15.006587266921997
+    },
+    {
+        "id": 162,
+        "question": "What is detail of collection subset with name 'Top collection'?",
+        "expected": "SELECT Collecrtion_Subset_Details FROM Collection_Subsets WHERE Collection_Subset_Name = \"Top collection\";",
+        "generated": "SELECT Collecrtion_Subset_Details FROM Collection_Subsets WHERE Collection_Subset_Name = 'Top collection'",
+        "response_time_secs": 14.774001359939575
+    },
+    {
+        "id": 163,
+        "question": "Which venue has the fewest publications?",
+        "expected": "SELECT venue FROM paper GROUP BY venue ORDER BY count(*) LIMIT 1",
+        "generated": "SELECT a.name AS venue_name, COUNT(DISTINCT p.paper_id) AS publication_count FROM Affiliation a JOIN Author_list al ON a.affiliation_id = al.affiliation_id JOIN Paper p ON al.paper_id = p.paper_id GROUP BY a.name ORDER BY publication_count ASC LIMIT 1",
+        "response_time_secs": 33.30091094970703
+    },
+    {
+        "id": 164,
+        "question": "What are the earnings of players from either of the countries of Australia or Zimbabwe?",
+        "expected": "SELECT Earnings FROM player WHERE Country  =  \"Australia\" OR Country  =  \"Zimbabwe\"",
+        "generated": "SELECT Earnings FROM player WHERE Country = 'Australia' OR Country = 'Zimbabwe'",
+        "response_time_secs": 4.189316749572754
+    },
+    {
+        "id": 165,
+        "question": "Show all client ids and details with sic code \"Bad\".",
+        "expected": "SELECT client_id ,  client_details FROM Clients WHERE sic_code  =  \"Bad\";",
+        "generated": "SELECT client_id, client_details FROM Clients WHERE sic_code = 'Bad'",
+        "response_time_secs": 12.979966640472412
+    },
+    {
+        "id": 166,
+        "question": "How many shipments take place on each planet?",
+        "expected": "SELECT T2.Name ,  count(*) FROM Shipment AS T1 JOIN Planet AS T2 ON T1.Planet = T2.PlanetID GROUP BY T1.Planet;",
+        "generated": "SELECT p.Name AS PlanetName, COUNT(s.ShipmentID) AS NumberOfShipments FROM Planet p JOIN Shipment s ON p.PlanetID = s.Planet GROUP BY p.PlanetID",
+        "response_time_secs": 20.57145595550537
+    },
+    {
+        "id": 168,
+        "question": "Find the name and Citation point of the universities whose reputation points are top 3 and above.",
+        "expected": "SELECT T1.University_Name ,  T2.Citation_point FROM University AS T1 JOIN Overall_ranking AS T2 ON T1.university_id  =  T2.university_id ORDER BY T2.Reputation_point DESC LIMIT 3",
+        "generated": "SELECT u.University_Name, o.Citation_point FROM university u JOIN overall_ranking o ON u.University_ID = o.University_ID WHERE o.Reputation_point >= (SELECT Reputation_point FROM overall_ranking ORDER BY Reputation_point DESC LIMIT 3)",
+        "response_time_secs": 28.59450125694275
+    },
+    {
+        "id": 169,
+        "question": "Find all distinct locations of warehouses.",
+        "expected": "SELECT count(DISTINCT LOCATION) FROM warehouses",
+        "generated": "SELECT DISTINCT LOCATION FROM Warehouses",
+        "response_time_secs": 2.343458652496338
+    },
+    {
+        "id": 170,
+        "question": "Return the affiliations of instituions that are not in the city of Vancouver.",
+        "expected": "SELECT Affiliation FROM institution WHERE City != \"Vancouver\"",
+        "generated": "SELECT Affiliation FROM institution WHERE City != 'Vancouver'",
+        "response_time_secs": 17.06718397140503
+    },
+    {
+        "id": 174,
+        "question": "When was the earliest date of loan?",
+        "expected": "SELECT date_of_loan FROM Student_Loans ORDER BY date_of_loan ASC LIMIT 1",
+        "generated": "SELECT MIN(date_of_transcript) AS earliest_date_of_loan FROM Transcripts",
+        "response_time_secs": 16.32699704170227
+    },
+    {
+        "id": 175,
+        "question": "What is the total number of students enrolled in an university with a rank of 5 or below?",
+        "expected": "SELECT sum(enrollment) FROM University AS T1 JOIN Overall_ranking AS T2 ON T1.university_id  =  T2.university_id WHERE T2.rank  >=  5",
+        "generated": "SELECT SUM(u.Enrollment) AS Total_Enrollment FROM university u JOIN overall_ranking o ON u.University_ID = o.University_ID WHERE o.Rank <= 5",
+        "response_time_secs": 23.640899658203125
+    },
+    {
+        "id": 176,
+        "question": "Find the max age for each group of pilots with the same name.",
+        "expected": "SELECT max(age) ,  pilot_name FROM pilotskills GROUP BY pilot_name",
+        "generated": "SELECT pilot_name, MAX(age) AS max_age FROM PilotSkills GROUP BY pilot_name",
+        "response_time_secs": 15.365403413772583
+    },
+    {
+        "id": 178,
+        "question": "What is the top speed and power of the vehicle manufactured in the year of 1996?",
+        "expected": "SELECT top_speed ,  power FROM vehicle WHERE build_year  =  1996",
+        "generated": "SELECT Top_Speed, Power FROM vehicle WHERE Build_Year = 1996 ORDER BY Top_Speed DESC LIMIT 1",
+        "response_time_secs": 5.587890863418579
+    },
+    {
+        "id": 180,
+        "question": "How many customers have bought each food?",
+        "expected": "SELECT T1.food ,  count(DISTINCT T3.CustomerId) FROM goods AS T1 JOIN items AS T2 ON T1.Id  =  T2.Item JOIN receipts AS T3 ON T2.Receipt  =  T3.ReceiptNumber GROUP BY T1.food",
+        "generated": "SELECT g.Food, COUNT(DISTINCT r.CustomerId) AS NumberOfCustomers FROM receipts r JOIN items i ON r.ReceiptNumber = i.Receipt JOIN goods g ON i.Item = g.Id GROUP BY g.Food",
+        "response_time_secs": 34.66558814048767
+    },
+    {
+        "id": 181,
+        "question": "List names of all authors who have only 1 paper.",
+        "expected": "SELECT T1.name FROM Author AS T1 JOIN Author_list AS T2 ON T1.author_id  =  T2.author_id GROUP BY T1.author_id HAVING count(*)  =  1",
+        "generated": "SELECT a.name FROM Author a JOIN Author_list al ON a.author_id = al.author_id GROUP BY a.author_id HAVING COUNT(al.paper_id) = 1",
+        "response_time_secs": 22.76166796684265
+    },
+    {
+        "id": 182,
+        "question": "In which years were more than one institution founded?",
+        "expected": "SELECT Founded ,  COUNT(*) FROM institution GROUP BY Founded HAVING COUNT(*)  >  1",
+        "generated": "SELECT founded FROM institution GROUP BY founded HAVING count(*) > 1",
+        "response_time_secs": 4.161053895950317
+    },
+    {
+        "id": 184,
+        "question": "What are highest, lowest, and average prices of goods, grouped and ordered by flavor?",
+        "expected": "SELECT max(price) ,  min(price) ,  avg(price) ,  flavor FROM goods GROUP BY flavor ORDER BY flavor",
+        "generated": "SELECT Flavor, MAX(Price) AS Highest_Price, MIN(Price) AS Lowest_Price, AVG(Price) AS Average_Price FROM goods GROUP BY Flavor",
+        "response_time_secs": 28.7577702999115
+    },
+    {
+        "id": 185,
+        "question": "For each conference id, what are their names, year, and number of participants?",
+        "expected": "SELECT T1.conference_name ,  T1.year ,  count(*) FROM Conference AS T1 JOIN Conference_participation AS T2 ON T1.conference_id  =  T2.conference_id GROUP BY T2.conference_id",
+        "generated": "SELECT c.Conference_ID, c.Conference_Name, c.Year, COUNT(cp.Participant_ID) AS Number_of_Participants",
+        "response_time_secs": 18.488338232040405
+    },
+    {
+        "id": 186,
+        "question": "What are the full names of customers who bought apple flavored Tarts?",
+        "expected": "SELECT DISTINCT T4.FirstName ,  T4.LastName FROM goods AS T1 JOIN items AS T2 ON T1.id  =  T2.item JOIN receipts AS T3 ON T2.receipt  =  T3.ReceiptNumber JOIN customers AS T4 ON T3.CustomerId  =  T4.id WHERE T1.flavor  =  \"Apple\" AND T1.food  =  \"Tart\"",
+        "generated": "SELECT T1.FirstName, T1.LastName FROM customers AS T1 JOIN receipts AS T2 ON T1.Id = T2.CustomerId JOIN items AS T3 ON T2.ReceiptNumber = T3.Receipt WHERE T3.Item = 'apple flavored Tarts'",
+        "response_time_secs": 9.229258060455322
+    },
+    {
+        "id": 188,
+        "question": "How many products are there for each product type?",
+        "expected": "SELECT product_type_code ,  count(*) FROM Products GROUP BY product_type_code",
+        "generated": "SELECT product_type_code, COUNT(*) AS number_of_products FROM Products GROUP BY product_type_code",
+        "response_time_secs": 13.718363285064697
+    },
+    {
+        "id": 190,
+        "question": "List names and addresses for all affiliations.",
+        "expected": "SELECT DISTINCT name ,  address FROM Affiliation",
+        "generated": "SELECT name, address FROM Affiliation",
+        "response_time_secs": 12.129876852035522
+    },
+    {
+        "id": 193,
+        "question": "Which region has the largest number of buildings? Show me the capital of the region.",
+        "expected": "SELECT T2.capital FROM building AS T1 JOIN region AS T2 ON T1.Region_ID  =  T2.Region_ID GROUP BY T1.Region_ID ORDER BY COUNT(*) DESC LIMIT 1",
+        "generated": "SELECT r.Name AS Region_Name, r.Capital FROM region r JOIN ( SELECT Region_ID, COUNT(*) as Building_Count FROM building GROUP BY Region_ID ) sub ON r.Region_ID = sub.Region_ID ORDER BY sub.Building_Count DESC LIMIT 1",
+        "response_time_secs": 30.00253701210022
+    },
+    {
+        "id": 194,
+        "question": "What is the title and purchase price of the book that has the highest total order amount?",
+        "expected": "SELECT T2.title ,  T2.PurchasePrice FROM Books_Order AS T1 JOIN BOOk AS T2 ON T1.isbn  =  T2.isbn GROUP BY T1.isbn ORDER BY sum(amount) DESC LIMIT 1",
+        "generated": "SELECT T3.Title, T3.PurchasePrice FROM Orders AS T1 INNER JOIN OrderDetails AS T2 ON T1.IdOrder = T2.IdOrder INNER JOIN Book AS T3 ON T2.ISBN = T3.ISBN GROUP BY T2.ISBN ORDER BY SUM(T2.Quantity * T3.PurchasePrice) DESC LIMIT 1",
+        "response_time_secs": 52.48435354232788
+    },
+    {
+        "id": 196,
+        "question": "What are the names of all universities without any majors ranked number 1?",
+        "expected": "SELECT university_name FROM University EXCEPT SELECT T2.university_name FROM Major_Ranking AS T1 JOIN University AS T2 ON T1.university_id  =  T2.university_id WHERE T1.rank  =  1",
+        "generated": "SELECT University_Name FROM university WHERE University_ID NOT IN ( SELECT University_ID FROM overall_ranking WHERE Rank = 1 )",
+        "response_time_secs": 30.086555004119873
+    },
+    {
+        "id": 197,
+        "question": "What are the unique first names of the artists who had medium oil paintings located in gallery 241?",
+        "expected": "SELECT DISTINCT T1.fname FROM artists AS T1 JOIN paintings AS T2 ON T1.artistID  =  T2.painterID WHERE T2.medium  =  \"oil\" AND LOCATION  =  \"Gallery 241\"",
+        "generated": "SELECT DISTINCT T1.fname FROM Artists AS T1 JOIN Paintings AS T2 ON T1.artistID = T2.painterID WHERE T2.medium = 'oil' AND T2.location = 241",
+        "response_time_secs": 8.058367252349854
+    },
+    {
+        "id": 198,
+        "question": "What are the ids of sailors who reserved red and blue boats?",
+        "expected": "SELECT DISTINCT T2.sid FROM Boats AS T1 JOIN Reserves AS T2 ON  T1.bid  =  T2.bid WHERE T1.color  =  'red' INTERSECT SELECT DISTINCT T2.sid FROM Boats AS T1 JOIN Reserves AS T2 ON  T1.bid  =  T2.bid WHERE T1.color  =  \"blue\"",
+        "generated": "SELECT T1.sid FROM Reserves AS T1 JOIN Boats AS T2 ON T1.bid = T2.bid WHERE T2.color = 'red' INTERSECT SELECT T1.sid FROM Reserves AS T1 JOIN Boats AS T2 ON T1.bid = T2.bid WHERE T2.color = 'blue'",
+        "response_time_secs": 12.120799541473389
+    },
+    {
+        "id": 199,
+        "question": "What is the discount name with most number of renting history records?",
+        "expected": "SELECT T2.name FROM renting_history AS T1 JOIN discount AS T2 ON T1.discount_id  =  T2.id GROUP BY T2.id ORDER BY count(*) DESC LIMIT 1",
+        "generated": "SELECT D.name FROM Discount D JOIN Renting_History RH ON D.id = RH.discount_id GROUP BY D.name ORDER BY COUNT(RH.id) DESC LIMIT 1",
+        "response_time_secs": 30.276140689849854
+    },
+    {
+        "id": 200,
+        "question": "Find the name of the publisher whose monthly profit is the highest or the lowest.",
+        "expected": "SELECT name FROM press WHERE Month_Profits_billion  =  (SELECT min(Month_Profits_billion) FROM press) OR Month_Profits_billion  =  (SELECT max(Month_Profits_billion) FROM press)",
+        "generated": "SELECT Name FROM press ORDER BY Month_Profits_billion DESC, Month_Profits_billion ASC LIMIT 2",
+        "response_time_secs": 19.19176149368286
+    },
+    {
+        "id": 201,
+        "question": "Find the titles and publish dates of the top 5 best sale books.",
+        "expected": "SELECT title ,  release_date FROM book ORDER BY sale_amount DESC LIMIT 5",
+        "generated": "SELECT Title, Release_date FROM book ORDER BY CAST(REPLACE(Sale_Amount, ',', '') AS REAL) DESC LIMIT 5",
+        "response_time_secs": 31.250170469284058
+    },
+    {
+        "id": 202,
+        "question": "What is the receipt number with the latest date, and what is that date?",
+        "expected": "SELECT ReceiptNumber ,  date FROM receipts WHERE date  =  (SELECT date FROM receipts ORDER BY date DESC LIMIT 1)",
+        "generated": "SELECT T1.ReceiptNumber , T1.Date FROM receipts AS T1 ORDER BY T1.Date DESC LIMIT 1",
+        "response_time_secs": 5.394934415817261
+    },
+    {
+        "id": 203,
+        "question": "Return the client ids for clients with two or more invoices?",
+        "expected": "SELECT client_id FROM Invoices GROUP BY client_id HAVING count(*)  >=  2",
+        "generated": "SELECT client_id FROM Invoices GROUP BY client_id HAVING COUNT(invoice_id) >= 2",
+        "response_time_secs": 12.933293581008911
+    },
+    {
+        "id": 204,
+        "question": "What is the first name of the user who owns the greatest number of properties?",
+        "expected": "SELECT T1.first_name FROM Users AS T1 JOIN Properties AS T2 ON T2.owner_user_id  =  T1.User_id GROUP BY T1.User_id ORDER BY count(*) DESC LIMIT 1;",
+        "generated": "SELECT u.first_name, COUNT(p.property_id) AS property_count FROM Users u JOIN Properties p ON u.user_id = p.owner_id GROUP BY u.first_name ORDER BY property_count DESC LIMIT 1",
+        "response_time_secs": 22.613062620162964
+    },
+    {
+        "id": 206,
+        "question": "What are the different room sizes, and how many of each are there?",
+        "expected": "SELECT room_size ,  count(*) FROM Rooms GROUP BY room_size",
+        "generated": "SELECT room_size, COUNT(*) AS number_of_rooms FROM Rooms GROUP BY room_size",
+        "response_time_secs": 27.01867961883545
+    },
+    {
+        "id": 207,
+        "question": "Show the customers with total quantity of order bigger than 1.",
+        "expected": "SELECT T1.Name FROM customer AS T1 JOIN customer_order AS T2 ON T1.Customer_ID  =  T2.Customer_ID GROUP BY T1.Name HAVING sum(T2.Quantity)  >  1",
+        "generated": "SELECT c.Customer_ID, c.Name, SUM(co.Quantity) AS Total_Quantity FROM customer c JOIN customer_order co ON c.Customer_ID = co.Customer_ID GROUP BY c.Customer_ID, c.Name HAVING SUM(co.Quantity) > 1",
+        "response_time_secs": 24.090261936187744
+    },
+    {
+        "id": 208,
+        "question": "Show me the city code of two cities with maximum distance.",
+        "expected": "SELECT city1_code ,  city2_code FROM Direct_distance ORDER BY distance DESC LIMIT 1",
+        "generated": "SELECT city1_code, city2_code, MAX(distance) AS max_distance FROM Direct_distance",
+        "response_time_secs": 15.284306049346924
+    },
+    {
+        "id": 212,
+        "question": "Find the number of reservations for each boat with more than 1 reservation.",
+        "expected": "SELECT bid ,  count(*) FROM Reserves GROUP BY bid HAVING count(*)  >  1",
+        "generated": "SELECT b.name, COUNT(r.bid) AS num_reservations FROM Boats b JOIN Reserves r ON b.bid = r.bid GROUP BY b.name HAVING COUNT(r.bid) > 1",
+        "response_time_secs": 20.148775100708008
+    },
+    {
+        "id": 213,
+        "question": "What are the names of every theater with at least one movie playing?",
+        "expected": "SELECT name FROM movietheaters GROUP BY name HAVING count(*)  >=  1",
+        "generated": "SELECT T2.Name FROM MovieTheaters AS T1 JOIN MovieTheaters AS T2 ON T1.Code = T2.Movie GROUP BY T2.Name HAVING COUNT(*) >= 1",
+        "response_time_secs": 6.9812610149383545
+    },
+    {
+        "id": 214,
+        "question": "Show all conference names and the number of times each conference has.",
+        "expected": "SELECT conference_name ,  count(*) FROM conference GROUP BY conference_name",
+        "generated": "SELECT Conference_Name, COUNT(*) AS Number_of_Times FROM conference GROUP BY Conference_Name",
+        "response_time_secs": 20.064621686935425
+    },
+    {
+        "id": 215,
+        "question": "Which headphone class contains the most headphones?",
+        "expected": "SELECT CLASS FROM headphone GROUP BY CLASS ORDER BY count(*) DESC LIMIT 1",
+        "generated": "SELECT Class, COUNT(*) AS Number_of_Headphones FROM headphone GROUP BY Class ORDER BY Number_of_Headphones DESC LIMIT 1",
+        "response_time_secs": 16.25575089454651
+    },
+    {
+        "id": 216,
+        "question": "How many hardware type products do we have?",
+        "expected": "SELECT count(*) FROM Products WHERE product_type_code  =  \"Hardware\"",
+        "generated": "SELECT COUNT(*) FROM Products WHERE product_type_code = 'hardware'",
+        "response_time_secs": 11.631555557250977
+    },
+    {
+        "id": 217,
+        "question": "What is the code and description of the most common student address type?",
+        "expected": "SELECT T1.address_type_code ,  T2.address_type_description FROM Students_Addresses AS T1 JOIN Ref_Address_Types AS T2 WHERE T1.address_type_code  =  T2.address_type_code GROUP BY T1.address_type_code ORDER BY count(*) DESC LIMIT 1",
+        "generated": "CREATE TABLE Student_Addresses ( address_id number PRIMARY KEY, code text, description text, student_id number, FOREIGN KEY (student_id) REFERENCES Students(student_id) )",
+        "response_time_secs": 33.08401823043823
+    },
+    {
+        "id": 218,
+        "question": "Find the most common result in the behavioral monitoring details. What are the count and the details of this result?",
+        "expected": "SELECT count(DISTINCT student_id) ,  behaviour_monitoring_details FROM Behaviour_Monitoring GROUP BY behaviour_monitoring_details ORDER BY count(*) DESC LIMIT 1",
+        "generated": "SELECT behaviour_monitoring_details, COUNT(*) as count FROM Behaviour_Monitoring GROUP BY behaviour_monitoring_details ORDER BY count DESC LIMIT 1",
+        "response_time_secs": 16.92751121520996
+    },
+    {
+        "id": 219,
+        "question": "Show all sic codes and the number of clients with each code.",
+        "expected": "SELECT sic_code ,  count(*) FROM Clients GROUP BY sic_code",
+        "generated": "SELECT sic_code, COUNT(client_id) AS number_of_clients FROM Clients GROUP BY sic_code",
+        "response_time_secs": 17.198965787887573
+    },
+    {
+        "id": 220,
+        "question": "What are the names of the collections that are not the parent of the other collections?",
+        "expected": "SELECT Collection_Name FROM Collections EXCEPT SELECT T2.Collection_Name FROM Collections AS T1 JOIN Collections AS T2 ON T1.Parent_Collection_ID = T2.Collection_ID;",
+        "generated": "SELECT Collection_Subset_Name FROM Collection_Subsets WHERE Collection_Subset_ID NOT IN ( SELECT Parent_Collection_Subset_ID FROM Collection_Subsets )",
+        "response_time_secs": 21.396182775497437
+    },
+    {
+        "id": 221,
+        "question": "For every order, how many products does it contain, and what are the orders' statuses and ids?",
+        "expected": "SELECT T1.order_id ,  T1.order_status_code ,  count(*) FROM Orders AS T1 JOIN Order_items AS T2 ON T1.order_id  =  T2.order_id GROUP BY T1.order_id",
+        "generated": "SELECT COUNT(*), T1.status, T1.id FROM Orders AS T1 JOIN Order_items AS T2 ON T1.id = T2.order_id GROUP BY T1.id",
+        "response_time_secs": 24.894687175750732
+    },
+    {
+        "id": 222,
+        "question": "Find the names of all sculptures located in gallery 226.",
+        "expected": "SELECT title FROM sculptures WHERE LOCATION  =  \"Gallery 226\"",
+        "generated": "SELECT title FROM Sculptures WHERE location = 'gallery 226'",
+        "response_time_secs": 3.970069169998169
+    },
+    {
+        "id": 224,
+        "question": "How many teachers have taught a student who has not won any achievements?",
+        "expected": "SELECT count(DISTINCT T1.teacher_id) FROM Teachers AS T1 JOIN Classes AS T2 ON T1.teacher_id  =  T2.teacher_id WHERE T2.student_id NOT IN ( SELECT student_id FROM Achievements )",
+        "generated": "SELECT COUNT(DISTINCT T2.teacher_id) FROM Students AS T1 JOIN Transcripts AS T2 ON T1.student_id = T2.student_id LEFT JOIN Achievements AS T3 ON T1.student_id = T3.student_id WHERE T3.achievement_id IS NULL",
+        "response_time_secs": 53.78133583068848
+    },
+    {
+        "id": 225,
+        "question": "What are the names of all sculptures in gallery 226?",
+        "expected": "SELECT title FROM sculptures WHERE LOCATION  =  \"Gallery 226\"",
+        "generated": "SELECT title FROM Sculptures WHERE location = 'gallery 226'",
+        "response_time_secs": 3.945852756500244
+    },
+    {
+        "id": 226,
+        "question": "What are the distinct descriptions of all the detentions which have ever happened?",
+        "expected": "SELECT distinct(T1.detention_type_description) FROM Ref_Detention_Type AS T1 JOIN Detention AS T2 ON T1.detention_type_code  =  T2.detention_type_code",
+        "generated": "SELECT DISTINCT T2.behaviour_monitoring_details FROM Behaviour_Monitoring AS T1 JOIN Students AS T2 ON T1.student_id = T2.student_id",
+        "response_time_secs": 6.068429231643677
+    },
+    {
+        "id": 229,
+        "question": "Count the number of property photos each property has by id.",
+        "expected": "SELECT count(*) ,  property_id FROM Property_Photos GROUP BY property_id;",
+        "generated": "SELECT p.property_id, COUNT(ph.photo_id) AS num_photos FROM Properties p LEFT JOIN Photos ph ON p.property_id = ph.property_id GROUP BY p.property_id",
+        "response_time_secs": 36.903908252716064
+    },
+    {
+        "id": 230,
+        "question": "What are the client details for each client and the corresponding details of their agencies?",
+        "expected": "SELECT T1.client_details ,  T2.agency_details FROM Clients AS T1 JOIN Agencies AS T2 ON T1.agency_id  =  T2.agency_id",
+        "generated": "SELECT Clients.client_details, Agencies.agency_details FROM Clients JOIN Agencies ON Clients.agency_id = Agencies.agency_id",
+        "response_time_secs": 18.902415990829468
+    },
+    {
+        "id": 232,
+        "question": "What is the type of event the most students joined? Give me the number of students, and the event type code and description.",
+        "expected": "SELECT count(*) ,  T2.event_type_code ,  T3.event_type_description FROM Students AS T1 JOIN Student_Events AS T2 ON T1.student_id  =  T2.student_id JOIN Ref_Event_Types AS T3 ON T2.event_type_code  =  T3.event_type_code GROUP BY T2.event_type_code ORDER BY count(*) DESC LIMIT 1",
+        "generated": "SELECT event_type_code, event_type_description, COUNT(*) as num_students FROM Events JOIN Student_Events ON Events.event_id = Student_Events.event_id GROUP BY event_type_code, event_type_description ORDER BY num_students DESC LIMIT 1",
+        "response_time_secs": 9.972105264663696
+    },
+    {
+        "id": 234,
+        "question": "What are the names of the movies not being shown in any theaters?",
+        "expected": "SELECT Title FROM Movies WHERE Code NOT IN (SELECT Movie FROM MovieTheaters WHERE Movie != 'null')",
+        "generated": "SELECT Title FROM Movies WHERE Code NOT IN (SELECT Movie FROM MovieTheaters)",
+        "response_time_secs": 3.4373106956481934
+    },
+    {
+        "id": 235,
+        "question": "List the invoices' status, date and the date of shipment.",
+        "expected": "SELECT T1.invoice_status_code ,  T1.invoice_date ,  T2.shipment_date FROM Invoices AS T1 JOIN Shipments AS T2 ON T1.invoice_number  =  T2.invoice_number",
+        "generated": "Unfortunately, the provided database schema does not include any tables related to invoices or shipments. Therefore, it's impossible to provide an accurate SQL query based on the given information. Please provide a more complete database schema that includes relevant tables for this question.",
+        "response_time_secs": 8.463237524032593
+    },
+    {
+        "id": 237,
+        "question": "Who is the owner of the parent document of every documents where 'Marlin' is the owner?",
+        "expected": "SELECT T2.Owner FROM Document_Objects AS T1 JOIN Document_Objects AS T2 ON T1.Parent_Document_Object_ID = T2.Document_Object_ID WHERE T1.Owner  =  'Marlin'",
+        "generated": "WITH MarlinDocuments AS ( SELECT Document_Object_ID FROM Document_Objects WHERE Owner = 'Marlin' ), ParentDocuments AS ( SELECT Parent_Document_Object_ID FROM Document_Objects WHERE Document_Object_ID IN (SELECT Document_Object_ID FROM MarlinDocuments) ), ParentOwners AS ( SELECT Owner FROM Document_Objects WHERE Document_Object_ID IN (SELECT Parent_Document_Object_ID FROM ParentDocuments) ) SELECT DISTINCT Owner FROM ParentOwners",
+        "response_time_secs": 73.08632826805115
+    },
+    {
+        "id": 238,
+        "question": "Which employees do not have clearance in Mars? List employee's name.",
+        "expected": "SELECT Name FROM Employee EXCEPT SELECT T2.Name FROM Has_Clearance AS T1 JOIN Employee AS T2 ON T1.Employee = T2.EmployeeID JOIN Planet AS T3 ON T1.Planet = T3.PlanetID WHERE T3.Name = \"Mars\";",
+        "generated": "-- Step 1: Get the planet ID for Mars WITH Mars_Planet AS ( SELECT PlanetID FROM Planet WHERE Name = 'Mars' ), -- Step 2: Find all employees who have clearance on Mars Employees_With_Clearance AS ( SELECT EmployeeID FROM Has_Clearance WHERE Planet = (SELECT PlanetID FROM Mars_Planet) ) -- Step 3: List all employees and exclude those who have clearance on Mars SELECT Name FROM Employee WHERE EmployeeID NOT IN (SELECT EmployeeID FROM Employees_With_Clearance)",
+        "response_time_secs": 33.38309574127197
+    },
+    {
+        "id": 239,
+        "question": "What are the names of authors who have not published a paper in ACL?",
+        "expected": "SELECT name FROM Author WHERE author_id NOT IN (SELECT T1.author_id FROM Author_list AS T1 JOIN Paper AS T2 ON T1.paper_id  =  T2.paper_id WHERE T2.venue  =  \"ACL\")",
+        "generated": "SELECT name FROM Author WHERE author_id NOT IN (SELECT DISTINCT author_id FROM Author_list WHERE paper_id IN (SELECT paper_id FROM Paper WHERE acronym = 'ACL'))",
+        "response_time_secs": 32.63704967498779
+    },
+    {
+        "id": 240,
+        "question": "Which students take 2 courses? List student id and details.",
+        "expected": "SELECT T1.student_id ,  T1.student_details FROM Students AS T1 JOIN Classes AS T2 ON T1.student_id  =  T2.student_id GROUP BY T1.student_id HAVING count(*)  =  2",
+        "generated": "SELECT s.student_id, s.bio_data, s.student_details FROM Students s JOIN Transcripts t ON s.student_id = t.student_id GROUP BY s.student_id HAVING COUNT(t.transcript_id) = 2",
+        "response_time_secs": 25.118908643722534
+    },
+    {
+        "id": 241,
+        "question": "What are the titles of books with the highest purchase price across all books ?",
+        "expected": "select title from book order by purchaseprice  desc limit 1",
+        "generated": "SELECT Title FROM Book WHERE PurchasePrice = (SELECT MAX(PurchasePrice) FROM Book)",
+        "response_time_secs": 13.78110933303833
+    },
+    {
+        "id": 242,
+        "question": "How many different official languages are there?",
+        "expected": "SELECT count(DISTINCT language_id) FROM official_languages",
+        "generated": "SELECT COUNT(DISTINCT language_id) AS number_of_official_languages FROM official_languages",
+        "response_time_secs": 13.307182550430298
+    },
+    {
+        "id": 243,
+        "question": "What are the names of all authors who have more than 50 papers?",
+        "expected": "SELECT T1.name FROM Author AS T1 JOIN Author_list AS T2 ON T1.author_id  =  T2.author_id GROUP BY T1.author_id HAVING count(*)  >  50",
+        "generated": "SELECT a.name FROM Author a JOIN Author_list al ON a.author_id = al.author_id GROUP BY a.author_id HAVING COUNT(al.paper_id) > 50",
+        "response_time_secs": 27.728575706481934
+    },
+    {
+        "id": 244,
+        "question": "What are the average city fuel economy rate, average highway fuel economy rate for different types of powertrains?",
+        "expected": "SELECT avg(City_fuel_economy_rate) ,  avg(Highway_fuel_economy_rate) , Type_of_powertrain FROM vehicles GROUP BY Type_of_powertrain",
+        "generated": "SELECT Type_of_powertrain, AVG(City_fuel_economy_rate) AS Average_City_Fuel_Economy, AVG(Highway_fuel_economy_rate) AS Average_Highway_Fuel_Economy FROM Vehicles GROUP BY Type_of_powertrain",
+        "response_time_secs": 18.74655795097351
+    },
+    {
+        "id": 247,
+        "question": "What are all payment ids and payment details for invoices with status Working?",
+        "expected": "SELECT T1.payment_id ,  T1.payment_details FROM Payments AS T1 JOIN Invoices AS T2 ON T1.invoice_id  =  T2.invoice_id WHERE T2.invoice_status  =  'Working'",
+        "generated": "SELECT p.payment_id, p.payment_details FROM Payments p JOIN Invoices i ON p.invoice_id = i.invoice_id WHERE i.invoice_status = 'Working'",
+        "response_time_secs": 32.640560150146484
+    },
+    {
+        "id": 248,
+        "question": "Find the title of the movie that is played in the Odeon theater.",
+        "expected": "SELECT T1.title FROM movies AS T1 JOIN movietheaters AS T2 ON T1.code  =  T2.movie WHERE T2.name  =  'Odeon'",
+        "generated": "SELECT T2.Title FROM MovieTheaters AS T1 JOIN Movies AS T2 ON T1.Movie = T2.Code WHERE T1.Name = 'Odeon'",
+        "response_time_secs": 6.555484294891357
+    },
+    {
+        "id": 249,
+        "question": "Find the name and age of pilots who have a plane in Austin.",
+        "expected": "SELECT T1.pilot_name ,  T1.age FROM pilotskills AS T1 JOIN hangar AS T2 ON T1.plane_name  =  T2.plane_name WHERE T2.location  =  \"Austin\"",
+        "generated": "SELECT T1.pilot_name , T1.age FROM PilotSkills AS T1 JOIN Hangar AS T2 ON T1.plane_name = T2.plane_name WHERE T2.location = 'Austin'",
+        "response_time_secs": 7.824198007583618
+    },
+    {
+        "id": 250,
+        "question": "Select the area and government website of the district with the smallest population.",
+        "expected": "SELECT area_km ,  Government_website FROM district ORDER BY Population LIMIT 1",
+        "generated": "SELECT Area_km, Government_website FROM district ORDER BY Population ASC LIMIT 1",
+        "response_time_secs": 18.29766321182251
+    },
+    {
+        "id": 252,
+        "question": "When was the transcript issued for the student with loan of maximum value?",
+        "expected": "SELECT T1.date_of_transcript FROM Transcripts AS T1 JOIN Student_Loans AS T2 ON T1.student_id  =  T2.student_id ORDER BY T2.amount_of_loan DESC LIMIT 1",
+        "generated": "SELECT t.date_of_transcript FROM Transcripts t JOIN Students s ON t.student_id = s.student_id JOIN Loans l ON s.student_id = l.student_id ORDER BY l.loan_value DESC LIMIT 1",
+        "response_time_secs": 29.429349184036255
+    },
+    {
+        "id": 253,
+        "question": "Find the highest and lowest points of drivers.",
+        "expected": "SELECT max(Points) ,  min(Points) FROM driver",
+        "generated": "SELECT MAX(Points) AS Highest_Points, MIN(Points) AS Lowest_Points FROM driver",
+        "response_time_secs": 13.45155119895935
+    },
+    {
+        "id": 254,
+        "question": "What are the shipment ids for the planet Mars?",
+        "expected": "SELECT T1.ShipmentID FROM Shipment AS T1 JOIN Planet AS T2 ON T1.Planet = T2.PlanetID WHERE T2.Name  =  \"Mars\";",
+        "generated": "SELECT T1.ShipmentID FROM Shipment AS T1 JOIN Planet AS T2 ON T1.Planet = T2.PlanetID WHERE T2.Name = \"Mars\"",
+        "response_time_secs": 7.718266248703003
+    },
+    {
+        "id": 256,
+        "question": "Show all city names and the average distance to all other cities.",
+        "expected": "SELECT T2.city_name ,  avg(distance) FROM Direct_distance AS T1 JOIN City AS T2 ON T1.city1_code  =  T2.city_code GROUP BY T1.city1_code",
+        "generated": "SELECT C1.city_name, AVG(C2.distance) AS avg_distance FROM City C1 JOIN Direct_distance C2 ON C1.city_code = C2.city1_code GROUP BY C1.city_name",
+        "response_time_secs": 21.755524158477783
+    },
+    {
+        "id": 257,
+        "question": "Which service ( s ) has never been used by any customer ? List their details .",
+        "expected": "select service_details from services except select t2.service_details from customers_and_services as t1 join services as t2 on t1.service_id  =  t2.service_id",
+        "generated": "SELECT s.Service_ID, s.Service_Details FROM Services s LEFT JOIN Customers_and_Services cas ON s.Service_ID = cas.Service_ID WHERE cas.Customer_ID IS NULL",
+        "response_time_secs": 22.98382878303528
+    },
+    {
+        "id": 261,
+        "question": "What are the names and ids of all sailors who have a rating of at least 3 and reserved a boat?",
+        "expected": "SELECT DISTINCT T1.name ,  T1.sid FROM Sailors AS T1 JOIN Reserves AS T2 ON T1.sid  =  T2.sid WHERE  T1.rating  >  2",
+        "generated": "SELECT name , sid FROM sailors WHERE rating >= 3 AND sid IN (SELECT sid FROM reserves)",
+        "response_time_secs": 4.824839353561401
+    },
+    {
+        "id": 262,
+        "question": "List the document id of all documents in collection named Best.",
+        "expected": "SELECT T2.Document_Object_ID FROM Collections AS T1 JOIN Documents_in_Collections AS T2 ON T1.Collection_ID = T2.Collection_ID WHERE T1.Collection_Name = \"Best\";",
+        "generated": "SELECT Document_Object_ID FROM Collection_Document_Membership JOIN Collections ON Collection_Document_Membership.Collection_ID = Collections.Collection_ID WHERE Collections.Collection_Name = 'Best'",
+        "response_time_secs": 30.733490705490112
+    },
+    {
+        "id": 263,
+        "question": "Find the name and id of Sailors (sid) that reserved red and blue boat.",
+        "expected": "SELECT DISTINCT T2.sid ,  T3.name FROM Boats AS T1 JOIN Reserves AS T2 ON  T1.bid  =  T2.bid JOIN Sailors AS T3 ON T2.sid  =  T3.sid WHERE T1.color  =  'red' INTERSECT SELECT DISTINCT T2.sid ,  T3.name FROM Boats AS T1 JOIN Reserves AS T2 ON  T1.bid  =  T2.bid JOIN Sailors AS T3 ON T2.sid  =  T3.sid WHERE T1.color  =  \"blue\"",
+        "generated": "SELECT s.sid, s.name FROM Sailors s WHERE EXISTS ( SELECT 1 FROM Reserves r JOIN Boats b ON r.bid = b.bid WHERE r.sid = s.sid AND b.color = 'red' ) AND EXISTS ( SELECT 1 FROM Reserves r JOIN Boats b ON r.bid = b.bid WHERE r.sid = s.sid AND b.color = 'blue' )",
+        "response_time_secs": 35.63066339492798
+    },
+    {
+        "id": 265,
+        "question": "Find the headphone models that are not in stock in any store.",
+        "expected": "SELECT model FROM headphone WHERE headphone_id NOT IN (SELECT headphone_id FROM stock)",
+        "generated": "SELECT h.Model FROM headphone h LEFT JOIN stock s ON h.Headphone_ID = s.Headphone_ID WHERE s.Quantity IS NULL",
+        "response_time_secs": 21.015823125839233
+    },
+    {
+        "id": 266,
+        "question": "Show all home conferences and the number of universities in each conference.",
+        "expected": "SELECT home_conference ,  count(*) FROM University GROUP BY home_conference",
+        "generated": "SELECT Home_Conference, COUNT(*) AS Number_of_Universities FROM university GROUP BY Home_Conference",
+        "response_time_secs": 14.694098711013794
+    },
+    {
+        "id": 268,
+        "question": "What is the most uncommon order status?",
+        "expected": "SELECT order_status_code FROM Orders GROUP BY order_status_code ORDER BY count(*) LIMIT 1",
+        "generated": "SELECT order_status, COUNT(*) AS status_count FROM Orders GROUP BY order_status ORDER BY status_count ASC LIMIT 1",
+        "response_time_secs": 20.906027793884277
+    },
+    {
+        "id": 269,
+        "question": "What are the names of the different official languages, as well as the number of countries that speak each?",
+        "expected": "SELECT T2.name ,  COUNT(*) FROM official_languages AS T1 JOIN languages AS T2 ON T1.language_id  =  T2.id GROUP BY T2.name",
+        "generated": "SELECT T1.name , count(*) FROM languages AS T1 JOIN official_languages AS T2 ON T1.id = T2.language_id GROUP BY T2.language_id",
+        "response_time_secs": 6.675230979919434
+    },
+    {
+        "id": 272,
+        "question": "What are the type of questions and their counts?",
+        "expected": "SELECT Type_of_Question_Code ,  COUNT(*) FROM Questions GROUP BY Type_of_Question_Code",
+        "generated": "SELECT Type_of_Question_Code, COUNT(*) AS Count FROM Questions GROUP BY Type_of_Question_Code",
+        "response_time_secs": 17.93204975128174
+    },
+    {
+        "id": 274,
+        "question": "What is the sum of distances between BAL and other cities?",
+        "expected": "SELECT sum(distance) FROM Direct_distance WHERE city1_code  =  \"BAL\"",
+        "generated": "SELECT SUM(distance) FROM Direct_distance JOIN City ON Direct_distance.city1_code = City.city_code OR Direct_distance.city2_code = City.city_code WHERE City.cname = 'BAL'",
+        "response_time_secs": 26.249495267868042
+    },
+    {
+        "id": 276,
+        "question": "What are the ids of the documents that have more than one child?",
+        "expected": "SELECT T2.Document_Object_ID FROM Document_Objects AS T1 JOIN Document_Objects AS T2 ON T1.Parent_Document_Object_ID = T2.Document_Object_ID GROUP BY T2.Document_Object_ID HAVING count(*)  >  1;",
+        "generated": "SELECT Parent_Document_Object_ID FROM Document_Objects GROUP BY Parent_Document_Object_ID HAVING COUNT(*) > 1",
+        "response_time_secs": 21.222360134124756
+    },
+    {
+        "id": 277,
+        "question": "What are the manager and car owner of the team that has at least 2 drivers?",
+        "expected": "SELECT t1.manager ,  t1.car_owner FROM team AS t1 JOIN team_driver AS t2 ON t1.team_id  =  t2.team_id GROUP BY t2.team_id HAVING count(*)  >=  2",
+        "generated": "SELECT t.Manager, t.Car_Owner FROM team t JOIN driver d ON t.Team_ID = d.Car_# GROUP BY t.Team_ID, t.Manager, t.Car_Owner HAVING COUNT(d.Driver_ID) >= 2",
+        "response_time_secs": 33.11555099487305
+    },
+    {
+        "id": 280,
+        "question": "For those students who have gone through an event, who do not have a student loan? List the students' biographical data",
+        "expected": "SELECT T1.bio_data FROM Students AS T1 JOIN Student_Events AS T2 WHERE T1.student_id  =  T2.student_id EXCEPT SELECT T1.bio_data FROM Students AS T1 JOIN Student_Loans AS T2 WHERE T1.student_id  =  T2.student_id",
+        "generated": "SELECT s.student_id, s.bio_data, s.student_details FROM Students s JOIN Transcripts t ON s.student_id = t.student_id LEFT JOIN Student_Loans sl ON s.student_id = sl.student_id WHERE t.date_of_transcript IS NOT NULL AND sl.student_id IS NULL",
+        "response_time_secs": 34.610289573669434
+    },
+    {
+        "id": 281,
+        "question": "For each analytical layer, return the analytical layer type code and the number of times it was used.",
+        "expected": "SELECT analytical_layer_type_code ,  count(*) FROM analytical_layer GROUP BY analytical_layer_type_code",
+        "generated": "The provided database schema does not include any table or column related to \"analytical layer\" or \"analytical layer type code\". Therefore, it's impossible to generate a SQL query based on the given natural language question. Please provide more accurate information about your database schema.",
+        "response_time_secs": 9.244717121124268
+    },
+    {
+        "id": 282,
+        "question": "What are the names and coordinates of all planets in alphabetical order by name?",
+        "expected": "SELECT Name ,  Coordinates FROM Planet ORDER BY Name",
+        "generated": "SELECT Name, Coordinates FROM Planet ORDER BY Name ASC",
+        "response_time_secs": 3.2784812450408936
+    },
+    {
+        "id": 286,
+        "question": "What are the agency ids and details agencies with at least 2 clients?",
+        "expected": "SELECT T1.agency_id ,  T1.agency_details FROM Agencies AS T1 JOIN Clients AS T2 ON T1.agency_id  =  T2.agency_id GROUP BY T1.agency_id HAVING count(*)  >=  2",
+        "generated": "SELECT a.agency_id, a.agency_details FROM Agencies a JOIN Clients c ON a.agency_id = c.agency_id GROUP BY a.agency_id, a.agency_details HAVING COUNT(c.client_id) >= 2",
+        "response_time_secs": 27.343871116638184
+    },
+    {
+        "id": 287,
+        "question": "Find all the customers whose name contains \"Kutch\".",
+        "expected": "SELECT customer_details FROM customers WHERE customer_details LIKE \"%Kutch%\"",
+        "generated": "SELECT * FROM Customers WHERE Customer_Details LIKE '%Kutch%'",
+        "response_time_secs": 3.2487261295318604
+    },
+    {
+        "id": 288,
+        "question": "What are the number of shipments managed and names of each manager?",
+        "expected": "SELECT T2.Name ,  count(*) FROM Shipment AS T1 JOIN Employee AS T2 ON T1.Manager = T2.EmployeeID GROUP BY T1.Manager;",
+        "generated": "SELECT COUNT(T2.ShipmentID) AS Number_of_Shipments, T1.Name AS Manager_Name FROM Employee AS T1 JOIN Shipment AS T2 ON T1.EmployeeID = T2.Manager GROUP BY T1.Name",
+        "response_time_secs": 33.88495755195618
+    },
+    {
+        "id": 289,
+        "question": "How many different neighborhoods are there for all stores?",
+        "expected": "SELECT count(DISTINCT neighborhood) FROM store",
+        "generated": "SELECT COUNT(DISTINCT Neighborhood) AS Number_of_Neighborhoods FROM store",
+        "response_time_secs": 12.542253732681274
+    },
+    {
+        "id": 290,
+        "question": "Count the number of payments.",
+        "expected": "SELECT count(*) FROM Payments",
+        "generated": "SELECT COUNT(*) AS total_payments FROM Invoices",
+        "response_time_secs": 20.564377307891846
+    },
+    {
+        "id": 295,
+        "question": "Find the number of books that are sold more than 1000 for each publisher. List the press name as well.",
+        "expected": "SELECT count(*) ,  t2.name FROM book AS t1 JOIN press AS t2 ON t1.press_id  =  t2.press_id WHERE sale_amount  >  1000 GROUP BY t2.name",
+        "generated": "SELECT p.Name, COUNT(b.Book_ID) as Number_of_Books_Sold FROM book b JOIN press p ON b.Press_ID = p.Press_ID WHERE b.Sale_Amount > 1000 GROUP BY p.Name",
+        "response_time_secs": 10.009410619735718
+    },
+    {
+        "id": 296,
+        "question": "Find the number of distinct types of contents in each warehouse.",
+        "expected": "SELECT count(DISTINCT CONTENTS) ,  warehouse FROM boxes GROUP BY warehouse",
+        "generated": "SELECT count(DISTINCT contents) , T1.code FROM warehouses AS T1 JOIN boxes AS T2 ON T1.code = T2.warehouse GROUP BY T1.code",
+        "response_time_secs": 6.855544805526733
+    },
+    {
+        "id": 297,
+        "question": "How many planes are owned by the pilot whose name is Smith?",
+        "expected": "SELECT count(plane_name) FROM pilotskills WHERE pilot_name  =  'Smith'",
+        "generated": "SELECT count(*) FROM Pilotskills WHERE pilot_name = \"Smith\"",
+        "response_time_secs": 3.767824649810791
+    },
+    {
+        "id": 299,
+        "question": "How much do the products cost on average?",
+        "expected": "SELECT avg(product_price) FROM Products",
+        "generated": "SELECT AVG(product_price) AS average_product_price FROM Products",
+        "response_time_secs": 10.422775983810425
+    },
+    {
+        "id": 302,
+        "question": "What types of contents cannot be found in warehouses in New York?",
+        "expected": "SELECT CONTENTS FROM boxes EXCEPT SELECT T1.contents FROM boxes AS T1 JOIN warehouses AS T2 ON T1.warehouse  =  T2.code WHERE T2.location  =  'New York'",
+        "generated": "SELECT DISTINCT contents FROM boxes EXCEPT SELECT DISTINCT contents FROM boxes AS T1 JOIN warehouses AS T2 ON T1.warehouse = T2.code WHERE LOCATION = 'New York'",
+        "response_time_secs": 7.138000965118408
+    },
+    {
+        "id": 303,
+        "question": "List the country that have more than one player.",
+        "expected": "SELECT Country FROM player GROUP BY Country HAVING COUNT(*)  >  1",
+        "generated": "SELECT Country FROM player GROUP BY Country HAVING COUNT(Player_ID) > 1",
+        "response_time_secs": 10.722206592559814
+    },
+    {
+        "id": 305,
+        "question": "Find all receipts in which either apple flavor pie was bought or customer id 12 shopped.",
+        "expected": "SELECT T1.receipt FROM items AS T1 JOIN goods AS T2 ON T1.item  =  T2.id WHERE T2.flavor  =  \"Apple\" AND T2.food  =  \"Pie\" UNION SELECT ReceiptNumber FROM receipts WHERE CustomerId  =  12",
+        "generated": "SELECT T1.ReceiptNumber FROM receipts AS T1 JOIN items AS T2 ON T1.ReceiptNumber = T2.Receipt WHERE T2.Item = 'apple' UNION SELECT T1.ReceiptNumber FROM receipts AS T1 JOIN items AS T2 ON T1.ReceiptNumber = T2.Receipt WHERE T1.CustomerId = 12",
+        "response_time_secs": 13.187248706817627
+    },
+    {
+        "id": 306,
+        "question": "For each location, what are the total, average, and maximum capacities of warehouses?",
+        "expected": "SELECT sum(capacity) ,  avg(capacity) ,  max(capacity) ,  LOCATION FROM warehouses GROUP BY LOCATION",
+        "generated": "SELECT LOCATION , sum(Capacity) , avg(Capacity) , max(Capacity) FROM WAREHOUSES GROUP BY LOCATION",
+        "response_time_secs": 5.575120210647583
+    },
+    {
+        "id": 307,
+        "question": "Which teacher teaches the most courses? Give me the id of the teacher and the number of courses he or she teaches.",
+        "expected": "SELECT count(*) ,  teacher_id FROM Classes GROUP BY teacher_id ORDER BY count(*) DESC LIMIT 1",
+        "generated": "SELECT T2.teacher_id, COUNT(*) as course_count FROM Courses AS T1 JOIN Teachers AS T2 ON T1.teacher_id = T2.teacher_id GROUP BY T2.teacher_id ORDER BY course_count DESC LIMIT 1",
+        "response_time_secs": 26.3345627784729
+    },
+    {
+        "id": 308,
+        "question": "For each building, return the address of the building and the name of the region it belongs to.",
+        "expected": "SELECT T1.Address ,  T2.Capital FROM building AS T1 JOIN region AS T2 ON T1.Region_ID  =  T2.Region_ID",
+        "generated": "SELECT T1.Address , T2.Name FROM building AS T1 JOIN region AS T2 ON T1.Region_ID = T2.Region_ID",
+        "response_time_secs": 5.808403015136719
+    },
+    {
+        "id": 309,
+        "question": "For each city, what is the the city code and sum of distances from each?",
+        "expected": "SELECT city1_code ,  sum(distance) FROM Direct_distance GROUP BY city1_code",
+        "generated": "SELECT c.city_code, SUM(dd.distance) AS total_distance FROM City c JOIN Direct_distance dd ON c.city_code = dd.city1_code OR c.city_code = dd.city2_code GROUP BY c.city_code",
+        "response_time_secs": 41.66349148750305
+    },
+    {
+        "id": 310,
+        "question": "What is the name of the planet with the most shipments?",
+        "expected": "SELECT T2.Name FROM Shipment AS T1 JOIN Planet AS T2 ON T1.Planet = T2.PlanetID GROUP BY T1.Planet ORDER BY count(*) DESC LIMIT 1;",
+        "generated": "SELECT p.Name FROM Planet p JOIN Shipment s ON p.PlanetID = s.Planet GROUP BY p.PlanetID ORDER BY COUNT(s.ShipmentID) DESC LIMIT 1",
+        "response_time_secs": 22.225234270095825
+    },
+    {
+        "id": 311,
+        "question": "Find the titles and paper IDs for papers which have Mckeown but not Rambow in author list.",
+        "expected": "SELECT T1.title ,  T1.paper_id FROM Paper AS T1 JOIN Author_list AS T2 ON T1.paper_id  =  T2.paper_id JOIN Author AS T3 ON T2.author_id  =  T3.author_id WHERE T3.name LIKE \"%Mckeown%\" EXCEPT SELECT T1.title ,  T1.paper_id FROM Paper AS T1 JOIN Author_list AS T2 ON T1.paper_id  =  T2.paper_id JOIN Author AS T3 ON T2.author_id  =  T3.author_id WHERE T3.name LIKE \"%Rambow%\"",
+        "generated": "SELECT DISTINCT p.title, al.paper_id FROM Paper p JOIN Author_list al ON p.paper_id = al.paper_id JOIN Author a ON al.author_id = a.author_id WHERE a.name = 'Mckeown' AND NOT EXISTS ( SELECT 1 FROM Author_list al2 JOIN Author a2 ON al2.author_id = a2.author_id WHERE al2.paper_id = p.paper_id AND a2.name = 'Rambow' )",
+        "response_time_secs": 38.739262104034424
+    },
+    {
+        "id": 312,
+        "question": "Find the average city and highway fuel rates for cars with different powertrain types.",
+        "expected": "SELECT avg(City_fuel_economy_rate) ,  avg(Highway_fuel_economy_rate) , Type_of_powertrain FROM vehicles GROUP BY Type_of_powertrain",
+        "generated": "SELECT Type_of_powertrain, AVG(City_fuel_economy_rate) AS Average_City_Fuel_Rate, AVG(Highway_fuel_economy_rate) AS Average_Highway_Fuel_Rate FROM Vehicles GROUP BY Type_of_powertrain",
+        "response_time_secs": 23.73750352859497
+    },
+    {
+        "id": 313,
+        "question": "For every home conference, how many universities attended that conference?",
+        "expected": "SELECT home_conference ,  count(*) FROM University GROUP BY home_conference",
+        "generated": "SELECT Home_Conference, COUNT(*) AS Number_of_Universities FROM university GROUP BY Home_Conference",
+        "response_time_secs": 14.988515853881836
+    },
+    {
+        "id": 315,
+        "question": "What are the number of packages shipped on Omicron Persei 8 planet or sent by Zapp Brannigan?",
+        "expected": "SELECT T1.PackageNumber FROM PACKAGE AS T1 JOIN Client AS T2 ON  T1.Sender = T2.AccountNumber JOIN Shipment AS T3 ON T1.Shipment = T3.ShipmentID JOIN Planet AS T4 ON T3.Planet = T4.PlanetID WHERE T2.Name  =  \"Zapp Brannigan\" OR T4.Name  =  \"Omicron Persei 8\";",
+        "generated": "SELECT COUNT(*) FROM Shipment AS T1 JOIN Planet AS T2 ON T1.Planet = T2.PlanetID JOIN Employee AS T3 ON T1.Manager = T3.EmployeeID WHERE T2.Name = 'Omicron Persei 8' OR T3.Name = 'Zapp Brannigan'",
+        "response_time_secs": 25.06261920928955
+    },
+    {
+        "id": 316,
+        "question": "Show the capital of the region that has the most buildings.",
+        "expected": "SELECT T2.capital FROM building AS T1 JOIN region AS T2 ON T1.Region_ID  =  T2.Region_ID GROUP BY T1.Region_ID ORDER BY COUNT(*) DESC LIMIT 1",
+        "generated": "SELECT r.Capital FROM region r JOIN building b ON r.Region_ID = b.Region_ID GROUP BY r.Region_ID ORDER BY COUNT(b.Building_ID) DESC LIMIT 1",
+        "response_time_secs": 24.343462467193604
+    },
+    {
+        "id": 317,
+        "question": "What are all the city names for cities in the USA, ordered by latitude?",
+        "expected": "SELECT city_name FROM City WHERE country  =  \"USA\" ORDER BY latitude",
+        "generated": "SELECT T1.cname FROM city AS T1 JOIN country AS T2 ON T1.country_code = T2.code WHERE T2.continent = 'North America' ORDER BY T1.latitude",
+        "response_time_secs": 7.968031883239746
+    },
+    {
+        "id": 319,
+        "question": "Which country has least number of students?",
+        "expected": "SELECT T1.country FROM City AS T1 JOIN Student AS T2 ON T1.city_code  =  T2.city_code GROUP BY T1.country ORDER BY count(*) LIMIT 1",
+        "generated": "SELECT country_code, COUNT(*) AS num_students FROM Student GROUP BY country_code ORDER BY num_students ASC LIMIT 1",
+        "response_time_secs": 34.16897439956665
+    },
+    {
+        "id": 320,
+        "question": "Show the titles of books that have been ordered.",
+        "expected": "SELECT DISTINCT T1.title FROM book AS T1 JOIN books_order AS T2 ON T1.isbn  =  T2.isbn",
+        "generated": "SELECT DISTINCT B.Title FROM Orders O JOIN Order_Books OB ON O.IdOrder = OB.IdOrder JOIN Book B ON OB.ISBN = B.ISBN",
+        "response_time_secs": 18.842182636260986
+    },
+    {
+        "id": 321,
+        "question": "What are the maximum and minimum points of drivers.",
+        "expected": "SELECT max(Points) ,  min(Points) FROM driver",
+        "generated": "SELECT MAX(Points) AS Max_Points, MIN(Points) AS Min_Points FROM driver",
+        "response_time_secs": 14.675850629806519
+    },
+    {
+        "id": 323,
+        "question": "Find the top 2 earpads that are mostly used.",
+        "expected": "SELECT earpads FROM headphone GROUP BY earpads ORDER BY count(*) DESC LIMIT 2",
+        "generated": "SELECT Earpads, COUNT(*) as Usage_Count FROM headphone GROUP BY Earpads ORDER BY Usage_Count DESC LIMIT 2",
+        "response_time_secs": 17.7982816696167
+    },
+    {
+        "id": 324,
+        "question": "Return the number of orders received for Pride and Prejudice.",
+        "expected": "SELECT count(*) FROM Book AS T1 JOIN Books_Order AS T2 ON T1.isbn  =  T2.isbn WHERE T1.title  =  \"Pride and Prejudice\"",
+        "generated": "SELECT COUNT(*) FROM Orders o JOIN Book b ON o.ISBN = b.ISBN WHERE b.Title = 'Pride and Prejudice'",
+        "response_time_secs": 16.63113570213318
+    },
+    {
+        "id": 325,
+        "question": "Please show the names and rank of players that have played the game titled \"Super Mario World\".",
+        "expected": "SELECT T3.Player_name ,  T3.rank_of_the_year FROM game AS T1 JOIN game_player AS T2 ON T1.Game_ID  =  T2.Game_ID JOIN player AS T3 ON T2.Player_ID  =  T3.Player_ID WHERE T1.Title  =  \"Super Mario World\"",
+        "generated": "SELECT p.Player_name, p.Rank_of_the_year FROM player p JOIN player_game_activity pga ON p.Player_ID = pga.Player_ID JOIN game g ON pga.Game_ID = g.Game_ID WHERE g.Title = 'Super Mario World'",
+        "response_time_secs": 30.807607173919678
+    },
+    {
+        "id": 326,
+        "question": "When was the time of the latest search by a user?",
+        "expected": "SELECT max(search_datetime) FROM User_Searches;",
+        "generated": "SELECT MAX(search_time) AS latest_search_time FROM Searches",
+        "response_time_secs": 3.8211827278137207
+    },
+    {
+        "id": 327,
+        "question": "What are the distinct ids of customers who bought lemon flavored cake?",
+        "expected": "SELECT DISTINCT T3.CustomerId FROM goods AS T1 JOIN items AS T2 ON T1.Id  =  T2.Item JOIN receipts AS T3 ON T2.Receipt  =  T3.ReceiptNumber WHERE T1.Flavor  =  \"Lemon\" AND T1.Food  =  \"Cake\"",
+        "generated": "SELECT DISTINCT T1.CustomerId FROM receipts AS T1 JOIN items AS T2 ON T1.ReceiptNumber = T2.Receipt WHERE T2.Item = 'cake' AND T2.Ordinal = 1 AND T1.Date LIKE '%lemon%'",
+        "response_time_secs": 9.682913780212402
+    },
+    {
+        "id": 328,
+        "question": "Find the make of the team whose car owner is \"Buddy Arrington\".",
+        "expected": "SELECT Make FROM team WHERE Car_Owner  =  \"Buddy Arrington\"",
+        "generated": "SELECT Make FROM team WHERE Car_Owner = 'Buddy Arrington'",
+        "response_time_secs": 4.59950852394104
+    },
+    {
+        "id": 329,
+        "question": "How many invoices are there for each status code?",
+        "expected": "SELECT invoice_status ,  count(*) FROM Invoices GROUP BY invoice_status",
+        "generated": "SELECT invoice_status, COUNT(*) AS number_of_invoices FROM Invoices GROUP BY invoice_status",
+        "response_time_secs": 16.929276943206787
+    },
+    {
+        "id": 330,
+        "question": "What are the names of drivers who had both the pole position James Hinchcliffe and the pole position Carl Skerlong?",
+        "expected": "SELECT T1.Driver_Name FROM driver AS T1 JOIN race AS T2 ON T1.Driver_ID  =  T2.Driver_ID WHERE Pole_Position  =  \"Carl Skerlong\" INTERSECT SELECT T1.Driver_Name FROM driver AS T1 JOIN race AS T2 ON T1.Driver_ID  =  T2.Driver_ID WHERE Pole_Position  =  \"James Hinchcliffe\"",
+        "generated": "SELECT T1.Driver_Name FROM driver AS T1 JOIN race AS T2 ON T1.Driver_ID = T2.Driver_ID WHERE T2.Pole_Position = 'James Hinchcliffe' INTERSECT SELECT T1.Driver_Name FROM driver AS T1 JOIN race AS T2 ON T1.Driver_ID = T2.Driver_ID WHERE T2.Pole_Position = 'Carl Skerlong'",
+        "response_time_secs": 13.062622547149658
+    },
+    {
+        "id": 332,
+        "question": "What are the names of authors who have exactly 1 paper?",
+        "expected": "SELECT T1.name FROM Author AS T1 JOIN Author_list AS T2 ON T1.author_id  =  T2.author_id GROUP BY T1.author_id HAVING count(*)  =  1",
+        "generated": "SELECT a.name FROM Author a JOIN Author_list al ON a.author_id = al.author_id GROUP BY a.author_id HAVING COUNT(al.paper_id) = 1",
+        "response_time_secs": 22.000251531600952
+    },
+    {
+        "id": 334,
+        "question": "Which customers have integration platform details \"Fail\" in interactions? Give me the customer details.",
+        "expected": "SELECT DISTINCT t1.customer_details FROM customers AS t1 JOIN customer_interactions AS t2 ON t1.customer_id  =  t2.customer_id JOIN integration_platform AS t3 WHERE t3.integration_platform_details  =  \"Fail\"",
+        "generated": "SELECT DISTINCT C.Customer_Details FROM Customers AS C JOIN Customers_and_Services AS CAS ON C.Customer_ID = CAS.Customer_ID JOIN Services AS S ON CAS.Service_ID = S.Service_ID WHERE S.Service_Details = 'Integration Platform' AND CAS.Customers_and_Services_Details = 'Fail'",
+        "response_time_secs": 26.859088897705078
+    },
+    {
+        "id": 336,
+        "question": "List the biographical data of the students who never had a detention or student loan .",
+        "expected": "select bio_data from students where student_id not in (select t1.student_id from students as t1 join detention as t2 on t1.student_id  =  t2.student_id union select t1.student_id from students as t1 join student_loans as t2 on t1.student_id  =  t2.student_id)",
+        "generated": "SELECT bio_data FROM Students WHERE student_id NOT IN ( SELECT student_id FROM Behaviour_Monitoring )",
+        "response_time_secs": 27.097305297851562
+    },
+    {
+        "id": 337,
+        "question": "What are the colors , descriptions , and sizes for all products that are not at the maximum price ?",
+        "expected": "select product_color ,  product_description ,  product_size from products where product_price  !=  ( select max(product_price) from products )",
+        "generated": "SELECT product_color, product_description, product_size FROM Products WHERE product_price < (SELECT MAX(product_price) FROM Products)",
+        "response_time_secs": 28.055947303771973
+    },
+    {
+        "id": 338,
+        "question": "Return the ids and names of the districts whose population is larger than 4000 or area bigger than 3000.",
+        "expected": "SELECT district_id ,  name FROM district WHERE area_km  >  3000 OR population  >  4000",
+        "generated": "SELECT District_ID, Name FROM district WHERE Population > 4000 OR Area_km > 3000",
+        "response_time_secs": 14.366579532623291
+    },
+    {
+        "id": 339,
+        "question": "What are all the flavors of croissant?",
+        "expected": "SELECT flavor FROM goods WHERE food  =  \"Croissant\"",
+        "generated": "SELECT DISTINCT Flavor FROM goods WHERE Food = \"croissant\"",
+        "response_time_secs": 3.5865728855133057
+    },
+    {
+        "id": 340,
+        "question": "What are the names of planes that the pilot Jones who is 32 has?",
+        "expected": "SELECT plane_name FROM pilotskills WHERE pilot_name  =  'Jones'  AND age  =  32",
+        "generated": "SELECT T1.plane_name FROM PilotSkills AS T1 JOIN Hangar AS T2 ON T1.plane_name = T2.plane_name WHERE T1.pilot_name = \"Jones\" AND T1.age = 32",
+        "response_time_secs": 8.852094888687134
+    },
+    {
+        "id": 341,
+        "question": "How many packages sent by Ogden Wernstrom and received by Leo Wong?",
+        "expected": "SELECT T1.PackageNumber FROM PACKAGE AS T1 JOIN Client AS T2 ON T1.Sender  =  T2.AccountNumber WHERE T2.Name = \"Ogden Wernstrom\" INTERSECT SELECT T1.PackageNumber FROM PACKAGE AS T1 JOIN Client AS T2 ON T1.Recipient  =  T2.AccountNumber WHERE T2.Name = \"Leo Wong\"",
+        "generated": "SELECT COUNT(T2.ShipmentID) FROM Employee AS T1 JOIN Shipment AS T2 ON T1.EmployeeID = T2.Manager WHERE T1.Name = 'Ogden Wernstrom' AND T2.Date IN ( SELECT Date FROM Shipment WHERE Manager = ( SELECT EmployeeID FROM Employee WHERE Name = 'Leo Wong' ) )",
+        "response_time_secs": 49.12241005897522
+    },
+    {
+        "id": 342,
+        "question": "List distinct receipt numbers for which someone bought a good that costs more than 13 dollars.",
+        "expected": "SELECT DISTINCT T1.ReceiptNumber FROM receipts AS T1 JOIN items AS T2 ON T1.ReceiptNumber  =  T2.receipt JOIN goods AS T3 ON T2.item  =  T3.id WHERE T3.price  >  13",
+        "generated": "SELECT DISTINCT T1.ReceiptNumber FROM receipts AS T1 JOIN items AS T2 ON T1.ReceiptNumber = T2.ReceiptNumber JOIN goods AS T3 ON T2.Item = T3.Id WHERE T3.Price > 13",
+        "response_time_secs": 36.55771064758301
+    },
+    {
+        "id": 343,
+        "question": "List the names of customers that do not have any order.",
+        "expected": "SELECT name FROM customer WHERE Customer_ID NOT IN (SELECT Customer_ID FROM customer_order)",
+        "generated": "SELECT c.Name FROM customer c LEFT JOIN customer_order co ON c.Customer_ID = co.Customer_ID WHERE co.Dish_Name IS NULL",
+        "response_time_secs": 24.503717184066772
+    },
+    {
+        "id": 344,
+        "question": "What are the tracking numbers and dates for all shipments listed?",
+        "expected": "SELECT shipment_tracking_number ,  shipment_date FROM Shipments",
+        "generated": "SELECT tracking_number , date FROM shipments",
+        "response_time_secs": 2.907254457473755
+    },
+    {
+        "id": 345,
+        "question": "List the start time, end time of each meeting, and the corresponding client detail and staff detail.",
+        "expected": "SELECT T1.start_date_time ,  T1.end_date_time ,  T2.client_details ,  T4.staff_details FROM meetings AS T1 JOIN clients AS T2 ON T1.client_id  =  T2.client_id JOIN staff_in_meetings AS T3 ON T1.meeting_id  =  T3.meeting_id JOIN staff AS T4 ON T3.staff_id  =  T4.staff_id",
+        "generated": "SELECT m.start_time, m.end_time, c.client_details, s.staff_details FROM Meetings m JOIN Clients c ON m.client_id = c.client_id JOIN Staff s ON m.staff_id = s.staff_id",
+        "response_time_secs": 25.64734172821045
+    },
+    {
+        "id": 346,
+        "question": "Find the names of districts which have more than one spokesman.",
+        "expected": "SELECT t1.name FROM district AS t1 JOIN spokesman_district AS t2 ON t1.District_ID  =  t2.District_ID GROUP BY t2.District_ID HAVING count(*)  >  1",
+        "generated": "SELECT d.Name FROM district d JOIN spokesman_district sd ON d.District_ID = sd.District_ID GROUP BY d.District_ID, d.Name HAVING COUNT(sd.Spokesman_ID) > 1",
+        "response_time_secs": 35.084656715393066
+    },
+    {
+        "id": 347,
+        "question": "What are the distinct venues for papers, ordered by year?",
+        "expected": "SELECT DISTINCT venue ,  YEAR FROM paper ORDER BY YEAR",
+        "generated": "SELECT DISTINCT T2.name FROM Paper AS T1 JOIN Venue AS T2 ON T1.venue_id = T2.venue_id ORDER BY T1.year",
+        "response_time_secs": 19.802574396133423
+    },
+    {
+        "id": 348,
+        "question": "What is the title of the paper that has most number of authors?",
+        "expected": "SELECT T2.title FROM Author_list AS T1 JOIN Paper AS T2 ON T1.paper_id  =  T2.paper_id GROUP BY T2.paper_id ORDER BY count(*) DESC LIMIT 1",
+        "generated": "SELECT p.title FROM Paper p JOIN Author_list al ON p.paper_id = al.paper_id GROUP BY p.paper_id, p.title ORDER BY COUNT(al.author_id) DESC LIMIT 1",
+        "response_time_secs": 26.228330373764038
+    },
+    {
+        "id": 349,
+        "question": "In how many different warehouses are Rocks stored within boxes?",
+        "expected": "SELECT count(DISTINCT LOCATION) FROM boxes AS T1 JOIN warehouses AS T2 ON T1.warehouse  =  T2.code WHERE T1.contents  =  'Rocks'",
+        "generated": "SELECT count(DISTINCT warehouse) FROM boxes WHERE contents = 'Rocks'",
+        "response_time_secs": 3.99702525138855
+    },
+    {
+        "id": 350,
+        "question": "Show all staff names who attend a conference in 2003 or 2004.",
+        "expected": "SELECT DISTINCT T1.name FROM staff AS T1 JOIN conference_participation AS T2 JOIN Conference AS T3 ON T1.staff_id  =  T2.staff_id AND T2.conference_id  =  T3.conference_id WHERE T3.year  =  2003 OR T3.year  =  2004",
+        "generated": "SELECT s.name FROM staff s JOIN conference_pa cp ON s.staff_id = cp.staff_id WHERE cp.Conference_ID IN ( SELECT Conference_ID FROM conference WHERE Year IN (2003, 2004) )",
+        "response_time_secs": 33.78531885147095
+    },
+    {
+        "id": 351,
+        "question": "What are the invoice ids and statuses for invoices without a payment?",
+        "expected": "SELECT invoice_id ,  invoice_status FROM Invoices EXCEPT SELECT T1.invoice_id ,  T1.invoice_status FROM Invoices AS T1 JOIN Payments AS T2 ON T1.invoice_id  =  T2.invoice_id",
+        "generated": "SELECT i.invoice_id, i.invoice_status FROM Invoices i LEFT JOIN Payments p ON i.invoice_id = p.invoice_id WHERE p.invoice_id IS NULL",
+        "response_time_secs": 21.21549153327942
+    },
+    {
+        "id": 352,
+        "question": "what are all shipment tracking numbers and shipment dates?",
+        "expected": "SELECT shipment_tracking_number ,  shipment_date FROM Shipments",
+        "generated": "SELECT tracking_number, shipment_date FROM Shipments",
+        "response_time_secs": 17.401159524917603
+    },
+    {
+        "id": 353,
+        "question": "What is the name of the affiliation which publishes the greatest number of papers among those whose address contains 'China'.",
+        "expected": "SELECT T1.name FROM Affiliation AS T1 JOIN Author_list AS T2 ON T1.affiliation_id  =  T2.affiliation_id WHERE T1.address LIKE \"%China%\" GROUP BY T1.affiliation_id ORDER BY count(*) DESC LIMIT 1",
+        "generated": "SELECT a.name, COUNT(DISTINCT al.paper_id) AS paper_count FROM Affiliation a JOIN Author_list al ON a.affiliation_id = al.affiliation_id WHERE a.address LIKE '%China%' GROUP BY a.name ORDER BY paper_count DESC LIMIT 1",
+        "response_time_secs": 32.35051155090332
+    },
+    {
+        "id": 355,
+        "question": "Select the warehouse codes along with the number of boxes in each warehouse.",
+        "expected": "SELECT Warehouse ,  count(*) FROM boxes GROUP BY warehouse",
+        "generated": "SELECT T2.code , count(*) FROM warehouses AS T1 JOIN boxes AS T2 ON T1.code = T2.warehouse GROUP BY T2.warehouse",
+        "response_time_secs": 6.446149826049805
+    },
+    {
+        "id": 356,
+        "question": "Which services are both used by the customer \"Hardy Kutch\" and are rated as \"bad\" in a customer interaction? Give me the service details.",
+        "expected": "SELECT DISTINCT t3.service_details FROM customers AS t1 JOIN customers_and_services AS t2 ON t1.customer_id  =  t2.customer_id JOIN services AS t3 ON t2.service_id  =  t3.service_id JOIN customer_interactions AS t4 ON t3.service_id  =  t4.service_id WHERE t1.customer_details  =  \"Hardy Kutch\" AND t4.services_and_channels_details  =  \"bad\"",
+        "generated": "SELECT T3.Service_Details FROM Customers AS T1 JOIN Customers_and_Services AS T2 ON T1.Customer_ID = T2.Customer_ID JOIN Services AS T3 ON T2.Service_ID = T3.Service_ID WHERE T1.Customer_Details = \"Hardy Kutch\" INTERSECT SELECT T3.Service_Details FROM Customers AS T1 JOIN Customer_Interaction AS T4 ON T1.Customer_ID = T4.Customer_ID JOIN Services AS T3 ON T4.Service_ID = T3.Service_ID WHERE T4.Rating = \"bad\"",
+        "response_time_secs": 19.375760078430176
+    },
+    {
+        "id": 358,
+        "question": "Find the birth years of all distinct artists who made sculptures after 1920?",
+        "expected": "SELECT DISTINCT T1.birthYear FROM artists AS T1 JOIN sculptures AS T2 ON T1.artistID  =  T2.sculptorID WHERE T2.year  >  1920",
+        "generated": "SELECT DISTINCT a.birthYear FROM Artists a JOIN Sculptures s ON a.artistID = s.artistID WHERE s.year > 1920",
+        "response_time_secs": 6.100202798843384
+    },
+    {
+        "id": 359,
+        "question": "List the station names of city channels whose affiliation is not \"ABC\".",
+        "expected": "SELECT Station_name FROM city_channel WHERE Affiliation != \"ABC\"",
+        "generated": "SELECT station_name FROM city_channel WHERE affiliation != 'ABC'",
+        "response_time_secs": 3.5520975589752197
+    },
+    {
+        "id": 360,
+        "question": "Show the official languages spoken by at least two countries.",
+        "expected": "SELECT T2.name FROM official_languages AS T1 JOIN languages AS T2 ON T1.language_id  =  T2.id GROUP BY T2.id HAVING COUNT(*)  >=  2",
+        "generated": "SELECT l.name AS language_name, COUNT(ol.country_id) AS country_count FROM official_languages ol JOIN languages l ON ol.language_id = l.id GROUP BY l.name HAVING COUNT(ol.country_id) >= 2",
+        "response_time_secs": 24.176076650619507
+    },
+    {
+        "id": 362,
+        "question": "List the details for all the pairs of teachers and students who are in the same class.",
+        "expected": "SELECT T1.teacher_details ,  T3.student_details FROM Teachers AS T1 JOIN Classes AS T2 ON T1.teacher_id  =  T2.teacher_id JOIN Students AS T3 ON T2.student_id  =  T3.student_id",
+        "generated": "SELECT s.student_details, t.teacher_details FROM Students s JOIN Classes c ON s.class_id = c.class_id JOIN Teachers t ON c.class_id = t.class_id",
+        "response_time_secs": 26.07733988761902
+    },
+    {
+        "id": 363,
+        "question": "Give the average distance between Boston and other cities.",
+        "expected": "SELECT avg(distance) FROM Direct_distance AS T1 JOIN City AS T2 ON T1.city1_code  =  T2.city_code WHERE T2.city_name  =  \"Boston\"",
+        "generated": "SELECT AVG(distance) AS avg_distance FROM City c1 JOIN Direct_distance dd ON c1.city_code = dd.city1_code OR c1.city_code = dd.city2_code WHERE (c1.city_code = 'BOS' AND dd.city2_code != 'BOS') OR (c1.city_code != 'BOS' AND dd.city1_code = 'BOS')",
+        "response_time_secs": 26.103017330169678
+    },
+    {
+        "id": 365,
+        "question": "What are the different plane names of planes with an average pilot age of below 35, and how many pilots have flown each of them?",
+        "expected": "SELECT count(*) ,  plane_name FROM pilotskills GROUP BY plane_name HAVING avg(age)  <  35",
+        "generated": "SELECT T1.plane_name , count(*) FROM PilotSkills AS T1 JOIN Hangar AS T2 ON T1.plane_name = T2.plane_name GROUP BY T1.plane_name HAVING avg(T1.age) < 35",
+        "response_time_secs": 9.194756984710693
+    },
+    {
+        "id": 366,
+        "question": "For each student, find the student id, student biographical data, and the number of courses he or she takes.",
+        "expected": "SELECT T1.student_id ,  T1.bio_data ,  count(*) FROM Students AS T1 JOIN Classes AS T2 ON T1.student_id  =  T2.student_id GROUP BY T1.student_id",
+        "generated": "SELECT s.student_id, s.bio_data, COUNT(t.transcript_id) AS number_of_courses FROM Students s JOIN Transcripts t ON s.student_id = t.student_id GROUP BY s.student_id, s.bio_data",
+        "response_time_secs": 25.914578437805176
+    },
+    {
+        "id": 367,
+        "question": "List all meeting type codes and details.",
+        "expected": "SELECT meeting_type ,  other_details FROM meetings",
+        "generated": "SELECT meeting_type_code, meeting_details FROM Meetings",
+        "response_time_secs": 3.0723319053649902
+    },
+    {
+        "id": 368,
+        "question": "What is the first and last name of each distinct artists who made a sculpture before 1900?",
+        "expected": "SELECT DISTINCT T1.lname ,  T1.fname FROM artists AS T1 JOIN sculptures AS T2 ON T1.artistID  =  T2.sculptorID WHERE T2.year  <  1900",
+        "generated": "SELECT DISTINCT a.fname, a.lname FROM Artists a JOIN Sculptures s ON a.artistID = s.artistID WHERE s.year < 1900",
+        "response_time_secs": 6.512717247009277
+    },
+    {
+        "id": 369,
+        "question": "How many different item status codes are there listed in ordered items?",
+        "expected": "SELECT count(DISTINCT order_item_status_code) FROM Order_items",
+        "generated": "SELECT COUNT(DISTINCT item_status_code) AS distinct_item_status_count FROM Orders",
+        "response_time_secs": 17.79149317741394
+    },
+    {
+        "id": 370,
+        "question": "Find the titles of paintings and sculpture works made by the artist whose id is 222?",
+        "expected": "SELECT T2.title FROM artists AS T1 JOIN paintings AS T2 ON T1.artistID  =  T2.painterID WHERE T1.artistID  =  222 UNION SELECT T4.title FROM artists AS T3 JOIN sculptures AS T4 ON T3.artistID  =  T4.sculptorID WHERE T3.artistID  =  222",
+        "generated": "SELECT T1.title FROM Paintings AS T1 JOIN Artists AS T2 ON T1.painterID = T2.artistID WHERE T2.artistID = 222 UNION SELECT T3.title FROM Sculptures AS T3 JOIN Artists AS T4 ON T3.artistID = T4.artistID WHERE T4.artistID = 222",
+        "response_time_secs": 12.165590763092041
+    },
+    {
+        "id": 372,
+        "question": "How many invoices are there for each client id?",
+        "expected": "SELECT client_id ,  count(*) FROM Invoices GROUP BY client_id",
+        "generated": "SELECT client_id, COUNT(*) as number_of_invoices FROM Invoices GROUP BY client_id",
+        "response_time_secs": 13.634907960891724
+    },
+    {
+        "id": 374,
+        "question": "Find the names of the districts which have had both spokesman with rank position 1 and 2.",
+        "expected": "SELECT t3.name FROM spokesman AS t1 JOIN spokesman_district AS t2 ON t1.Spokesman_ID  =  t2.Spokesman_ID JOIN district AS t3 ON t3.district_id  =  t2.district_id WHERE t1.rank_position  =  1 INTERSECT SELECT t3.name FROM spokesman AS t1 JOIN spokesman_district AS t2 ON t1.Spokesman_ID  =  t2.Spokesman_ID JOIN district AS t3 ON t3.district_id  =  t2.district_id WHERE t1.rank_position  =  2",
+        "generated": "SELECT d.Name FROM district d WHERE EXISTS ( SELECT 1 FROM spokesman s1 JOIN spokesman_district sd1 ON s1.Spokesman_ID = sd1.Spokesman_ID AND sd1.District_ID = d.District_ID WHERE s1.Rank_position = 1 ) AND EXISTS ( SELECT 1 FROM spokesman s2 JOIN spokesman_district sd2 ON s2.Spokesman_ID = sd2.Spokesman_ID AND sd2.District_ID = d.District_ID WHERE s2.Rank_position = 2 )",
+        "response_time_secs": 37.44912099838257
+    },
+    {
+        "id": 375,
+        "question": "Find the name of the oldest pilot for each type of plane, and order the results by plane name.",
+        "expected": "SELECT pilot_name ,  plane_name ,  max(age) FROM pilotskills GROUP BY plane_name ORDER BY plane_name",
+        "generated": "SELECT T1.plane_name , T2.pilot_name FROM Hangar AS T1 JOIN PilotSkills AS T2 ON T1.plane_name = T2.plane_name WHERE T2.age = ( SELECT MAX(age) FROM PilotSkills WHERE plane_name = T1.plane_name ) ORDER BY T1.plane_name",
+        "response_time_secs": 10.662514448165894
+    },
+    {
+        "id": 378,
+        "question": "What are the names of all the authors, and how many books has each written?",
+        "expected": "SELECT T1.name ,  count(*) FROM Author AS T1 JOIN Author_Book AS T2 ON T1.idAuthor  =  T2.Author GROUP BY T1.idAuthor",
+        "generated": "SELECT Author.Name, COUNT(Book.ISBN) AS NumberOfBooks FROM Author JOIN Author_Book ON Author.idAuthor = Author_Book.Author JOIN Book ON Author_Book.ISBN = Book.ISBN GROUP BY Author.Name",
+        "response_time_secs": 20.962132453918457
+    },
+    {
+        "id": 379,
+        "question": "How many staff do we have?",
+        "expected": "SELECT count(*) FROM Staff",
+        "generated": "SELECT COUNT(staff_id) AS total_staff FROM Staff",
+        "response_time_secs": 12.118344068527222
+    },
+    {
+        "id": 380,
+        "question": "Count the number of different official languages.",
+        "expected": "SELECT count(DISTINCT language_id) FROM official_languages",
+        "generated": "SELECT COUNT(DISTINCT language_id) AS number_of_official_languages FROM official_languages",
+        "response_time_secs": 17.569072484970093
+    },
+    {
+        "id": 381,
+        "question": "List the search content of the users who do not own a single property.",
+        "expected": "SELECT search_string FROM User_Searches EXCEPT SELECT T1.search_string FROM User_Searches AS T1 JOIN Properties AS T2 ON T1.user_id  =  T2.owner_user_id;",
+        "generated": "SELECT u.search_content FROM Users u LEFT JOIN Properties p ON u.user_id = p.owner_id WHERE p.property_id IS NULL",
+        "response_time_secs": 20.43243956565857
+    },
+    {
+        "id": 382,
+        "question": "Which customers do not have any order? Give me the customer names.",
+        "expected": "SELECT name FROM customer WHERE Customer_ID NOT IN (SELECT Customer_ID FROM customer_order)",
+        "generated": "SELECT c.Name FROM customer c LEFT JOIN customer_order co ON c.Customer_ID = co.Customer_ID WHERE co.Dish_Name IS NULL",
+        "response_time_secs": 20.935970783233643
+    },
+    {
+        "id": 383,
+        "question": "What are the ids and details of the students who take 2 courses?",
+        "expected": "SELECT T1.student_id ,  T1.student_details FROM Students AS T1 JOIN Classes AS T2 ON T1.student_id  =  T2.student_id GROUP BY T1.student_id HAVING count(*)  =  2",
+        "generated": "SELECT T1.student_id, T1.bio_data, T1.student_details FROM Students AS T1 JOIN Transcripts AS T2 ON T1.student_id = T2.student_id GROUP BY T1.student_id HAVING COUNT(*) = 2",
+        "response_time_secs": 32.85559916496277
+    },
+    {
+        "id": 384,
+        "question": "Find the name of all movies that are not played in Odeon theater.",
+        "expected": "SELECT title FROM movies EXCEPT SELECT T1.title FROM movies AS T1 JOIN movietheaters AS T2 ON T1.code  =  T2.movie WHERE T2.name  =  'Odeon'",
+        "generated": "SELECT T1.Title FROM Movies AS T1 JOIN MovieTheaters AS T2 ON T1.Code != T2.Movie WHERE T2.Name = 'Odeon'",
+        "response_time_secs": 5.970766305923462
+    },
+    {
+        "id": 385,
+        "question": "What are the ids for male students not in the USA?",
+        "expected": "SELECT StuID FROM City AS T1 JOIN Student AS T2 ON T1.city_code  =  T2.city_code WHERE T2.sex  =  'M' AND T1.country != \"USA\"",
+        "generated": "SELECT StuID FROM Student WHERE Sex = 'Male' AND city_code != (SELECT city_code FROM City WHERE country = 'USA')",
+        "response_time_secs": 16.645080089569092
+    },
+    {
+        "id": 390,
+        "question": "How much does headphones cost on average for each headphone construction?",
+        "expected": "SELECT construction ,  avg(price) FROM headphone GROUP BY construction",
+        "generated": "SELECT Construction, AVG(Price) AS Average_Price FROM headphone GROUP BY Construction",
+        "response_time_secs": 15.086558818817139
+    },
+    {
+        "id": 391,
+        "question": "What is the name of the theater playing the most movies?",
+        "expected": "SELECT name FROM movietheaters GROUP BY name ORDER BY count(*) DESC LIMIT 1",
+        "generated": "SELECT T2.Name FROM MovieTheaters AS T1 JOIN Movies AS T2 ON T1.Movie = T2.Code GROUP BY T1.Name ORDER BY COUNT(*) DESC LIMIT 1",
+        "response_time_secs": 6.664238214492798
+    },
+    {
+        "id": 392,
+        "question": "List the last names of all customers in an alphabetical order.",
+        "expected": "SELECT DISTINCT LastName FROM customers ORDER BY LastName",
+        "generated": "SELECT LastName FROM customers ORDER BY LastName",
+        "response_time_secs": 2.5519282817840576
+    },
+    {
+        "id": 393,
+        "question": "Show the transmitters of radios and the station names of the channels they are associated with in descending order of the ERP of the radios.",
+        "expected": "SELECT T3.Transmitter ,  T2.Station_name FROM city_channel_radio AS T1 JOIN city_channel AS T2 ON T1.City_channel_ID  =  T2.ID JOIN radio AS T3 ON T1.Radio_ID  =  T3.Radio_ID ORDER BY T3.ERP_kW DESC",
+        "generated": "SELECT r.Transmitter, cc.Station_name FROM radio r JOIN city_channel cc ON r.Transmitter = cc.Station_name ORDER BY CAST(REPLACE(r.ERP_kW, ',', '') AS REAL) DESC",
+        "response_time_secs": 36.1179723739624
+    },
+    {
+        "id": 395,
+        "question": "How many clients are there for each sic code?",
+        "expected": "SELECT sic_code ,  count(*) FROM Clients GROUP BY sic_code",
+        "generated": "SELECT sic_code, COUNT(client_id) AS number_of_clients FROM Clients GROUP BY sic_code",
+        "response_time_secs": 14.557756185531616
+    },
+    {
+        "id": 396,
+        "question": "What is the first name of the artist who has the highest number of sculptures?",
+        "expected": "SELECT T1.fname FROM artists AS T1 JOIN sculptures AS T2 ON T1.artistID  =  T2.sculptorID GROUP BY T2.sculptorID ORDER BY count(*) DESC LIMIT 1",
+        "generated": "SELECT a.fname FROM Artists a JOIN Sculptures s ON a.artistID = s.artistID GROUP BY a.artistID ORDER BY COUNT(s.sculptureID) DESC LIMIT 1",
+        "response_time_secs": 21.450197458267212
+    },
+    {
+        "id": 398,
+        "question": "List all the distinct student answer texts to which comments \"Normal\" were given?",
+        "expected": "SELECT DISTINCT Student_Answer_Text FROM Student_Answers WHERE Comments  =  \"Normal\"",
+        "generated": "SELECT DISTINCT Student_Answers.Answer_Text FROM Student_Answers JOIN Comments ON Student_Answers.Answer_ID = Comments.Answer_ID WHERE Comments.Comment_Text = 'Normal'",
+        "response_time_secs": 18.753639221191406
+    },
+    {
+        "id": 399,
+        "question": "Show the distinct transmitters of radios that are not associated with any city channel.",
+        "expected": "SELECT Transmitter FROM radio WHERE Radio_ID NOT IN (SELECT Radio_ID FROM city_channel_radio)",
+        "generated": "SELECT DISTINCT r.Transmitter FROM radio r LEFT JOIN city_channel cc ON r.Transmitter = cc.Station_name WHERE cc.Station_name IS NULL",
+        "response_time_secs": 23.275519847869873
+    },
+    {
+        "id": 401,
+        "question": "What are the names and powertrain types of cars that have more than 30 total rental hours?",
+        "expected": "SELECT T2.name ,  T2.Type_of_powertrain FROM renting_history AS T1 JOIN vehicles AS T2 ON T1.vehicles_id  =  T2.id GROUP BY T1.vehicles_id HAVING sum(T1.total_hours)  >  30",
+        "generated": "SELECT name, type_of_powertrain FROM Vehicles WHERE id IN ( SELECT vehicle_id FROM Rental_Hours GROUP BY vehicle_id HAVING SUM(hours_rented) > 30 )",
+        "response_time_secs": 9.074840068817139
+    },
+    {
+        "id": 402,
+        "question": "What are the ids for papers with titles containing 'translation'?",
+        "expected": "SELECT paper_id FROM Paper WHERE title LIKE \"%translation%\"",
+        "generated": "SELECT paper_id FROM Paper WHERE title LIKE '%translation%'",
+        "response_time_secs": 3.819816827774048
+    },
+    {
+        "id": 404,
+        "question": "Show agency details for client with detail 'Mac'.",
+        "expected": "SELECT T2.agency_details FROM Clients AS T1 JOIN Agencies AS T2 ON T1.agency_id  =  T2.agency_id WHERE T1.client_details  =  'Mac'",
+        "generated": "SELECT Agencies.agency_details FROM Clients JOIN Agencies ON Clients.agency_id = Agencies.agency_id WHERE Clients.client_details = 'Mac'",
+        "response_time_secs": 18.55015802383423
+    },
+    {
+        "id": 405,
+        "question": "For the document subset with the most number of different documents , what are the ids and names of the subset , as well as the number of documents ?",
+        "expected": "select t1.document_subset_id ,  t2.document_subset_name , count(distinct t1.document_object_id) from document_subset_members as t1 join document_subsets as t2 on t1.document_subset_id =  t2.document_subset_id group by t1.document_subset_id order by count(*) desc limit 1;",
+        "generated": "SELECT ds.Document_Subset_ID, ds.Document_Subset_Name, COUNT(DISTINCT do.Document_Object_ID) AS Number_of_Documents FROM Document_Subsets ds JOIN Document_Objects do ON ds.Document_Subset_ID = do.Parent_Document_Object_ID GROUP BY ds.Document_Subset_ID, ds.Document_Subset_Name ORDER BY Number_of_Documents DESC LIMIT 1",
+        "response_time_secs": 71.37183904647827
+    },
+    {
+        "id": 406,
+        "question": "What is the name of the client who received the heaviest package?",
+        "expected": "SELECT T2.Name FROM PACKAGE AS T1 JOIN Client AS T2 ON T1.Recipient  =  T2.AccountNumber ORDER BY T1.Weight DESC LIMIT 1",
+        "generated": "SELECT C.Name FROM Client C JOIN Package P ON C.ClientID = P.ClientID ORDER BY P.Weight DESC LIMIT 1",
+        "response_time_secs": 27.976476192474365
+    },
+    {
+        "id": 407,
+        "question": "Find the details of the teachers who have taught the student with the earliest transcript issuance.",
+        "expected": "SELECT T1.teacher_details FROM Teachers AS T1 JOIN Classes AS T2 ON T1.teacher_id  =  T2.teacher_id JOIN Transcripts AS T3 ON T2.student_id  =  T3.student_id ORDER BY T3.date_of_transcript ASC LIMIT 1",
+        "generated": "SELECT T3.teacher_details FROM Students AS T1 JOIN Transcripts AS T2 ON T1.student_id = T2.student_id JOIN Student_Teachers AS T4 ON T1.student_id = T4.student_id JOIN Teachers AS T3 ON T4.teacher_id = T3.teacher_id ORDER BY T2.date_of_transcript ASC LIMIT 1",
+        "response_time_secs": 41.165560722351074
+    },
+    {
+        "id": 408,
+        "question": "What are the average rhythm scores for the songs in each different language?",
+        "expected": "SELECT avg(T2.rhythm_tempo) ,  T1.language FROM songs AS T1 JOIN performance_score AS T2 ON T2.songs_id  =  T1.id GROUP BY T1.language",
+        "generated": "SELECT s.language, AVG(ps.rhythm_tempo) AS average_rhythm_score FROM performance_score ps JOIN songs s ON ps.songs_id = s.id GROUP BY s.language",
+        "response_time_secs": 22.47368812561035
+    },
+    {
+        "id": 409,
+        "question": "How many orders do we have for \"Pride and Prejudice\"?",
+        "expected": "SELECT count(*) FROM Book AS T1 JOIN Books_Order AS T2 ON T1.isbn  =  T2.isbn WHERE T1.title  =  \"Pride and Prejudice\"",
+        "generated": "SELECT COUNT(o.IdOrder) FROM Orders o JOIN Book b ON o.ISBN = b.ISBN WHERE b.Title = 'Pride and Prejudice'",
+        "response_time_secs": 22.942143440246582
+    },
+    {
+        "id": 410,
+        "question": "Show the other details for the author Addison Denesik.",
+        "expected": "SELECT other_details FROM Authors WHERE author_name  =  \"Addison Denesik\"",
+        "generated": "SELECT other_details FROM Authors WHERE author_name = 'Addison Denesik'",
+        "response_time_secs": 3.8274247646331787
+    },
+    {
+        "id": 411,
+        "question": "What is the average units sold in millions of the games that are not developed by Nintendo?",
+        "expected": "SELECT avg(Units_sold_Millions) FROM game WHERE developers != 'Nintendo'",
+        "generated": "SELECT AVG(Units_sold_Millions) AS Average_Units_Sold FROM game WHERE Developers != 'Nintendo'",
+        "response_time_secs": 16.418050289154053
+    },
+    {
+        "id": 412,
+        "question": "Find the total value of boxes in the warehouses located at Chicago or New York.",
+        "expected": "SELECT sum(T1.value) FROM boxes AS T1 JOIN warehouses AS T2 ON T1.warehouse  =  T2.code WHERE T2.location  =  'Chicago' OR T2.location  =  'New York'",
+        "generated": "SELECT sum(T2.Value) FROM Warehouses AS T1 JOIN Boxes AS T2 ON T1.Code = T2.Warehouse WHERE T1.Location = 'Chicago' OR T1.Location = 'New York'",
+        "response_time_secs": 8.14588451385498
+    },
+    {
+        "id": 414,
+        "question": "When did the user with login name ratione register?",
+        "expected": "SELECT date_registered FROM Users WHERE login_name  =  'ratione';",
+        "generated": "SELECT registration_date FROM Users WHERE login_name = 'ratione'",
+        "response_time_secs": 4.250621318817139
+    },
+    {
+        "id": 416,
+        "question": "Find the unique id of the painters who had medium oil paintings exhibited at gallery 240?",
+        "expected": "SELECT DISTINCT painterID FROM paintings WHERE medium  =  \"oil\" AND LOCATION  =  \"Gallery 240\"",
+        "generated": "SELECT DISTINCT painterID FROM Paintings WHERE location = 'gallery 240' AND medium = 'oil'",
+        "response_time_secs": 20.094568014144897
+    },
+    {
+        "id": 420,
+        "question": "Show names of players and names of clubs they are in.",
+        "expected": "SELECT T2.Name ,  T1.Name FROM club AS T1 JOIN player AS T2 ON T1.Club_ID  =  T2.Club_ID",
+        "generated": "SELECT player.Name AS Player_Name, club.Name AS Club_Name FROM player JOIN club ON player.Club_ID = club.Club_ID",
+        "response_time_secs": 20.679457187652588
+    },
+    {
+        "id": 421,
+        "question": "Give the average justice scores across all countries.",
+        "expected": "SELECT avg(justice_score) FROM countries",
+        "generated": "SELECT AVG(justice_score) AS average_justice_score FROM countries",
+        "response_time_secs": 14.191680192947388
+    },
+    {
+        "id": 422,
+        "question": "List the nicknames of institutions in descending order of capacity.",
+        "expected": "SELECT T1.Nickname FROM championship AS T1 JOIN institution AS T2 ON T1.Institution_ID  =  T2.Institution_ID ORDER BY T2.Capacity DESC",
+        "generated": "SELECT T2.Nickname FROM institution AS T1 JOIN championship AS T2 ON T1.Institution_ID = T2.Institution_ID ORDER BY T1.Capacity DESC",
+        "response_time_secs": 6.97183084487915
+    },
+    {
+        "id": 423,
+        "question": "Find all locations of planes sorted by the plane name.",
+        "expected": "SELECT LOCATION FROM hangar ORDER BY plane_name",
+        "generated": "SELECT T2.location FROM PilotSkills AS T1 JOIN Hangar AS T2 ON T1.plane_name = T2.plane_name ORDER BY T1.plane_name",
+        "response_time_secs": 6.399230003356934
+    },
+    {
+        "id": 424,
+        "question": "What are the type and title of the books that are not rated?",
+        "expected": "SELECT TYPE ,  title FROM book EXCEPT SELECT T1.type ,  T1.title FROM book AS T1 JOIN review AS T2 ON T1.Book_ID  =  T2.Book_ID;",
+        "generated": "SELECT TYPE , Title FROM book WHERE Book_ID NOT IN (SELECT Book_ID FROM review)",
+        "response_time_secs": 4.394068956375122
+    },
+    {
+        "id": 426,
+        "question": "For each student answer, find the email address of the student and the date of the answer. Sort them in descending order of dates.",
+        "expected": "SELECT T2.Email_Adress ,  T1.Date_of_Answer FROM Student_Answers AS T1 JOIN Students AS T2 ON T1.Student_ID  =  T2.Student_ID ORDER BY T1.Date_of_Answer DESC",
+        "generated": "SELECT Students.Email_Adress, Answers.Answer_Date FROM Students JOIN Answers ON Students.Student_ID = Answers.Student_ID ORDER BY Answers.Answer_Date DESC",
+        "response_time_secs": 28.431811809539795
+    },
+    {
+        "id": 427,
+        "question": "Show all payment method codes and the number of customers in each code.",
+        "expected": "SELECT payment_method_code ,  count(*) FROM Customers GROUP BY payment_method_code",
+        "generated": "SELECT payment_method_code, COUNT(customer_id) AS number_of_customers FROM Customers GROUP BY payment_method_code",
+        "response_time_secs": 17.370452404022217
+    },
+    {
+        "id": 428,
+        "question": "Show the book title and purchase price of the book that has had the greatest amount in orders.",
+        "expected": "SELECT T2.title ,  T2.PurchasePrice FROM Books_Order AS T1 JOIN BOOk AS T2 ON T1.isbn  =  T2.isbn GROUP BY T1.isbn ORDER BY sum(amount) DESC LIMIT 1",
+        "generated": "SELECT T2.Title, SUM(T2.PurchasePrice) as TotalPurchasePrice FROM Orders AS T1 JOIN Book AS T2 ON T1.ISBN = T2.ISBN GROUP BY T2.ISBN ORDER BY TotalPurchasePrice DESC LIMIT 1",
+        "response_time_secs": 45.89927935600281
+    },
+    {
+        "id": 430,
+        "question": "List the last names of the students whose gender is not \"M\".",
+        "expected": "SELECT Last_Name FROM Students WHERE Gender_MFU != \"M\"",
+        "generated": "SELECT Last_Name FROM Students WHERE Gender_MFU != 'M'",
+        "response_time_secs": 3.765159845352173
+    },
+    {
+        "id": 431,
+        "question": "Count the number of goods for each food type.",
+        "expected": "SELECT count(*) ,  food FROM goods GROUP BY food",
+        "generated": "SELECT Food , COUNT(*) FROM goods GROUP BY Food",
+        "response_time_secs": 3.440481185913086
+    },
+    {
+        "id": 434,
+        "question": "Show all client names for clients who have not made orders.",
+        "expected": "SELECT name FROM Client EXCEPT SELECT T1.name FROM Client AS T1 JOIN Orders AS T2 ON T1.idClient  =  T2.idClient",
+        "generated": "SELECT Name FROM Client WHERE IdClient NOT IN (SELECT IdClient FROM Orders)",
+        "response_time_secs": 26.73012137413025
+    },
+    {
+        "id": 435,
+        "question": "What is the title of the book written by Plato has price lower than the average sale price of all books?",
+        "expected": "SELECT T1.title FROM Book AS T1 JOIN Author_book AS T2 ON T1.isbn  =  T2.isbn JOIN Author AS T3 ON T2.Author  =  T3.idAuthor WHERE T3.name  =  \"Plato\" AND T1.saleprice  <  (SELECT avg(saleprice) FROM Book)",
+        "generated": "SELECT Title FROM Book WHERE Author = 'Plato' AND SalePrice < (SELECT AVG(SalePrice) FROM Book)",
+        "response_time_secs": 16.969083547592163
+    },
+    {
+        "id": 436,
+        "question": "What are the first and last names of the artists who have not only medium oil paintings but also paintings with the lithographic medium?",
+        "expected": "SELECT T1.lname ,  T1.fname FROM artists AS T1 JOIN paintings AS T2 ON T1.artistID  =  T2.painterID WHERE T2.medium  =  \"oil\" INTERSECT SELECT T3.lname ,  T3.fname FROM artists AS T3 JOIN paintings AS T4 ON T3.artistID  =  T4.painterID WHERE T4.medium  =  \"lithograph\"",
+        "generated": "SELECT T1.fname, T1.lname FROM Artists AS T1 JOIN Paintings AS T2 ON T1.artistID = T2.painterID WHERE T2.medium = 'oil' INTERSECT SELECT T1.fname, T1.lname FROM Artists AS T1 JOIN Paintings AS T2 ON T1.artistID = T2.painterID WHERE T2.medium = 'lithographic'",
+        "response_time_secs": 13.742525100708008
+    },
+    {
+        "id": 437,
+        "question": "Show the vehicle name with a descending order of total hours of renting.",
+        "expected": "SELECT T2.name FROM renting_history AS T1 JOIN vehicles AS T2 ON T1.vehicles_id  =  T2.id GROUP BY T2.id ORDER BY sum(T1.total_hours) DESC",
+        "generated": "SELECT Vehicles.name, SUM(Rentals.hours_rented) AS total_hours_rented FROM Vehicles JOIN Rentals ON Vehicles.id = Rentals.vehicle_id GROUP BY Vehicles.name ORDER BY total_hours_rented DESC",
+        "response_time_secs": 24.373332738876343
+    },
+    {
+        "id": 438,
+        "question": "What are the last names and ids of users who have searched two or fewer times, and own two or more properties?",
+        "expected": "SELECT T1.last_name ,  T1.user_id FROM Users AS T1 JOIN User_Searches AS T2 ON T1.user_id  =  T2.user_id GROUP BY T1.user_id HAVING count(*)  <=  2 INTERSECT SELECT T3.last_name ,  T3.user_id FROM Users AS T3 JOIN Properties AS T4 ON T3.user_id  =  T4.owner_user_id GROUP BY T3.user_id HAVING count(*)  >=  2;",
+        "generated": "SELECT u.last_name, u.user_id FROM Users u JOIN User_Searches us ON u.user_id = us.user_id JOIN Properties p ON u.user_id = p.owner_id GROUP BY u.user_id, u.last_name HAVING COUNT(us.search_id) <= 2 AND COUNT(p.property_id) >= 2",
+        "response_time_secs": 27.078842163085938
+    },
+    {
+        "id": 439,
+        "question": "For each document object id, how many children do they have?",
+        "expected": "SELECT T2.Document_Object_ID ,  count(*) FROM Document_Objects AS T1 JOIN Document_Objects AS T2 ON T1.Parent_Document_Object_ID = T2.Document_Object_ID GROUP BY T2.Document_Object_ID ORDER BY count(*) DESC LIMIT 1;",
+        "generated": "SELECT d1.Document_Object_ID, COUNT(d2.Document_Object_ID) AS Number_of_Children FROM Document_Objects d1 LEFT JOIN Document_Objects d2 ON d1.Document_Object_ID = d2.Parent_Document_Object_ID GROUP BY d1.Document_Object_ID",
+        "response_time_secs": 40.72784209251404
+    },
+    {
+        "id": 441,
+        "question": "What is the lowest room count across all the properties?",
+        "expected": "SELECT min(room_count) FROM Properties;",
+        "generated": "SELECT MIN(room_count) AS lowest_room_count FROM Properties",
+        "response_time_secs": 17.319741010665894
+    },
+    {
+        "id": 442,
+        "question": "What are the id and height of the painting with the longest width in gallery 240?",
+        "expected": "SELECT paintingID ,  height_mm FROM paintings WHERE LOCATION  =  'Gallery 240' ORDER BY width_mm DESC LIMIT 1",
+        "generated": "SELECT paintingID, height_mm FROM Paintings WHERE gallery = 240 ORDER BY width_mm DESC LIMIT 1",
+        "response_time_secs": 5.210963726043701
+    },
+    {
+        "id": 443,
+        "question": "What is the title of the book that has been ordered the greatest number of times?",
+        "expected": "SELECT T2.title FROM Books_Order AS T1 JOIN Book AS T2 ON T1.isbn  =  T2.isbn GROUP BY T1.isbn ORDER BY count(*) DESC LIMIT 1",
+        "generated": "SELECT b.Title, COUNT(o.IdOrder) as TotalOrders FROM Orders o JOIN Client c ON o.IdClient = c.IdClient JOIN Book b ON o.ISBN = b.ISBN GROUP BY b.Title ORDER BY TotalOrders DESC LIMIT 1",
+        "response_time_secs": 29.27577567100525
+    },
+    {
+        "id": 444,
+        "question": "Find the id of the papers whose title has the key word 'translation'.",
+        "expected": "SELECT paper_id FROM Paper WHERE title LIKE \"%translation%\"",
+        "generated": "SELECT paper_id FROM Paper WHERE title LIKE '%translation%'",
+        "response_time_secs": 18.075190782546997
+    },
+    {
+        "id": 446,
+        "question": "Show the number of staff roles.",
+        "expected": "SELECT count(*) FROM Ref_staff_roles",
+        "generated": "SELECT COUNT(staff_role_code) AS number_of_staff_roles FROM Ref_Staff_Roles",
+        "response_time_secs": 15.28176736831665
+    },
+    {
+        "id": 447,
+        "question": "What is the average price of the products being ordered?",
+        "expected": "SELECT avg(T1.product_price) FROM Products AS T1 JOIN Order_items AS T2 ON T1.product_id  =  T2.product_id",
+        "generated": "SELECT AVG(product_price) AS average_price FROM Products WHERE is_ordered = 1",
+        "response_time_secs": 27.264328002929688
+    },
+    {
+        "id": 448,
+        "question": "What are the name and citizenship of the drivers who have driven the vehicle model 'DJ1'?",
+        "expected": "SELECT T1.name ,  T1.citizenship FROM driver AS T1 JOIN vehicle_driver AS T2 ON T1.driver_id  =  T2.driver_id JOIN vehicle AS T3 ON T2.vehicle_id  =  T3.vehicle_id WHERE T3.model  =  'DJ1'",
+        "generated": "SELECT T2.Name , T2.Citizenship FROM vehicle_driver AS T1 JOIN driver AS T2 ON T1.Driver_ID = T2.Driver_ID JOIN vehicle AS T3 ON T1.Vehicle_ID = T3.Vehicle_ID WHERE T3.Model = 'DJ1'",
+        "response_time_secs": 11.424135208129883
+    },
+    {
+        "id": 449,
+        "question": "Tell me the height and id number of the widest painting in gallery 240.",
+        "expected": "SELECT paintingID ,  height_mm FROM paintings WHERE LOCATION  =  'Gallery 240' ORDER BY width_mm DESC LIMIT 1",
+        "generated": "SELECT height_mm, paintingID FROM Paintings WHERE location = 'gallery 240' ORDER BY width_mm DESC LIMIT 1",
+        "response_time_secs": 21.62728500366211
+    },
+    {
+        "id": 450,
+        "question": "What is the smallest number of packages received and by whom ?",
+        "expected": "select t2.name ,  count(*) from package as t1 join client as t2 on t1.recipient  =  t2.accountnumber group by t1.recipient order by count(*) limit 1;",
+        "generated": "SELECT Manager, COUNT(*) AS NumberOfPackages FROM Shipment GROUP BY Manager ORDER BY NumberOfPackages ASC LIMIT 1",
+        "response_time_secs": 36.71701169013977
+    },
+    {
+        "id": 451,
+        "question": "Show all staff role codes and the number of document processes for each role.",
+        "expected": "SELECT staff_role_code ,  count(*) FROM Staff_in_processes GROUP BY staff_role_code",
+        "generated": "SELECT r.staff_role_code, COUNT(dp.process_id) AS number_of_document_processes FROM Ref_Staff_Roles r LEFT JOIN Document_Processes dp ON r.staff_role_code = dp.role_code GROUP BY r.staff_role_code",
+        "response_time_secs": 39.87082099914551
+    },
+    {
+        "id": 452,
+        "question": "How many kinds of products have not been sold?",
+        "expected": "SELECT count(*) FROM Products WHERE product_id NOT IN ( SELECT product_id FROM Order_items )",
+        "generated": "SELECT COUNT(*) AS unsold_products_count FROM Products p LEFT JOIN Sales s ON p.product_id = s.product_id WHERE s.product_id IS NULL",
+        "response_time_secs": 41.272549867630005
+    },
+    {
+        "id": 453,
+        "question": "What are the names of clubs who do not have the manufacturer Nike?",
+        "expected": "SELECT Name FROM club WHERE Manufacturer != \"Nike\"",
+        "generated": "SELECT Name FROM CLub WHERE Manufacturer != 'Nike'",
+        "response_time_secs": 3.0591299533843994
+    },
+    {
+        "id": 454,
+        "question": "How many child documents does each parent document has? List the document id and the number.",
+        "expected": "SELECT T2.Document_Object_ID ,  count(*) FROM Document_Objects AS T1 JOIN Document_Objects AS T2 ON T1.Parent_Document_Object_ID = T2.Document_Object_ID GROUP BY T2.Document_Object_ID;",
+        "generated": "SELECT Parent_Document_Object_ID AS Document_ID, COUNT(Document_Object_ID) AS Number_of_Children FROM Document_Objects GROUP BY Parent_Document_Object_ID",
+        "response_time_secs": 27.873722314834595
+    },
+    {
+        "id": 455,
+        "question": "Find all the items that have chocolate flavor but were not bought more than 10 times.",
+        "expected": "SELECT DISTINCT T1.item FROM items AS T1 JOIN goods AS T2 ON T1.item  =  T2.id WHERE T2.flavor  =  \"Chocolate\" GROUP BY item HAVING count(*)  <=  10",
+        "generated": "SELECT g.Id, g.Flavor, g.Food FROM goods g JOIN items i ON g.Id = i.Item WHERE g.Flavor = 'chocolate' GROUP BY g.Id, g.Flavor, g.Food HAVING COUNT(i.Receipt) <= 10",
+        "response_time_secs": 34.51402306556702
+    },
+    {
+        "id": 457,
+        "question": "Find the top 3 artists who have the biggest number of painting works whose medium is oil?",
+        "expected": "SELECT T1.lname ,  T1.fname FROM artists AS T1 JOIN paintings AS T2 ON T1.artistID  =  T2.painterID WHERE T2.medium  =  \"oil\" GROUP BY T2.painterID ORDER BY count(*) DESC LIMIT 3",
+        "generated": "SELECT a.fname, a.lname, COUNT(p.paintingID) AS num_paintings FROM Artists a JOIN Paintings p ON a.artistID = p.painterID WHERE p.medium = 'oil' GROUP BY a.artistID ORDER BY num_paintings DESC LIMIT 3",
+        "response_time_secs": 26.17528200149536
+    },
+    {
+        "id": 458,
+        "question": "What are all isbns for each book, and how many times has each been ordered?",
+        "expected": "SELECT isbn ,  count(*) FROM Books_Order GROUP BY isbn",
+        "generated": "SELECT B.ISBN, COUNT(O.IdOrder) as OrderCount FROM Orders O JOIN Book B ON O.ISBN = B.ISBN GROUP BY B.ISBN",
+        "response_time_secs": 21.325050592422485
+    },
+    {
+        "id": 459,
+        "question": "What are the 5 best books in terms of sale amount? Give me their titles and release dates.",
+        "expected": "SELECT title ,  release_date FROM book ORDER BY sale_amount DESC LIMIT 5",
+        "generated": "SELECT Title, Release_date FROM book ORDER BY CAST(REPLACE(Sale_Amount, ',', '') AS REAL) DESC LIMIT 5",
+        "response_time_secs": 6.704437255859375
+    },
+    {
+        "id": 460,
+        "question": "Which item was bought the fewest times?",
+        "expected": "SELECT item FROM items GROUP BY item ORDER BY count(*) LIMIT 1",
+        "generated": "SELECT Item, COUNT(*) AS Count FROM items GROUP BY Item ORDER BY Count ASC LIMIT 1",
+        "response_time_secs": 21.16420269012451
+    },
+    {
+        "id": 462,
+        "question": "How many planes are controlled by the pilots whose age is older than 40?",
+        "expected": "SELECT count(plane_name) FROM pilotskills WHERE age  >  40",
+        "generated": "SELECT count(*) FROM pilotskills WHERE age > 40",
+        "response_time_secs": 3.4356305599212646
+    },
+    {
+        "id": 463,
+        "question": "What are the buildings, streets, and cities corresponding to the addresses of senior citizens?",
+        "expected": "SELECT T1.line_1_number_building ,  T1.line_2_number_street ,  T1.town_city FROM Addresses AS T1 JOIN Users AS T2 ON T1.address_id  =  T2.user_address_id WHERE T2.user_category_code  =  'Senior Citizen';",
+        "generated": "SELECT b.building_name, s.street_name, c.city_name FROM Addresses a JOIN Buildings b ON a.address_id = b.address_id JOIN Streets s ON a.address_id = s.address_id JOIN Cities c ON a.address_id = c.address_id JOIN Users u ON a.user_id = u.user_id WHERE u.age_category_code IN (SELECT age_category_code FROM Ref_Age_Categories WHERE age_category_description LIKE '%senior%')",
+        "response_time_secs": 15.354148626327515
+    },
+    {
+        "id": 464,
+        "question": "What is the name of the sailors who reserved boat with id 103?",
+        "expected": "SELECT DISTINCT T1.name FROM Sailors AS T1 JOIN Reserves AS T2 ON T1.sid  =  T2.sid WHERE  T2.bid  =  103",
+        "generated": "SELECT T1.name FROM sailors AS T1 JOIN reserves AS T2 ON T1.sid = T2.sid WHERE T2.bid = 103",
+        "response_time_secs": 6.385727643966675
+    },
+    {
+        "id": 467,
+        "question": "What are the names of the press that makes the highest monthly profit or the lowest monthly profit?",
+        "expected": "SELECT name FROM press WHERE Month_Profits_billion  =  (SELECT min(Month_Profits_billion) FROM press) OR Month_Profits_billion  =  (SELECT max(Month_Profits_billion) FROM press)",
+        "generated": "SELECT Name FROM press ORDER BY Month_Profits_billion DESC LIMIT 1 UNION SELECT Name FROM press ORDER BY Month_Profits_billion ASC LIMIT 1",
+        "response_time_secs": 23.80901837348938
+    },
+    {
+        "id": 468,
+        "question": "Who receieved the heaviest package?",
+        "expected": "SELECT T2.Name FROM PACKAGE AS T1 JOIN Client AS T2 ON T1.Recipient  =  T2.AccountNumber ORDER BY T1.Weight DESC LIMIT 1",
+        "generated": "SELECT e.Name AS EmployeeName, p.Weight AS PackageWeight FROM Employee e JOIN Shipment s ON e.EmployeeID = s.Manager JOIN Package p ON s.ShipmentID = p.ShipmentID ORDER BY p.Weight DESC LIMIT 1",
+        "response_time_secs": 38.7374324798584
+    },
+    {
+        "id": 469,
+        "question": "On average, how many rooms do properties with garden features have?",
+        "expected": "SELECT avg(T3.room_count) FROM Property_Features AS T1 JOIN Features AS T2 ON T1.feature_id  =  T2.feature_id JOIN Properties AS T3 ON T1.property_id  =  T3.property_id WHERE T2.feature_name  =  'garden';",
+        "generated": "SELECT AVG(num_rooms) FROM ( SELECT p.property_id, COUNT(r.room_type_code) AS num_rooms FROM Properties p JOIN Property_Rooms pr ON p.property_id = pr.property_id JOIN Rooms r ON pr.room_id = r.room_id WHERE EXISTS ( SELECT 1 FROM Features f JOIN Property_Features pf ON f.feature_id = pf.feature_id WHERE pf.property_id = p.property_id AND f.feature_description = 'garden' ) GROUP BY p.property_id ) AS room_counts",
+        "response_time_secs": 36.50584292411804
+    },
+    {
+        "id": 470,
+        "question": "How many products named Monitor have been ordered?",
+        "expected": "SELECT sum(order_quantity) FROM Order_items AS T1 JOIN Products AS T2 ON T1.product_id  =  T2.product_id WHERE T2.product_name  =  \"Monitor\"",
+        "generated": "SELECT count(*) FROM products WHERE product_name = \"Monitor\"",
+        "response_time_secs": 3.8209080696105957
+    },
+    {
+        "id": 471,
+        "question": "What is the name of the most popular plane?",
+        "expected": "SELECT plane_name FROM pilotskills GROUP BY plane_name ORDER BY count(*) DESC LIMIT 1",
+        "generated": "SELECT T1.plane_name FROM Hangar AS T1 JOIN PilotSkills AS T2 ON T1.plane_name = T2.plane_name GROUP BY T1.plane_name ORDER BY count(*) DESC LIMIT 1",
+        "response_time_secs": 7.791467666625977
+    },
+    {
+        "id": 472,
+        "question": "What are the different names, prices, and descriptions for all products bought by female customers?",
+        "expected": "SELECT DISTINCT T1.product_name ,  T1.product_price ,  T1.product_description FROM Products AS T1 JOIN Order_items AS T2 ON T1.product_id  =  T2.product_id JOIN Orders AS T3 ON T2.order_id  =  T3.order_id JOIN Customers AS T4 ON T3.customer_id  =  T4.customer_id WHERE T4.gender_code  =  'Female'",
+        "generated": "SELECT DISTINCT T1.product_name , T1.product_price , T1.product_description FROM Products AS T1 JOIN Orders AS T2 ON T1.product_id = T2.product_id JOIN Customers AS T3 ON T2.customer_id = T3.customer_id WHERE T3.gender_code = \"F\"",
+        "response_time_secs": 10.413713455200195
+    },
+    {
+        "id": 474,
+        "question": "Find the name of the district which has greatest number of spokesmen.",
+        "expected": "SELECT t1.name FROM district AS t1 JOIN spokesman_district AS t2 ON t1.District_ID  =  t2.District_ID GROUP BY t2.District_ID ORDER BY count(*) DESC LIMIT 1",
+        "generated": "SELECT d.Name FROM district d JOIN spokesman_district sd ON d.District_ID = sd.District_ID GROUP BY d.District_ID ORDER BY COUNT(sd.Spokesman_ID) DESC LIMIT 1",
+        "response_time_secs": 23.243942975997925
+    },
+    {
+        "id": 475,
+        "question": "Find the names of all pilots with age between 30 and 40 sorted by their ages in ascending order.",
+        "expected": "SELECT pilot_name FROM pilotskills WHERE age BETWEEN 30 AND 40 ORDER BY age",
+        "generated": "SELECT pilot_name FROM PilotSkills WHERE age BETWEEN 30 AND 40 ORDER BY age ASC",
+        "response_time_secs": 4.17851185798645
+    },
+    {
+        "id": 476,
+        "question": "Show all product names without an order.",
+        "expected": "SELECT product_name FROM Products EXCEPT SELECT T1.product_name FROM Products AS t1 JOIN Order_items AS T2 ON T1.product_id  =  T2.product_id",
+        "generated": "SELECT p.product_name FROM Products p LEFT JOIN Customer_Orders co ON p.product_id = co.product_id WHERE co.order_id IS NULL",
+        "response_time_secs": 32.94375133514404
+    },
+    {
+        "id": 478,
+        "question": "List all product type codes and the number of products in each type.",
+        "expected": "SELECT product_type_code ,  count(*) FROM Products GROUP BY product_type_code",
+        "generated": "SELECT product_type_code, COUNT(*) AS number_of_products FROM Products GROUP BY product_type_code",
+        "response_time_secs": 17.635704040527344
+    },
+    {
+        "id": 480,
+        "question": "Which nations have both customers with card credit above 50 and customers with card credit below 75.",
+        "expected": "SELECT Nationality FROM customer WHERE Card_Credit  <  50 INTERSECT SELECT Nationality FROM customer WHERE Card_Credit  >  75",
+        "generated": "SELECT Nationality FROM customer WHERE Card_Credit > 50 INTERSECT SELECT Nationality FROM customer WHERE Card_Credit < 75",
+        "response_time_secs": 20.96495294570923
+    },
+    {
+        "id": 482,
+        "question": "Which team does not have drivers?",
+        "expected": "SELECT Team FROM team WHERE Team_ID NOT IN (SELECT Team_ID FROM team_driver)",
+        "generated": "SELECT t.Team_ID, t.Team FROM team t LEFT JOIN driver d ON t.Car_Owner = d.Driver_ID WHERE d.Driver_ID IS NULL",
+        "response_time_secs": 27.266614198684692
+    },
+    {
+        "id": 484,
+        "question": "What are the different document object ids that are in the collection named Best but not in the subset named 'Best for 2000'?",
+        "expected": "SELECT DISTINCT T2.Document_Object_ID FROM Collections AS T1 JOIN Documents_in_Collections AS T2 ON T1.Collection_ID = T2.Collection_ID WHERE T1.Collection_Name = \"Best\" EXCEPT SELECT DISTINCT T3.Document_Object_ID FROM Document_Subset_Members AS T3 JOIN Document_Subsets AS T4 ON T3.Document_Subset_ID =  T4.Document_Subset_ID WHERE T4.Document_Subset_Name = \"Best for 2000\"",
+        "generated": "SELECT DISTINCT d.Document_Object_ID FROM Document_Objects d JOIN Collection_Subsets c ON d.Parent_Document_Object_ID = c.Collection_Subset_ID WHERE c.Collection_Subset_Name = 'Best' AND d.Document_Object_ID NOT IN ( SELECT Document_Object_ID FROM Document_Objects JOIN Collection_Subsets ON Parent_Document_Object_ID = Collection_Subset_ID WHERE Collection_Subset_Name = 'Best for 2000' )",
+        "response_time_secs": 32.180156230926514
+    },
+    {
+        "id": 485,
+        "question": "What is the name and model year of the vehicle which has been rented the most times?",
+        "expected": "SELECT T2.name ,  T2.model_year FROM renting_history AS T1 JOIN vehicles AS T2 ON T1.vehicles_id  =  T2.id GROUP BY T2.id ORDER BY count(*) DESC LIMIT 1",
+        "generated": "SELECT V.name, V.Model_year FROM Vehicles AS V JOIN Rentals AS R ON V.id = R.vehicle_id GROUP BY V.id ORDER BY COUNT(R.id) DESC LIMIT 1",
+        "response_time_secs": 24.15226459503174
+    },
+    {
+        "id": 486,
+        "question": "How many business processes do we have?",
+        "expected": "SELECT count(*) FROM Business_processes",
+        "generated": "SELECT COUNT(*) FROM Processes",
+        "response_time_secs": 24.703754663467407
+    },
+    {
+        "id": 487,
+        "question": "Show all invoice status codes and the number of invoices with each status.",
+        "expected": "SELECT invoice_status ,  count(*) FROM Invoices GROUP BY invoice_status",
+        "generated": "SELECT invoice_status, COUNT(*) AS number_of_invoices FROM Invoices GROUP BY invoice_status",
+        "response_time_secs": 18.187151193618774
+    },
+    {
+        "id": 489,
+        "question": "For each student answer, find the first name of the student and the date of the answer.",
+        "expected": "SELECT T2.First_Name ,  T1.Date_of_Answer FROM Student_Answers AS T1 JOIN Students AS T2 ON T1.Student_ID  =  T2.Student_ID",
+        "generated": "SELECT S.First_Name, A.Answer_Date FROM Students S JOIN Answers A ON S.Student_ID = A.Student_ID",
+        "response_time_secs": 24.47034525871277
+    },
+    {
+        "id": 490,
+        "question": "What is the number of documents in the collection named 'Best'?",
+        "expected": "SELECT count(*) FROM Collections AS T1 JOIN Documents_in_Collections AS T2 ON T1.Collection_ID = T2.Collection_ID WHERE T1.Collection_Name = \"Best\";",
+        "generated": "SELECT count(*) FROM Collection_Subsets WHERE Collection_Subset_Name = \"Best\"",
+        "response_time_secs": 4.356752395629883
+    },
+    {
+        "id": 491,
+        "question": "What are the average laps of all the drivers who are younger than 20?",
+        "expected": "SELECT avg(Laps) FROM driver WHERE age  <  20",
+        "generated": "SELECT AVG(Laps) AS Average_Laps FROM driver WHERE Age < 20",
+        "response_time_secs": 16.269963026046753
+    },
+    {
+        "id": 492,
+        "question": "What are the names of pilots who own both Piper Cub and the B-52 Bomber?",
+        "expected": "SELECT pilot_name FROM pilotskills WHERE plane_name  =  'Piper Cub' INTERSECT SELECT pilot_name FROM pilotskills WHERE plane_name  =  'B-52 Bomber'",
+        "generated": "SELECT T1.pilot_name FROM Pilotskills AS T1 JOIN Hangar AS T2 ON T1.plane_name = T2.plane_name WHERE T2.location = 'Piper Cub' INTERSECT SELECT T1.pilot_name FROM Pilotskills AS T1 JOIN Hangar AS T2 ON T1.plane_name = T2.plane_name WHERE T2.location = 'B-52 Bomber'",
+        "response_time_secs": 14.787315130233765
+    },
+    {
+        "id": 494,
+        "question": "What is the id of the artist with the most paintings before 1900?",
+        "expected": "SELECT T1.artistID FROM artists AS T1 JOIN paintings AS T2 ON T1.artistID  =  T2.painterID WHERE T2.year  <  1900 GROUP BY T1.artistID ORDER BY count(*) DESC LIMIT 1",
+        "generated": "SELECT painterID FROM Paintings WHERE year < 1900 GROUP BY painterID ORDER BY COUNT(*) DESC LIMIT 1",
+        "response_time_secs": 21.28903603553772
+    },
+    {
+        "id": 495,
+        "question": "Which date corresponds to when a customer purchased a good costing over 15 dollars?",
+        "expected": "SELECT DISTINCT T1.date FROM receipts AS T1 JOIN items AS T2 ON T1.ReceiptNumber  =  T2.receipt JOIN goods AS T3 ON T2.item  =  T3.id WHERE T3.price  >  15",
+        "generated": "SELECT T2.Date FROM items AS T1 JOIN receipts AS T2 ON T1.Receipt = T2.ReceiptNumber WHERE T1.Item IN ( SELECT Id FROM goods WHERE Price > 15 )",
+        "response_time_secs": 7.526821851730347
+    },
+    {
+        "id": 497,
+        "question": "How many movies have a rating that is not null?",
+        "expected": "SELECT count(*) ,  rating FROM movies WHERE rating != 'null' GROUP BY rating",
+        "generated": "SELECT count(*) FROM Movies WHERE Rating != \"null\"",
+        "response_time_secs": 2.986238479614258
+    },
+    {
+        "id": 499,
+        "question": "Find the manager and sponsor of the team that has the most drivers.",
+        "expected": "SELECT t1.manager ,  t1.sponsor FROM team AS t1 JOIN team_driver AS t2 ON t1.team_id  =  t2.team_id GROUP BY t2.team_id ORDER BY count(*) DESC LIMIT 1",
+        "generated": "SELECT T1.Manager, T1.Sponsor FROM team AS T1 JOIN driver AS T2 ON T1.Team_ID = T2.Car_# GROUP BY T1.Team_ID ORDER BY COUNT(T2.Driver_ID) DESC LIMIT 1",
+        "response_time_secs": 23.88536238670349
+    }
+]
