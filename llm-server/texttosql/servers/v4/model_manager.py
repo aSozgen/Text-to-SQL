@@ -35,7 +35,7 @@ except ImportError:
 
 # Llama 3 base model — tokenizer bozuksa buradan çekilir
 LLAMA3_BASE_MODEL = "meta-llama/Meta-Llama-3-8B-Instruct"
-HF_TOKEN = "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"
+HF_TOKEN = "TOKEN HAS EXPIRED."
 
 
 class ModelManager:
